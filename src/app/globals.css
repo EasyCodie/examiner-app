@@ -1,26 +1,217 @@
+/* Sora: Precision Geometric Face for High-Stakes Evaluation & JetBrains Mono */
+@import url('https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+
 @import "tailwindcss";
+@import "katex/dist/katex.min.css";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+  --background: #0c0d0e;
+  --foreground: #f3f3f2;
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+  /* Cursor Dark Mode Design Tokens */
+  --cursor-primary: #f54e00;
+  --cursor-primary-active: #d04200;
+  --cursor-canvas: #0c0d0e;
+  --cursor-canvas-soft: #141517;
+  --cursor-surface-card: #1a1b1e;
+  --cursor-surface-strong: #222428;
+  --cursor-surface-hover: #26282d;
+  --cursor-hairline: rgba(255, 255, 255, 0.08);
+  --cursor-hairline-strong: rgba(255, 255, 255, 0.16);
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --cursor-text-strong: #f3f3f2;
+  --cursor-text-body: #9b9a95;
+  --cursor-text-muted: #686763;
+
+  /* Cursor Agent Timeline Pastels */
+  --timeline-thinking: #dfa88f;
+  --timeline-read: #9fbbe0;
+  --timeline-grep: #9fc9a2;
+  --timeline-codes: #c0a8dd;
+  --timeline-done: #c08532;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--cursor-canvas);
+  color: var(--cursor-text-strong);
+  font-family: 'Sora', sans-serif;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Headings: weight 400 with negative tracking per Cursor magazine voice */
+h1, h2, h3 {
+  letter-spacing: -0.025em;
+  font-weight: 400;
+}
+
+/* Monospace for code, manifest keys, mark codes, and telemetry */
+.font-mono-code {
+  font-family: 'JetBrains Mono', monospace;
+}
+
+/* Cursor Dark Mode Panes and Cards */
+.cursor-card {
+  background-color: var(--cursor-surface-card);
+  border: 1px solid var(--cursor-hairline);
+}
+
+.cursor-card-soft {
+  background-color: var(--cursor-canvas-soft);
+  border: 1px solid var(--cursor-hairline);
+}
+
+.cursor-card:hover {
+  border-color: var(--cursor-hairline-strong);
+}
+
+/* Primary Cursor Orange Button */
+.cursor-btn-primary {
+  background-color: var(--cursor-primary);
+  color: #ffffff;
+  font-weight: 500;
+  border-radius: 8px;
+  transition: background-color 0.15s ease, transform 0.1s ease;
+}
+
+.cursor-btn-primary:hover {
+  background-color: var(--cursor-primary-active);
+}
+
+.cursor-btn-primary:active {
+  transform: scale(0.99);
+}
+
+/* Secondary Button */
+.cursor-btn-secondary {
+  background-color: var(--cursor-surface-card);
+  color: var(--cursor-text-strong);
+  border: 1px solid var(--cursor-hairline);
+  border-radius: 8px;
+  font-weight: 500;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.cursor-btn-secondary:hover {
+  background-color: var(--cursor-surface-strong);
+  border-color: var(--cursor-hairline-strong);
+}
+
+/* Timeline pill base */
+.timeline-pill {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  border-radius: 9999px;
+  padding: 3px 9px;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Hairline border */
+.hairline {
+  border: 1px solid var(--cursor-hairline);
+}
+
+/* Smooth motion choreography per /impeccable animate */
+@keyframes flowStepForward {
+  0% {
+    opacity: 0;
+    transform: translateX(12px) translateY(2px) scale(0.995);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0) translateY(0) scale(1);
+  }
+}
+
+@keyframes flowStepBack {
+  0% {
+    opacity: 0;
+    transform: translateX(-12px) translateY(2px) scale(0.995);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0) translateY(0) scale(1);
+  }
+}
+
+@keyframes cardStagger {
+  0% {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-step-enter,
+.animate-step-forward {
+  animation: flowStepForward 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-step-back {
+  animation: flowStepBack 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-card-1 {
+  animation: cardStagger 0.35s cubic-bezier(0.16, 1, 0.3, 1) 0.05s forwards;
+  opacity: 0;
+}
+
+.animate-card-2 {
+  animation: cardStagger 0.35s cubic-bezier(0.16, 1, 0.3, 1) 0.12s forwards;
+  opacity: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-step-enter,
+  .animate-step-forward,
+  .animate-step-back,
+  .animate-card-1,
+  .animate-card-2 {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
+
+/* Custom minimal scrollbar */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--cursor-canvas);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--cursor-surface-strong);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--cursor-surface-hover);
+}
+
+/* Selection */
+::selection {
+  background: rgba(245, 78, 0, 0.3);
+  color: #ffffff;
+}
+
+/* Math rendering typography */
+.math-content .katex-display {
+  margin: 0.8em 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 4px 0;
+}
+
+.math-content .katex {
+  font-size: 1.05em;
 }
