@@ -204,14 +204,22 @@ h1, h2, h3 {
   color: #ffffff;
 }
 
-/* Math rendering typography */
-.math-content .katex-display {
-  margin: 0.8em 0;
-  overflow-x: auto;
-  overflow-y: hidden;
-  padding: 4px 0;
+/* Math rendering typography - 20% size boost for enhanced clarity and legibility */
+.katex {
+  font-size: 1.2em;
 }
 
 .math-content .katex {
-  font-size: 1.05em;
+  font-size: 1.25em;
+}
+
+.math-content .katex-display {
+  margin: 1em 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 6px 0;
+}
+
+.math-content .katex-display .katex {
+  font-size: 1.3em;
 }

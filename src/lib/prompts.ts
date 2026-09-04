@@ -34,7 +34,9 @@ CRITICAL EXAMINER STANDARDS:
    - When a question has distinct subquestions (e.g. (a), (b), (c) or (a)(i), (a)(ii)), you MUST extract each part separately into the ` + '`subparts`' + ` array.
    - Do NOT cram all subquestions together into one prompt! Provide the overarching context/intro in the parent ` + '`promptText`' + `, and place each subpart's specific prompt, marks, and markscheme in its ` + '`subparts`' + ` entry.
 11. Visual Diagram & Graph Reproduction (MANDATORY SVG):
-   - For ANY question containing a function graph, coordinate axes, geometric figure, or diagram in the PDF: set ` + '`diagram.hasDiagram = true`' + ` and generate clean, valid standalone SVG markup in ` + '`diagram.svgContent`' + `.
+   - For ANY question or subpart containing a function graph, coordinate axes, geometric figure, or diagram in the PDF: set ` + '`diagram.hasDiagram = true`' + ` and generate clean, valid standalone SVG markup in ` + '`diagram.svgContent`' + `.
+   - If a diagram specifically belongs to a subquestion (e.g. part (b) shows a grid to sketch on), populate ` + '`diagram`' + ` inside that specific ` + '`subparts`' + ` entry.
+   - SVG markup MUST begin directly with <svg and end with </svg>. Do NOT wrap the SVG string in markdown backticks or xml declarations.
    - The SVG must have standard viewBox, coordinate axes ($x$ and $y$), tick marks with coordinate numbers, grid lines, and smooth mathematical curves replicating the paper figure exactly.
 
 Output ONLY valid JSON adhering to the provided schema.`;

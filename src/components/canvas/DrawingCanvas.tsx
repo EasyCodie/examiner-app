@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useRef, useEffect, useState, useCallback, useImperativeHandle, forwardRef } from 'react';
+import React, { useRef, useEffect, useState, useCallback, useImperativeHandle, forwardRef, useMemo } from 'react';
 import { CanvasStroke, QuestionItem } from '@/types/exam';
 import { MathRenderer } from '@/components/common/MathRenderer';
 import { Trash2 } from 'lucide-react';
@@ -31,6 +31,13 @@ interface DrawingCanvasProps {
   compact?: boolean;
 }
 
+const calculateWorkingHeight = (marks: number, isCompact: boolean): number => {
+  const base = isCompact ? 460 : 520;
+  const perMark = isCompact ? 45 : 55;
+  const computed = base + Math.max(1, marks) * perMark;
+  return Math.min(2200, Math.max(base, computed));
+};
+
 export const DrawingCanvas = forwardRef<DrawingCanvasRef, DrawingCanvasProps>(({
   pageNumber,
   questionsOnPage,
@@ -48,7 +55,13 @@ export const DrawingCanvas = forwardRef<DrawingCanvasRef, DrawingCanvasProps>(({
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRefs = useRef<Record<string, HTMLCanvasElement | null>>({});
   const boxRefs = useRef<Record<string, HTMLDivElement | null>>({});
-  const activeBoxIdRef = useRef<string>('main');
+
+  const defaultBoxId = useMemo(() => {
+    if (!questionsOnPage || questionsOnPage.length === 0) return 'main';
+    return questionsOnPage[0].id || 'main';
+  }, [questionsOnPage]);
+
+  const activeBoxIdRef = useRef<string>(defaultBoxId);
 
   // Helper to partition flat stroke arrays back into their respective boxes
   const parseStrokes = useCallback((strokes: CanvasStroke[] = [], propBoxes?: Record<string, CanvasStroke[]>): Record<string, CanvasStroke[]> => {
@@ -58,14 +71,21 @@ export const DrawingCanvas = forwardRef<DrawingCanvasRef, DrawingCanvasProps>(({
     const map: Record<string, CanvasStroke[]> = {};
     if (strokes && strokes.length > 0) {
       for (const s of strokes) {
-        const bId = s.boxId || 'main';
+        let bId: string = s.boxId && s.boxId !== 'main' ? s.boxId : defaultBoxId;
+        // If stroke was saved with a subpart ID (e.g. q10_a), map it to question ID (q10)
+        for (const q of questionsOnPage) {
+          if (bId.startsWith(`${q.id}_`)) {
+            bId = q.id;
+            break;
+          }
+        }
         if (!map[bId]) map[bId] = [];
         map[bId].push(s);
       }
       return map;
     }
-    return { main: [] };
-  }, []);
+    return { [defaultBoxId]: [] };
+  }, [defaultBoxId, questionsOnPage]);
 
   // Internal state for strokes by box
   const [boxStrokes, setBoxStrokes] = useState<Record<string, CanvasStroke[]>>(() => {
@@ -460,6 +480,36 @@ export const DrawingCanvas = forwardRef<DrawingCanvasRef, DrawingCanvasProps>(({
 
       const paperRect = paper.getBoundingClientRect();
 
+      // Render any SVG diagrams onto composite image so examiner sees coordinate axes & curves
+      const svgEls = Array.from(paper.querySelectorAll('svg'));
+      for (const svgEl of svgEls) {
+        try {
+          const svgRect = svgEl.getBoundingClientRect();
+          if (svgRect.width > 0 && svgRect.height > 0) {
+            const svgXml = new XMLSerializer().serializeToString(svgEl);
+            const svgBlob = new Blob([svgXml], { type: 'image/svg+xml;charset=utf-8' });
+            const url = URL.createObjectURL(svgBlob);
+            const img = new Image();
+            await new Promise<void>((resolve) => {
+              img.onload = () => {
+                const ox = (svgRect.left - paperRect.left) * dpr;
+                const oy = (svgRect.top - paperRect.top) * dpr;
+                ctx.drawImage(img, ox, oy, svgRect.width * dpr, svgRect.height * dpr);
+                URL.revokeObjectURL(url);
+                resolve();
+              };
+              img.onerror = () => {
+                URL.revokeObjectURL(url);
+                resolve();
+              };
+              img.src = url;
+            });
+          }
+        } catch {
+          // ignore svg serialization failure
+        }
+      }
+
       // Draw all working boxes and their strokes onto composite
       for (const boxId of Object.keys(boxRefs.current)) {
         const box = boxRefs.current[boxId];
@@ -509,141 +559,127 @@ export const DrawingCanvas = forwardRef<DrawingCanvasRef, DrawingCanvasProps>(({
         </div>
       </div>
 
-      {/* Question Content & Scrollable Subquestions */}
+      {/* Question Content & Designated Working Space */}
       {questionsOnPage.length > 0 ? (
         questionsOnPage.map((q) => {
           const hasSubparts = Array.isArray(q.subparts) && q.subparts.length > 0;
+          const cleanNumber = q.number.replace(/^Question\s*/i, '').replace(/\.$/, '').trim();
+          const isSectionB = q.promptText.toLowerCase().includes('section b') || q.totalMarks >= 14;
+          const cleanedPromptText = q.promptText
+            .replace(/^Section\s+[AB]\s*(?:\(Question\s*\d+\))?:\s*/i, '')
+            .replace(/^Question\s*\d+:\s*/i, '')
+            .trim();
+
+          const workingHeight = calculateWorkingHeight(q.totalMarks, compact);
 
           return (
             <div key={q.id} className="flex-1 flex flex-col min-h-0 space-y-6">
-              {/* Main Question Title & Mark Count */}
-              <div className="flex items-baseline justify-between border-b border-slate-200 pb-2 shrink-0">
-                <h3 className="text-lg font-bold font-serif text-slate-950">
-                  {q.number.replace(/^Question\s*/i, '')}
-                </h3>
-                <span className="text-xs font-bold font-mono-code text-slate-700 bg-slate-100 px-2.5 py-0.5 rounded border border-slate-200">
-                  [{q.totalMarks} marks]
-                </span>
+              {/* 1. Entire Question Box (Shown as a whole, authentic IB typography) */}
+              <div className="bg-white rounded-xl border border-slate-300 p-6 sm:p-7 shadow-sm space-y-5">
+                {/* Header: Question number & [Maximum mark: X] */}
+                <div className="flex items-baseline justify-between border-b border-slate-300 pb-3 shrink-0">
+                  <div className="flex items-center gap-2.5">
+                    <h3 className="text-xl font-bold font-serif text-slate-950">
+                      {cleanNumber}.
+                    </h3>
+                    {isSectionB && (
+                      <span className="text-[10px] font-mono-code uppercase font-bold tracking-wider px-2 py-0.5 rounded bg-slate-100 text-slate-700 border border-slate-300">
+                        Section B
+                      </span>
+                    )}
+                  </div>
+                  <span className="text-sm font-serif font-bold text-slate-900 tracking-tight">
+                    [Maximum mark: {q.totalMarks}]
+                  </span>
+                </div>
+
+                {/* Main Question Context / Preamble / Equations */}
+                {cleanedPromptText && (
+                  <div className="text-slate-950 font-serif leading-relaxed text-[15px]">
+                    <MathRenderer content={cleanedPromptText} lightMode={true} />
+                  </div>
+                )}
+
+                {/* Top-Level Mathematical Diagram / SVG Graph */}
+                {q.diagram?.hasDiagram && q.diagram.svgContent && (
+                  <div className="p-4 bg-white rounded-lg border border-slate-300 shadow-sm flex flex-col items-center my-3">
+                    {q.diagram.title && (
+                      <div className="text-xs font-mono-code font-bold text-slate-800 mb-2">
+                        {q.diagram.title}
+                      </div>
+                    )}
+                    <div
+                      className="w-full max-w-lg overflow-x-auto flex justify-center [&>svg]:max-w-full [&>svg]:h-auto"
+                      dangerouslySetInnerHTML={{ __html: q.diagram.svgContent }}
+                    />
+                    {q.diagram.description && (
+                      <div className="text-[11px] text-slate-500 font-serif italic mt-2 text-center">
+                        {q.diagram.description}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* All Subparts displayed continuously within the question */}
+                {hasSubparts && (
+                  <div className="space-y-4 pt-1 border-t border-slate-200">
+                    {q.subparts!.map((sub) => {
+                      const isNested = /^\([a-z]\)\([ivx]+\)/i.test(sub.partLetter) || /^\([ivx]+\)/i.test(sub.partLetter);
+
+                      return (
+                        <div key={sub.id} className="flex flex-col space-y-2">
+                          <div className="flex items-start justify-between gap-6">
+                            <div className={`flex items-start gap-3.5 flex-1 ${isNested ? 'pl-6' : ''}`}>
+                              <span className="font-serif font-bold text-[15px] text-slate-950 shrink-0 select-none min-w-[28px]">
+                                {sub.partLetter}
+                              </span>
+                              <div className="text-[15px] text-slate-950 font-serif leading-relaxed flex-1">
+                                <MathRenderer content={sub.promptText} lightMode={true} />
+                              </div>
+                            </div>
+                            <span className="text-[13px] font-serif font-bold text-slate-800 shrink-0 select-none pt-0.5">
+                              [{sub.totalMarks}]
+                            </span>
+                          </div>
+
+                          {sub.diagram?.hasDiagram && sub.diagram.svgContent && (
+                            <div className="p-3 bg-white rounded border border-slate-300 flex justify-center [&>svg]:max-w-full [&>svg]:h-auto my-2">
+                              <div dangerouslySetInnerHTML={{ __html: sub.diagram.svgContent }} />
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
 
-              {/* Top-Level Mathematical Diagram / SVG Graph */}
-              {q.diagram?.hasDiagram && q.diagram.svgContent && (
-                <div className="p-4 bg-white rounded-lg border border-slate-300 shadow-sm flex flex-col items-center">
-                  {q.diagram.title && (
-                    <div className="text-xs font-mono-code font-bold text-slate-800 mb-2">
-                      {q.diagram.title}
-                    </div>
-                  )}
-                  <div
-                    className="w-full max-w-lg overflow-x-auto flex justify-center [&>svg]:max-w-full [&>svg]:h-auto"
-                    dangerouslySetInnerHTML={{ __html: q.diagram.svgContent }}
-                  />
-                  {q.diagram.description && (
-                    <div className="text-[11px] text-slate-500 font-serif italic mt-2 text-center">
-                      {q.diagram.description}
-                    </div>
-                  )}
+              {/* 2. Designated Working Space Below the Entire Question (height proportional to marks) */}
+              <div className="flex flex-col space-y-2 pt-2">
+                <div className="flex items-center justify-between text-[11px] font-mono-code text-slate-500 uppercase tracking-wider px-1">
+                  <span className="font-bold text-slate-700">
+                    Working Area • Question {cleanNumber} ({q.totalMarks} marks)
+                  </span>
+                  <span className="italic normal-case text-slate-400">
+                    Answers must be written in the space provided below
+                  </span>
                 </div>
-              )}
 
-              {/* Main Question Preamble / LaTeX Prompt */}
-              {q.promptText && (
                 <div
-                  className={`text-slate-900 leading-relaxed bg-slate-50/80 rounded-lg border border-slate-200 shrink-0 ${
-                    compact ? 'text-xs sm:text-sm p-3.5' : 'text-sm p-4'
-                  }`}
+                  ref={(el) => { boxRefs.current[q.id] = el; }}
+                  data-boxid={q.id}
+                  style={{ minHeight: `${workingHeight}px` }}
+                  className="relative w-full rounded-xl border-2 border-slate-400 bg-white overflow-hidden shadow-sm flex flex-col"
                 >
-                  <MathRenderer content={q.promptText} lightMode={true} />
-                </div>
-              )}
-
-              {/* Case 1: Multiple Subparts (Scroll down to reach subquestions a, b, c) */}
-              {hasSubparts ? (
-                <div className="space-y-8 mt-4">
-                  {q.subparts!.map((sub, sIdx) => {
-                    const boxId = sub.id || `${q.id}_${sIdx}`;
-
-                    return (
-                      <div
-                        key={boxId}
-                        className="bg-white rounded-xl border border-slate-300 p-5 shadow-sm space-y-4"
-                      >
-                        {/* Subquestion Header */}
-                        <div className="flex items-center justify-between border-b border-slate-200 pb-2">
-                          <span className="text-sm font-bold font-serif text-slate-900 flex items-center gap-1.5">
-                            <span className="font-mono-code text-xs px-2 py-0.5 rounded bg-slate-100 text-slate-800 border border-slate-200">
-                              {sub.partLetter}
-                            </span>
-                            <span>Subquestion {sub.partLetter}</span>
-                          </span>
-                          <span className="text-xs font-mono-code font-bold text-slate-600 bg-slate-50 px-2 py-0.5 rounded border border-slate-200">
-                            [{sub.totalMarks} marks]
-                          </span>
-                        </div>
-
-                        {/* Subpart Prompt */}
-                        <div className="text-sm text-slate-800 leading-relaxed bg-slate-50/60 p-3 rounded-lg border border-slate-200">
-                          <MathRenderer content={sub.promptText} lightMode={true} />
-                        </div>
-
-                        {/* Subpart Diagram if specific to part */}
-                        {sub.diagram?.hasDiagram && sub.diagram.svgContent && (
-                          <div className="p-3 bg-white rounded border border-slate-200 flex justify-center [&>svg]:max-w-full [&>svg]:h-auto">
-                            <div dangerouslySetInnerHTML={{ __html: sub.diagram.svgContent }} />
-                          </div>
-                        )}
-
-                        {/* Subpart Working Box */}
-                        <div
-                          ref={(el) => { boxRefs.current[boxId] = el; }}
-                          data-boxid={boxId}
-                          className="relative w-full rounded-lg border-2 border-slate-400 bg-white overflow-hidden min-h-[460px] flex flex-col"
-                        >
-                          <div className="absolute inset-0 bg-[linear-gradient(to_bottom,#f1f5f9_1px,transparent_1px)] bg-[size:100%_28px] pointer-events-none" />
-
-                          {/* Clear Button */}
-                          <div className="absolute top-3 right-3 z-20 pointer-events-auto">
-                            <button
-                              type="button"
-                              onClick={() => handleClearBox(boxId)}
-                              title={`Clear working for ${sub.partLetter}`}
-                              className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-white hover:bg-[#cf2d56]/10 text-slate-700 hover:text-[#cf2d56] border border-slate-300 shadow-sm text-xs font-mono-code transition active:scale-95"
-                            >
-                              <Trash2 className="w-3.5 h-3.5" />
-                              <span>Clear</span>
-                            </button>
-                          </div>
-
-                          <canvas
-                            ref={(el) => { canvasRefs.current[boxId] = el; }}
-                            onPointerDown={(e) => handlePointerDown(e, boxId)}
-                            onPointerMove={(e) => handlePointerMove(e, boxId)}
-                            onPointerUp={(e) => handlePointerUp(e, boxId)}
-                            onPointerCancel={(e) => handlePointerUp(e, boxId)}
-                            className="absolute inset-0 w-full h-full cursor-crosshair touch-none z-10"
-                          />
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              ) : (
-                /* Case 2: Single Question (no subparts) */
-                <div
-                  ref={(el) => { boxRefs.current['main'] = el; }}
-                  data-boxid="main"
-                  className={`relative flex-1 w-full rounded-lg border-2 border-slate-400 bg-white overflow-hidden flex flex-col ${
-                    compact ? 'min-h-[500px]' : 'min-h-[620px]'
-                  }`}
-                >
+                  {/* Authentic 28px Ruled Lines Grid */}
                   <div className="absolute inset-0 bg-[linear-gradient(to_bottom,#f1f5f9_1px,transparent_1px)] bg-[size:100%_28px] pointer-events-none" />
 
                   {/* Clear Button */}
                   <div className="absolute top-3 right-3 z-20 pointer-events-auto">
                     <button
                       type="button"
-                      onClick={() => handleClearBox('main')}
-                      title="Clear working"
+                      onClick={() => handleClearBox(q.id)}
+                      title={`Clear working for Question ${cleanNumber}`}
                       className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-white hover:bg-[#cf2d56]/10 text-slate-700 hover:text-[#cf2d56] border border-slate-300 shadow-sm text-xs font-mono-code transition active:scale-95"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
@@ -652,15 +688,15 @@ export const DrawingCanvas = forwardRef<DrawingCanvasRef, DrawingCanvasProps>(({
                   </div>
 
                   <canvas
-                    ref={(el) => { canvasRefs.current['main'] = el; }}
-                    onPointerDown={(e) => handlePointerDown(e, 'main')}
-                    onPointerMove={(e) => handlePointerMove(e, 'main')}
-                    onPointerUp={(e) => handlePointerUp(e, 'main')}
-                    onPointerCancel={(e) => handlePointerUp(e, 'main')}
+                    ref={(el) => { canvasRefs.current[q.id] = el; }}
+                    onPointerDown={(e) => handlePointerDown(e, q.id)}
+                    onPointerMove={(e) => handlePointerMove(e, q.id)}
+                    onPointerUp={(e) => handlePointerUp(e, q.id)}
+                    onPointerCancel={(e) => handlePointerUp(e, q.id)}
                     className="absolute inset-0 w-full h-full cursor-crosshair touch-none z-10"
                   />
                 </div>
-              )}
+              </div>
             </div>
           );
         })

@@ -52,7 +52,12 @@ function safeRenderKaTeX(tex: string, displayMode: boolean): string {
  * in raw exam prompts or LLM extractions into valid LaTeX syntax.
  */
 function normalizeAsciiMath(expr: string): string {
-  let s = expr;
+  let s = expr.trim();
+
+  // If already a structured LaTeX environment (matrix, array, etc.), pass through untouched
+  if (/\\begin\{(aligned|matrix|pmatrix|bmatrix|vmatrix|cases|equation|align\*?|gather\*?|array)\}/.test(s)) {
+    return s;
+  }
 
   // 1. Unicode mathematical symbols to standard LaTeX
   s = s
@@ -84,31 +89,54 @@ function normalizeAsciiMath(expr: string): string {
     .replace(/∫/g, '\\int ')
     .replace(/∑/g, '\\sum ');
 
-  // 2. Roots: sqrt(...) -> \sqrt{...}
+  // 2. Implication and function arrows
+  s = s.replace(/=>/g, ' \\implies ');
+  s = s.replace(/->/g, ' \\to ');
+
+  // 3. Roots: √(1+x) or \sqrt(1+x)
+  s = s.replace(/√\(([^)]+)\)/g, '\\sqrt{$1}');
+  s = s.replace(/√\{([^}]+)\}/g, '\\sqrt{$1}');
+  s = s.replace(/√([0-9a-zA-Z]+)/g, '\\sqrt{$1}');
+  s = s.replace(/√/g, '\\surd ');
   s = s.replace(/\\?sqrt\(([^)]+)\)/g, '\\sqrt{$1}');
   s = s.replace(/\\?sqrt\{([^}]+)\}/g, '\\sqrt{$1}');
 
-  // 3. Higher order derivatives: f^(n)(x) -> f^{(n)}(x)
-  s = s.replace(/\b([fghuv])\^\(([a-zA-Z0-9+\-]+)\)\(([a-z0-9,\s]+)\)/g, '$1^{($2)}($3)');
-  s = s.replace(/\b([fghuv])\^\{([a-zA-Z0-9+\-]+)\}\(([a-z0-9,\s]+)\)/g, '$1^{$2}($3)');
+  // 4. Calculus derivatives: d/dx [ ... ] -> \frac{d}{dx}\left[ ... \right]
+  s = s.replace(/\bd\/dx\s*\[(.*?)\]/g, '\\frac{d}{dx}\\left[$1\\right]');
+  s = s.replace(/\bd\/dx\s*\((.*?)\)/g, '\\frac{d}{dx}\\left($1\\right)');
 
-  // 4. Prime derivatives: f''(x) -> f''(x), f'(x) -> f'(x)
-  s = s.replace(/\b([fghuv])('{1,3})\(([a-z0-9,\s]+)\)/g, '$1$2($3)');
+  // 5. Higher order derivatives: f^(n)(x) -> f^{(n)}(x)
+  s = s.replace(/\b([fghuvy])\^\(([a-zA-Z0-9+\-]+)\)\(([a-z0-9,\s]+)\)/g, '$1^{($2)}($3)');
+  s = s.replace(/\b([fghuvy])\^\{([a-zA-Z0-9+\-]+)\}\(([a-z0-9,\s]+)\)/g, '$1^{$2}($3)');
 
-  // 5. Exponents: e^(mx) -> e^{mx}, x^(2k+1) -> x^{2k+1}, (-1/4)^(n-1) -> (-1/4)^{n-1}
+  // 6. Prime derivatives: f''(x) -> f''(x), f'(x) -> f'(x)
+  s = s.replace(/\b([fghuvy])('{1,3})\(([a-z0-9,\s]+)\)/g, '$1$2($3)');
+
+  // 7. Negative fraction powers: (-1/4)^(n-1) -> \left(-\frac{1}{4}\right)^{n-1}
+  s = s.replace(/\(-([0-9]+)\/([0-9]+)\)\^([a-zA-Z0-9+\-]+)/g, '\\left(-\\frac{$1}{$2}\\right)^{$3}');
+  s = s.replace(/\(-([0-9]+)\/([0-9]+)\)\^\(([^)]+)\)/g, '\\left(-\\frac{$1}{$2}\\right)^{$3}');
   s = s.replace(/([a-zA-Z0-9\)])\^\(([^\)]+)\)/g, '$1^{$2}');
   s = s.replace(/([a-zA-Z0-9\)])\^([0-9a-zA-Z]+)(?![^{])/g, '$1^{$2}');
 
-  // 6. Subscripts: u_1 -> u_1, S_8 -> S_8, u_n -> u_n
+  // 8. Fractions: a/b where both are numbers or simple expressions in parens
+  s = s.replace(/\b([0-9]+)\/([0-9]+)\b/g, '\\frac{$1}{$2}');
+
+  // 9. Factorials: (2k-3)! / (k-2)! -> \frac{(2k-3)!}{(k-2)!}
+  s = s.replace(/\(([^)]+)\)!\s*\/\s*\(([^)]+)\)!/g, '\\frac{($1)!}{($2)!}');
+
+  // 10. Subscripts: u_1 -> u_1, S_8 -> S_8, u_n -> u_n
   s = s.replace(/\b([a-zA-Z])_([0-9a-zA-Z]+)\b/g, '$1_{$2}');
 
-  // 7. Relations and inequalities
+  // 11. Relations and inequalities
   s = s
     .replace(/<=/g, '\\le ')
     .replace(/>=/g, '\\ge ')
     .replace(/!=/g, '\\ne ');
 
-  // 8. Set memberships: in Q -> \in \mathbb{Q}, in R -> \in \mathbb{R}, in Z -> \in \mathbb{Z}
+  // 12. Multiplication asterisks: * -> \times
+  s = s.replace(/\s*\*\s*/g, ' \\times ');
+
+  // 13. Set memberships: in Q -> \in \mathbb{Q}, in R -> \in \mathbb{R}, in Z -> \in \mathbb{Z}
   s = s
     .replace(/\b(?:\\in|in)\s+(?:Q|\\mathbb\{Q\})\b/g, '\\in \\mathbb{Q}')
     .replace(/\b(?:\\in|in)\s+(?:R|\\mathbb\{R\})\b/g, '\\in \\mathbb{R}')
@@ -117,6 +145,69 @@ function normalizeAsciiMath(expr: string): string {
     .replace(/\b(?:\\in|in)\s+(?:C|\\mathbb\{C\})\b/g, '\\in \\mathbb{C}');
 
   return s;
+}
+
+/**
+ * Converts a LaTeX \begin{array} table into a beautifully stretched, authentic IB exam HTML table.
+ */
+function parseLatexArrayToExamTable(arrayTex: string, lightMode = false): string | null {
+  const match = arrayTex.match(/\\begin\{array\}\{[^}]*\}([\s\S]*?)\\end\{array\}/);
+  if (!match) return null;
+
+  const body = match[1].trim();
+
+  // Split by LaTeX row delimiters: "\\" (escaped as \\ or \\\\)
+  const rawRows = body.split(/(?:\\\\|\\newline|\r?\n)(?!\s*[a-zA-Z])/);
+
+  const parsedRows: string[][] = [];
+
+  for (const rawRow of rawRows) {
+    const cleanRow = rawRow.replace(/\\*hline/g, '').trim();
+    if (!cleanRow) continue;
+
+    const cells = cleanRow.split('&').map((c) => c.trim());
+    if (cells.length > 0 && cells.some((c) => c.length > 0)) {
+      parsedRows.push(cells);
+    }
+  }
+
+  if (parsedRows.length < 2) return null;
+
+  const maxCols = Math.max(...parsedRows.map((r) => r.length));
+
+  const tableClass = lightMode
+    ? 'w-full max-w-3xl border-collapse border-2 border-slate-900 text-center font-serif my-6 shadow-sm mx-auto'
+    : 'w-full max-w-3xl border-collapse border-2 border-white/60 text-center font-serif my-6 shadow-sm mx-auto';
+
+  const cellBorderClass = lightMode
+    ? 'border border-slate-800 px-8 py-4 text-slate-950 font-serif'
+    : 'border border-white/40 px-8 py-4 text-white font-serif';
+
+  let html = `<div class="w-full my-6 flex justify-center overflow-x-auto"><table class="${tableClass}"><tbody>`;
+
+  parsedRows.forEach((row, rowIdx) => {
+    html += '<tr>';
+    const fullRow = [...row];
+    while (fullRow.length < maxCols) fullRow.push('');
+
+    fullRow.forEach((cell, cellIdx) => {
+      const isFirstCol = cellIdx === 0;
+      const isHeaderRow = rowIdx === 0;
+
+      const bgClass = lightMode
+        ? (isHeaderRow ? 'bg-slate-50/60 font-semibold' : 'bg-white')
+        : (isHeaderRow ? 'bg-white/[0.04] font-semibold' : 'bg-transparent');
+
+      const fontClass = isFirstCol ? 'font-semibold' : 'font-normal';
+      const cellContent = cell ? safeRenderKaTeX(cell, false) : '&nbsp;';
+
+      html += `<td class="${cellBorderClass} ${bgClass} ${fontClass} text-center align-middle text-[17px]">${cellContent}</td>`;
+    });
+    html += '</tr>';
+  });
+
+  html += '</tbody></table></div>';
+  return html;
 }
 
 export const MathRenderer: React.FC<MathRendererProps> = ({
@@ -129,8 +220,9 @@ export const MathRenderer: React.FC<MathRendererProps> = ({
 
     let text = content;
 
-    // Normalize escaped backslashes from JSON payloads (e.g. \\frac -> \frac)
-    text = text.replace(/\\\\([a-zA-Z\{\}\[\]\(\)\$\\_])/g, '\\$1');
+    // Normalize escaped backslashes from JSON payloads (e.g. \\frac -> \frac),
+    // but preserve double backslashes that represent newlines (\\).
+    text = text.replace(/\\\\([a-zA-Z\{\}\[\]\(\)\$])/g, '\\$1');
 
     const placeholders = new Map<string, string>();
     let placeholderId = 0;
@@ -141,26 +233,41 @@ export const MathRenderer: React.FC<MathRendererProps> = ({
       return key;
     };
 
-    // PHASE 1: Protect and render LaTeX environments (\begin{aligned} ... \end{aligned})
-    text = text.replace(
-      /\\begin\{(aligned|matrix|pmatrix|bmatrix|vmatrix|cases|equation|align\*?|gather\*?)\}([\s\S]*?)\\end\{\1\}/g,
-      (match) => saveToken(safeRenderKaTeX(match, true))
-    );
+    // PHASE 1: Delimited block math ($$...$$ and \[...\])
+    // If the block contains a LaTeX \begin{array} table, convert to stretched authentic exam table.
+    text = text.replace(/\$\$([\s\S]*?)\$\$/g, (_, math) => {
+      if (math.includes('\\begin{array}')) {
+        const examTable = parseLatexArrayToExamTable(math, lightMode);
+        if (examTable) return saveToken(examTable);
+      }
+      return saveToken(safeRenderKaTeX(normalizeAsciiMath(math), true));
+    });
+    text = text.replace(/\\\[([\s\S]*?)\\\]/g, (_, math) => {
+      if (math.includes('\\begin{array}')) {
+        const examTable = parseLatexArrayToExamTable(math, lightMode);
+        if (examTable) return saveToken(examTable);
+      }
+      return saveToken(safeRenderKaTeX(normalizeAsciiMath(math), true));
+    });
 
-    // PHASE 2: Protect and render block math ($$...$$ and \[...\])
-    text = text.replace(/\$\$([\s\S]*?)\$\$/g, (_, math) =>
-      saveToken(safeRenderKaTeX(normalizeAsciiMath(math), true))
-    );
-    text = text.replace(/\\\[([\s\S]*?)\\\]/g, (_, math) =>
-      saveToken(safeRenderKaTeX(normalizeAsciiMath(math), true))
-    );
-
-    // PHASE 3: Protect and render inline math ($...$ and \(...\))
-    text = text.replace(/\$([^\$\n]+?)\$/g, (_, math) =>
+    // PHASE 2: Delimited inline math ($...$ and \(...\))
+    text = text.replace(/\$([^\$]+?)\$/g, (_, math) =>
       saveToken(safeRenderKaTeX(normalizeAsciiMath(math), false))
     );
     text = text.replace(/\\\(([\s\S]*?)\\\)/g, (_, math) =>
       saveToken(safeRenderKaTeX(normalizeAsciiMath(math), false))
+    );
+
+    // PHASE 3: Standalone un-delimited LaTeX environments (\begin{aligned}, \begin{pmatrix}, \begin{array}, etc.)
+    text = text.replace(
+      /\\begin\{(aligned|matrix|pmatrix|bmatrix|vmatrix|cases|equation|align\*?|gather\*?|array)\}(?:\{[^}]*\})?([\s\S]*?)\\end\{\1\}/g,
+      (match, envName) => {
+        if (envName === 'array') {
+          const examTable = parseLatexArrayToExamTable(match, lightMode);
+          if (examTable) return saveToken(examTable);
+        }
+        return saveToken(safeRenderKaTeX(match, true));
+      }
     );
 
     // PHASE 4: Protect inline code blocks
@@ -178,69 +285,104 @@ export const MathRenderer: React.FC<MathRendererProps> = ({
       }
     );
 
-    // PHASE 6: Intelligent ASCII Math Detection in remaining text
-    // Handles expressions like:
-    // - "f(x) = sqrt(1+x)"
-    // - "f''(x)" or "f^(n)(x)"
-    // - "h(x) = f(x)g(x)" or "g(x) = e^(mx)"
-    // - "u_8 = S_8 = 8"
-    // - "x > -1" or "n >= 2"
-    // - "m in Q" or "x in R"
-
-    // 6a. Function equations: e.g. f(x) = sqrt(1+x), h(x) = f(x)g(x), g(x) = e^(mx), y = 2x^2 + 1
+    // PHASE 6: Authentic Examination Tables (Markdown table formatting)
     text = text.replace(
-      /\b([fghuvy])\s*\(([a-z0-9,\s]+)\)\s*=\s*([a-zA-Z0-9_+\-*/^().\s\\]+?)(?=[.,;!?]|\s+(?:for|where|and|with|show|find|let|when|such|\b)|$)/gi,
-      (fullMatch, fnName, fnArg, expr) => {
-        const fullFormula = `${fnName}(${fnArg}) = ${expr.trim()}`;
-        const normalized = normalizeAsciiMath(fullFormula);
-        return saveToken(safeRenderKaTeX(normalized, false));
+      /(?:(?:^|\n)\|[^\n]+\|\r?\n\|[\s\-:|]+\|\r?\n(?:\|[^\n]+\|\r?\n?)+)/g,
+      (tableMatch) => {
+        const lines = tableMatch.trim().split(/\r?\n/).map((l) => l.trim());
+        if (lines.length < 3) return tableMatch;
+        const parseRow = (rowStr: string) =>
+          rowStr
+            .replace(/^\|/, '')
+            .replace(/\|$/, '')
+            .split('|')
+            .map((c) => c.trim());
+
+        const headers = parseRow(lines[0]);
+        const rows = lines.slice(2).map(parseRow);
+
+        const tableClass = lightMode
+          ? 'w-full max-w-3xl border-collapse border-2 border-slate-900 text-center font-serif my-6 shadow-sm mx-auto'
+          : 'w-full max-w-3xl border-collapse border-2 border-white/60 text-center font-serif my-6 shadow-sm mx-auto';
+        const cellClass = lightMode
+          ? 'border border-slate-800 px-8 py-4 text-slate-950 font-serif text-[17px]'
+          : 'border border-white/40 px-8 py-4 text-white font-serif text-[17px]';
+
+        let tableHtml = `<div class="w-full overflow-x-auto my-6 flex justify-center"><table class="${tableClass}"><thead><tr>`;
+        headers.forEach((h) => {
+          tableHtml += `<th class="${cellClass} bg-slate-50/60 font-semibold">${h}</th>`;
+        });
+        tableHtml += `</tr></thead><tbody>`;
+        rows.forEach((r) => {
+          tableHtml += `<tr>`;
+          r.forEach((cell) => {
+            tableHtml += `<td class="${cellClass} align-middle text-center">${cell}</td>`;
+          });
+          tableHtml += `</tr>`;
+        });
+        tableHtml += `</tbody></table></div>`;
+
+        return saveToken(tableHtml);
       }
     );
 
-    // 6b. Standalone higher order & prime derivatives: e.g. f''(x), f'(x), f^(n)(x)
+    // PHASE 7: Explicit Calculus expressions: d/dx [ ... ]
     text = text.replace(
-      /\b([fghuv])('{1,3}|\^\([a-zA-Z0-9+\-]+\)|\^\{[a-zA-Z0-9+\-]+\})\s*\(([a-z0-9,\s]+)\)/g,
+      /\bd\/dx\s*\[(.*?)\]/g,
       (match) => {
-        const normalized = normalizeAsciiMath(match);
-        return saveToken(safeRenderKaTeX(normalized, false));
+        if (match.includes('@@@MATH_TOKEN')) return match;
+        return saveToken(safeRenderKaTeX(normalizeAsciiMath(match), false));
       }
     );
 
-    // 6c. Standalone mathematical definitions: e.g. "u_8 = S_8 = 8", "4m^2 + 4m - 15 = 0", "m = 3/2"
+    // PHASE 8: Equations with '=' and arrows '=>': e.g. "f'(x) = ...", "m^2/2 + m/2 = 7/4 => 4m^2 = 14"
     text = text.replace(
-      /\b([a-zA-Z](?:_[0-9a-zA-Z]+|\^[0-9a-zA-Z]+)?)\s*=\s*([a-zA-Z0-9_+\-*/^().\s\\=]+?)(?=[.,;!?]|\s+(?:for|where|and|or|with|show|find|let|when|such|\b)|$)/g,
-      (fullMatch, left, right) => {
-        // Guard against matching plain English clauses like "it = something"
-        if (/^(it|this|that|which|there|here|where)$/i.test(left.trim())) return fullMatch;
-        const normalized = normalizeAsciiMath(`${left} = ${right.trim()}`);
-        return saveToken(safeRenderKaTeX(normalized, false));
+      /(?:^|(?<=[:\n;.]\s*))([a-zA-Z0-9+\-*/^().\s\\'_!><=]+?\s*=\s*[a-zA-Z0-9+\-*/^().\s\\'_!><=]+?)(?=[.,;!?]|\s+(?:for|where|with|and|or|since|hence|when)\b|$)/g,
+      (match, mathExpr) => {
+        if (match.includes('@@@MATH_TOKEN')) return match;
+        if (/^(it|this|that|which|there|here|where)\s*=/i.test(mathExpr.trim())) return match;
+        if (!/[0-9+\-*/^()'_!\\><]/.test(mathExpr)) return match;
+        return saveToken(safeRenderKaTeX(normalizeAsciiMath(mathExpr), false));
       }
     );
 
-    // 6d. Domain/interval inequalities: e.g. "x > -1", "-4 <= x <= 6", "n >= 2", "x \ge 0"
+    // PHASE 9: Standalone complex algebraic expressions with exponents, factorials or paren fractions
+    text = text.replace(
+      /(?:^|(?<=[^a-zA-Z0-9_]|\s))((?:\(-?[0-9a-zA-Z\/+\-]+\)\^[0-9a-zA-Z+\-()]+|\([0-9a-zA-Z+\-]+\)!|\b[fghuvy]('{1,3}|\^\([a-zA-Z0-9+\-]+\))\([a-z0-9,\s]+\))[a-zA-Z0-9+\-*/^().\s\\'_!><]*)/g,
+      (match, expr) => {
+        const trimmed = expr.trim();
+        if (trimmed.length < 3) return match;
+        if (trimmed.includes('@@@MATH_TOKEN')) return match;
+        return saveToken(safeRenderKaTeX(normalizeAsciiMath(trimmed), false));
+      }
+    );
+
+    // PHASE 10: Domain/interval inequalities: e.g. "x > -1", "-4 <= x <= 6", "n >= 2"
     text = text.replace(
       /\b(-?[0-9]+(?:\.[0-9]+)?\s*(?:<=|<|>=|>|\\le|\\ge)\s*)?([a-zA-Z])\s*(?:<=|<|>=|>|\\le|\\ge)\s*(-?[0-9]+(?:\.[0-9]+)?|[a-zA-Z0-9_]+)\b/g,
       (match) => {
+        if (match.includes('@@@MATH_TOKEN')) return match;
         const normalized = normalizeAsciiMath(match);
         return saveToken(safeRenderKaTeX(normalized, false));
       }
     );
 
-    // 6e. Set conditions: e.g. "m \in \mathbb{Q}", "m in Q", "x \in \mathbb{R}"
+    // PHASE 11: Set conditions: e.g. "m \in \mathbb{Q}", "m in Q", "x \in \mathbb{R}"
     text = text.replace(
       /\b([a-zA-Z])\s*(?:\\in|in)\s*(\\mathbb\{[A-Z]\}|[A-Z])\b/g,
       (match) => {
+        if (match.includes('@@@MATH_TOKEN')) return match;
         const normalized = normalizeAsciiMath(match);
         return saveToken(safeRenderKaTeX(normalized, false));
       }
     );
 
-    // 6f. Standalone sequence/series terms: e.g. "u_1", "S_8", "u_8", "S_n"
+    // PHASE 12: Standalone sequence/series terms: e.g. "u_1", "S_8", "u_8", "S_n"
     text = text.replace(/\b([uUSxya])_([0-9a-zA-Z]+)\b/g, (_, sym, sub) => {
       return saveToken(safeRenderKaTeX(`${sym}_{${sub}}`, false));
     });
 
-    // PHASE 7: Markdown formatting on the remaining prose
+    // PHASE 13: Markdown formatting on the remaining prose
     const strongClass = lightMode
       ? 'font-semibold text-slate-950 tracking-normal'
       : 'font-semibold text-white tracking-normal';
@@ -249,16 +391,22 @@ export const MathRenderer: React.FC<MathRendererProps> = ({
     text = text.replace(/\*\*(.*?)\*\*/g, (_, bold) => `<strong class="${strongClass}">${bold}</strong>`);
     text = text.replace(/__([^_]+?)__/g, (_, bold) => `<strong class="${strongClass}">${bold}</strong>`);
 
-    // Italic (*word* or _word_)
+    // Italic (*word*)
     text = text.replace(/\*([^\*\n]+?)\*/g, (_, italic) => `<em class="italic text-inherit">${italic}</em>`);
 
     // Line breaks
     text = text.replace(/\n\n/g, '<br/><br/>').replace(/\n/g, '<br/>');
 
-    // PHASE 8: Re-insert all protected and rendered math tokens
-    placeholders.forEach((html, token) => {
-      text = text.split(token).join(html);
-    });
+    // PHASE 14: Re-insert all protected and rendered math tokens (with recursion protection)
+    let prevText: string;
+    let passes = 0;
+    do {
+      prevText = text;
+      placeholders.forEach((html, token) => {
+        text = text.split(token).join(html);
+      });
+      passes++;
+    } while (text !== prevText && text.includes('@@@MATH_TOKEN') && passes < 10);
 
     return text;
   }, [content, lightMode]);

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { ExamSession, ExamManifest, QuestionGrading } from '@/types/exam';
@@ -41,44 +41,7 @@ export default function ResultsPage() {
 
   const streamInitiatedRef = useRef(false);
 
-  useEffect(() => {
-    getExamSession(sessionId).then((s) => {
-      if (s) {
-        setSession(s);
-        getManifestById(s.paperId).then((m) => {
-          if (m) {
-            setManifest(m);
-            setHeaderInfo({
-              paperTitle: m.title,
-              category: m.category,
-              paperId: m.id,
-            });
-
-            // If session is already finalized with grading results, display immediately
-            if (s.gradingResults && s.gradingResults.evaluations.length > 0) {
-              setLoading(false);
-              return;
-            }
-
-            // Otherwise, if evaluating query param is set, trigger streaming evaluation
-            if (isEvaluatingParam && !streamInitiatedRef.current) {
-              streamInitiatedRef.current = true;
-              setLoading(false);
-              startEvaluationStream(m, s);
-            } else {
-              setLoading(false);
-            }
-          } else {
-            setLoading(false);
-          }
-        });
-      } else {
-        setLoading(false);
-      }
-    });
-  }, [sessionId, isEvaluatingParam, setHeaderInfo]);
-
-  const startEvaluationStream = async (m: ExamManifest, s: ExamSession) => {
+  const startEvaluationStream = useCallback(async (m: ExamManifest, s: ExamSession) => {
     setIsStreaming(true);
     setStreamStatus('Connecting to Senior Examiner assessment stream...');
     setStreamError(null);
@@ -162,7 +125,44 @@ export default function ResultsPage() {
       setStreamError(msg);
       setIsStreaming(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    getExamSession(sessionId).then((s) => {
+      if (s) {
+        setSession(s);
+        getManifestById(s.paperId).then((m) => {
+          if (m) {
+            setManifest(m);
+            setHeaderInfo({
+              paperTitle: m.title,
+              category: m.category,
+              paperId: m.id,
+            });
+
+            // If session is already finalized with grading results, display immediately
+            if (s.gradingResults && s.gradingResults.evaluations.length > 0) {
+              setLoading(false);
+              return;
+            }
+
+            // Otherwise, if evaluating query param is set, trigger streaming evaluation
+            if (isEvaluatingParam && !streamInitiatedRef.current) {
+              streamInitiatedRef.current = true;
+              setLoading(false);
+              startEvaluationStream(m, s);
+            } else {
+              setLoading(false);
+            }
+          } else {
+            setLoading(false);
+          }
+        });
+      } else {
+        setLoading(false);
+      }
+    });
+  }, [sessionId, isEvaluatingParam, setHeaderInfo, startEvaluationStream]);
 
   if (loading) {
     return (

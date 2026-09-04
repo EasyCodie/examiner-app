@@ -5,20 +5,17 @@ import { useParams, useRouter } from 'next/navigation';
 import {
   ExamManifest,
   QuestionSubmission,
-  QuestionGrading,
   ExamSession,
   CanvasStroke,
 } from '@/types/exam';
 import {
   getManifestById,
   saveExamSession,
-  getAiConfig,
 } from '@/lib/storage';
 import { useAppShell } from '@/components/common/AppShell';
 import { DrawingCanvas, DrawingCanvasRef } from '@/components/canvas/DrawingCanvas';
 import { CanvasToolbar } from '@/components/canvas/CanvasToolbar';
 import { renderStrokesToPng } from '@/lib/canvasUtils';
-import confetti from 'canvas-confetti';
 import {
   Send,
   Sparkles,
@@ -151,7 +148,12 @@ export default function MockExamPage() {
       for (const q of manifest.questions) {
         const pageImg = pageImages[q.pageNumber];
         const existingSub = updatedSubmissions[q.id];
-        const canvasImg = pageImg || existingSub?.canvasImageBase64 || undefined;
+        const singleBoxImg = activeBoxImages[q.id] || (
+          pageBoxStrokes[q.pageNumber]?.[q.id]?.length
+            ? renderStrokesToPng(pageBoxStrokes[q.pageNumber][q.id])
+            : undefined
+        );
+        const canvasImg = singleBoxImg || pageImg || existingSub?.canvasImageBase64 || undefined;
 
         // Subpart images mapping
         const subImages: Record<string, string> = {};

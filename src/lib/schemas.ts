@@ -91,7 +91,18 @@ export const MANIFEST_RESPONSE_SCHEMA = {
                   }
                 },
                 markschemeExcerpt: { type: 'string' },
-                ecfRules: { type: 'string' }
+                ecfRules: { type: 'string' },
+                diagram: {
+                  type: 'object',
+                  properties: {
+                    hasDiagram: { type: 'boolean', description: 'True if this subpart contains a diagram, function graph, coordinate grid, or geometric figure' },
+                    type: { type: 'string', enum: ['function_graph', 'geometric_figure', 'coordinate_grid', 'tree_diagram', 'physics_circuit', 'other'] },
+                    title: { type: 'string' },
+                    svgContent: { type: 'string', description: 'Clean, standalone SVG markup reproducing the diagram/graph/axes with exact coordinates, curves, labels, and ticks from the paper' },
+                    description: { type: 'string', description: 'Detailed mathematical description of the diagram and coordinate points' }
+                  },
+                  required: ['hasDiagram']
+                }
               },
               required: ['id', 'partLetter', 'totalMarks', 'commandTerm', 'promptText', 'markCodes', 'markschemeExcerpt']
             }

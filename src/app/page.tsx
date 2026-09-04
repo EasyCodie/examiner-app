@@ -11,7 +11,7 @@ import {
   deleteExamSession,
   clearAllExamSessions,
 } from '@/lib/storage';
-import { BUNDLED_MATH_AA_HL, BUNDLED_ECONOMICS_HL } from '@/lib/samplePapers';
+import { BUNDLED_MATH_AA_HL, BUNDLED_ECONOMICS_HL, MAY_2021_MATH_AA_HL_P1 } from '@/lib/samplePapers';
 import { useAppShell } from '@/components/common/AppShell';
 import {
   FileUp,
@@ -237,8 +237,12 @@ export default function HomePage() {
       await new Promise((r) => setTimeout(r, 450));
 
       await saveManifest(manifest);
-      await savePdfBlob(manifest.id, 'paper', paperFile);
-      await savePdfBlob(manifest.id, 'markscheme', markschemeFile);
+      try {
+        await savePdfBlob(manifest.id, 'paper', paperFile);
+        await savePdfBlob(manifest.id, 'markscheme', markschemeFile);
+      } catch (blobErr) {
+        console.warn('Non-fatal warning: failed to store raw PDF blobs in IndexedDB:', blobErr);
+      }
 
       setCompilingLog('Examination paper ready!');
       setActiveManifest(manifest);
@@ -385,7 +389,27 @@ export default function HomePage() {
 
           {/* Specimen Papers */}
           <div className="pt-4 border-t border-white/[0.08] space-y-3">
-            <span className="text-xs text-[#686763] block font-normal">Or choose a specimen paper:</span>
+            <span className="text-xs text-[#686763] block font-normal">Or choose a preloaded authentic paper:</span>
+
+            {/* Featured Full 12-Question Exam Paper */}
+            <div
+              onClick={() => handleSelectSpecimen(MAY_2021_MATH_AA_HL_P1)}
+              className="p-4 rounded-xl bg-[#18191d] border border-[#f54e00]/40 hover:border-[#f54e00] hover:-translate-y-0.5 active:scale-[0.99] cursor-pointer transition-all duration-200 group relative overflow-hidden"
+            >
+              <div className="flex items-center justify-between text-[11px] font-mono-code mb-1.5">
+                <span className="text-[#f54e00] font-semibold flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#f54e00] animate-pulse" />
+                  AUTHENTIC IB EXAM • 12 QUESTIONS (SEC A &amp; B)
+                </span>
+                <span className="text-[#9b9a95]">120m • 110 marks</span>
+              </div>
+              <h3 className="text-sm font-medium text-[#f3f3f2] group-hover:text-white transition">
+                Mathematics: Analysis &amp; Approaches HL (May 2021 TZ1)
+              </h3>
+              <p className="text-xs text-[#9b9a95] mt-0.5">
+                Full 12-question official paper with function graphs, calculus, vectors, Maclaurin series &amp; induction.
+              </p>
+            </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {/* Specimen 1: Math AA HL */}
