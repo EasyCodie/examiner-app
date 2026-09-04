@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getGeminiClient, INGESTION_MODELS, generateWithTimeout } from '@/lib/gemini';
 import { INGESTION_SYSTEM_PROMPT } from '@/lib/prompts';
 import { MANIFEST_RESPONSE_SCHEMA } from '@/lib/schemas';
+import { parseWithGlmOcr, getZaiApiKey } from '@/lib/ocr/glmOcr';
 
 export async function POST(req: NextRequest) {
   try {
@@ -17,6 +18,8 @@ export async function POST(req: NextRequest) {
     }
 
     const clientKey = req.headers.get('x-gemini-key') || undefined;
+    const clientZaiKey = req.headers.get('x-zai-key') || undefined;
+    const zaiKey = getZaiApiKey(clientZaiKey);
     const ai = getGeminiClient(clientKey);
 
     if (!ai) {
@@ -28,6 +31,22 @@ export async function POST(req: NextRequest) {
 
     const paperBuffer = Buffer.from(await paperFile.arrayBuffer());
     const markschemeBuffer = Buffer.from(await markschemeFile.arrayBuffer());
+
+    let glmOcrContext = '';
+    if (zaiKey) {
+      try {
+        console.log('Running GLM-OCR layout parsing on Question Paper & Markscheme PDFs...');
+        const [paperOcr, markschemeOcr] = await Promise.all([
+          parseWithGlmOcr(paperBuffer.toString('base64'), 'application/pdf', zaiKey),
+          parseWithGlmOcr(markschemeBuffer.toString('base64'), 'application/pdf', zaiKey),
+        ]);
+
+        glmOcrContext = `\n\n===============================\nGLM-OCR SOTA DOCUMENT RECOGNITION TRANSCRIPT:\n\nDOCUMENT 1 (QUESTION PAPER MARKDOWN):\n${paperOcr.md_results || 'N/A'}\n\nDOCUMENT 2 (MARKSCHEME MARKDOWN):\n${markschemeOcr.md_results || 'N/A'}\n===============================\nUse this high-precision GLM-OCR extracted Markdown and LaTeX equations to guarantee 100% question extraction accuracy, exact formulas, and correct mark schemes.`;
+        console.log('GLM-OCR layout parsing successfully completed.');
+      } catch (ocrErr) {
+        console.warn('GLM-OCR pre-parsing encountered error, continuing with direct multimodal PDF:', ocrErr);
+      }
+    }
 
     const paperPart = {
       inlineData: {
@@ -46,6 +65,7 @@ export async function POST(req: NextRequest) {
     const prompt = `Ingest these two official IB examination documents:
 Document 1: Official IB Question Paper PDF
 Document 2: Matching Official IB Markscheme PDF
+${glmOcrContext}
 
 CRITICAL INGESTION REQUIREMENTS:
 1. Verify the total marks indicated on the cover page (e.g. 110 marks for HL, 90 marks for SL). The sum of all question marks in your output MUST match this total.

@@ -28,10 +28,13 @@ export const Header: React.FC<HeaderProps> = ({
   const isLowTime = timeRemainingSeconds !== undefined && timeRemainingSeconds < 600;
 
   return (
-    <header className="sticky top-0 z-40 w-full bg-[#0c0d0e] border-b border-white/[0.08] px-4 sm:px-6 h-12 flex items-center justify-between">
+    <header
+      aria-label="Global Examination Navigation"
+      className="sticky top-0 z-40 w-full bg-[#0c0d0e] border-b border-white/[0.08] px-4 sm:px-6 h-12 flex items-center justify-between"
+    >
       {/* Brand & Breadcrumbs */}
       <div className="flex items-center gap-3">
-        <Link href="/" className="flex items-center gap-2 group">
+        <Link href="/" className="flex items-center gap-2 group focus-ring rounded-md p-0.5">
           <div className="w-5 h-5 rounded bg-[#f54e00] flex items-center justify-center text-white font-mono-code text-[10px] font-bold tracking-tight">
             IB
           </div>
@@ -62,11 +65,11 @@ export const Header: React.FC<HeaderProps> = ({
           <div
             className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md border font-mono-code text-xs transition ${
               isLowTime
-                ? 'bg-rose-950/60 border-rose-700/80 text-rose-300 animate-pulse'
+                ? 'bg-[#cf2d56]/15 border-[#cf2d56]/30 text-[#cf2d56] animate-pulse'
                 : 'bg-[#141517] border-white/[0.08] text-[#f54e00]'
             }`}
           >
-            <Clock className="w-3 h-3 text-[#f54e00]" />
+            <Clock className={`w-3 h-3 ${isLowTime ? 'text-[#cf2d56]' : 'text-[#f54e00]'}`} />
             <span className="font-semibold">{formatTime(timeRemainingSeconds)}</span>
           </div>
         )}
@@ -75,9 +78,9 @@ export const Header: React.FC<HeaderProps> = ({
           <div className="flex items-center bg-[#141517] p-0.5 rounded-lg border border-white/[0.08] text-xs">
             <Link
               href={`/mock/${paperId}`}
-              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md transition ${
+              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md transition focus-ring ${
                 mode === 'TIMED_MOCK'
-                  ? 'bg-[#f54e00] text-white font-medium'
+                  ? 'bg-[#f54e00] text-white font-medium shadow-sm'
                   : 'text-[#9b9a95] hover:text-[#f3f3f2]'
               }`}
             >
@@ -87,9 +90,9 @@ export const Header: React.FC<HeaderProps> = ({
 
             <Link
               href={`/learn/${paperId}`}
-              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md transition ${
+              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md transition focus-ring ${
                 mode === 'SOCRATIC_LEARN'
-                  ? 'bg-[#222428] text-white font-medium'
+                  ? 'bg-[#222428] text-white font-medium shadow-sm'
                   : 'text-[#9b9a95] hover:text-[#f3f3f2]'
               }`}
             >

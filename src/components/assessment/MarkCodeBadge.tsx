@@ -27,7 +27,7 @@ export const MarkCodeBadge: React.FC<MarkCodeBadgeProps> = ({
   if (isEcfApplied) {
     return (
       <span
-        className={`inline-flex items-center gap-1 font-mono font-semibold rounded-md border ${sizeClasses} bg-amber-500/15 border-amber-500/40 text-amber-300`}
+        className={`inline-flex items-center gap-1 font-mono-code font-semibold rounded-md border ${sizeClasses} bg-amber-500/15 border-amber-500/40 text-amber-300`}
         title="Error Carried Forward (ECF): Method mark preserved to avoid double penalty"
       >
         <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
@@ -41,7 +41,7 @@ export const MarkCodeBadge: React.FC<MarkCodeBadgeProps> = ({
   if (!awarded) {
     return (
       <span
-        className={`inline-flex items-center gap-1 font-mono font-semibold rounded-md border ${sizeClasses} bg-rose-950/40 border-rose-800/50 text-rose-300`}
+        className={`inline-flex items-center gap-1 font-mono-code font-semibold rounded-md border ${sizeClasses} bg-rose-950/40 border-rose-800/50 text-rose-300`}
         title="Mark forfeited or not demonstrated in student working"
       >
         <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
@@ -101,7 +101,7 @@ export const MarkCodeBadge: React.FC<MarkCodeBadgeProps> = ({
 
   return (
     <span
-      className={`inline-flex items-center gap-1.5 font-mono font-semibold rounded-md border ${sizeClasses} ${style.bg} ${style.border} ${style.text}`}
+      className={`inline-flex items-center gap-1.5 font-mono-code font-semibold rounded-md border ${sizeClasses} ${style.bg} ${style.border} ${style.text}`}
       title={`${style.label} mark`}
     >
       <span className={`w-1.5 h-1.5 rounded-full ${style.dot}`} />

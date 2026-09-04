@@ -65,7 +65,8 @@ export const CanvasToolbar: React.FC<CanvasToolbarProps> = ({
         <button
           type="button"
           onClick={() => setTool('pen')}
-          className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-mono-code transition ${
+          aria-label="Fountain Pen tool"
+          className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-mono-code transition focus-ring ${
             tool === 'pen'
               ? 'bg-[#f54e00] text-white font-medium shadow-sm'
               : 'text-[#9b9a95] hover:text-[#f3f3f2]'
@@ -79,9 +80,10 @@ export const CanvasToolbar: React.FC<CanvasToolbarProps> = ({
         <button
           type="button"
           onClick={() => setTool('highlighter')}
-          className={`flex items-center gap-1.5 px-2 py-1 rounded-md text-xs font-mono-code transition ${
+          aria-label="Fluorescent Highlighter tool"
+          className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-mono-code transition focus-ring ${
             tool === 'highlighter'
-              ? 'bg-amber-500 text-black font-semibold shadow-sm'
+              ? 'bg-[#c08532] text-black font-semibold shadow-sm'
               : 'text-[#9b9a95] hover:text-[#f3f3f2]'
           }`}
           title="Highlighter (H)"
@@ -93,9 +95,10 @@ export const CanvasToolbar: React.FC<CanvasToolbarProps> = ({
         <button
           type="button"
           onClick={() => setTool('eraser')}
-          className={`flex items-center gap-1.5 px-2 py-1 rounded-md text-xs font-mono-code transition ${
+          aria-label="Precision Eraser tool"
+          className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-mono-code transition focus-ring ${
             tool === 'eraser'
-              ? 'bg-rose-600 text-white font-medium shadow-sm'
+              ? 'bg-[#cf2d56] text-white font-medium shadow-sm'
               : 'text-[#9b9a95] hover:text-[#f3f3f2]'
           }`}
           title="Precision Eraser (E)"
@@ -106,7 +109,7 @@ export const CanvasToolbar: React.FC<CanvasToolbarProps> = ({
       </div>
 
       {/* Colors */}
-      <div className="flex items-center gap-1.5 bg-[#0c0d0e] px-2 py-1 rounded-lg border border-white/[0.06] shrink-0">
+      <div className="flex items-center gap-1 bg-[#0c0d0e] px-1.5 py-1 rounded-lg border border-white/[0.06] shrink-0">
         {PALETTE.map((c) => {
           const isSelected = color === c.value && tool !== 'eraser';
           return (
@@ -121,14 +124,21 @@ export const CanvasToolbar: React.FC<CanvasToolbarProps> = ({
                   setTool('pen');
                 }
               }}
+              aria-label={`Select ${c.name} ink color`}
               title={c.name}
-              className={`w-3.5 h-3.5 rounded-full transition-transform border ${
-                isSelected
-                  ? 'scale-125 ring-2 ring-[#f54e00] ring-offset-1 ring-offset-[#0c0d0e] border-white'
-                  : 'border-white/20 hover:scale-110'
+              className={`w-7 h-7 rounded-md flex items-center justify-center transition-all focus-ring ${
+                isSelected ? 'bg-white/[0.12]' : 'hover:bg-white/[0.06]'
               }`}
-              style={{ backgroundColor: c.value }}
-            />
+            >
+              <span
+                className={`w-3.5 h-3.5 rounded-full transition-transform border ${
+                  isSelected
+                    ? 'scale-125 ring-2 ring-[#f54e00] ring-offset-1 ring-offset-[#0c0d0e] border-white'
+                    : 'border-white/20'
+                }`}
+                style={{ backgroundColor: c.value }}
+              />
+            </button>
           );
         })}
       </div>
@@ -142,8 +152,9 @@ export const CanvasToolbar: React.FC<CanvasToolbarProps> = ({
           max={tool === 'highlighter' ? 30 : 8}
           step={tool === 'highlighter' ? 2 : 0.5}
           value={width}
+          aria-label="Stroke width"
           onChange={(e) => setWidth(Number(e.target.value))}
-          className="w-12 accent-[#f54e00] cursor-pointer h-1.5 bg-[#1a1b1e] rounded-lg appearance-none"
+          className="w-12 accent-[#f54e00] cursor-pointer h-1.5 bg-[#1a1b1e] rounded-lg appearance-none focus-ring"
         />
         <span className="text-[10px] text-[#9b9a95] font-mono-code w-3">{width}</span>
       </div>
@@ -154,7 +165,8 @@ export const CanvasToolbar: React.FC<CanvasToolbarProps> = ({
           type="button"
           onClick={onUndo}
           disabled={!canUndo}
-          className="p-1 rounded-md text-[#9b9a95] hover:text-[#f3f3f2] hover:bg-white/[0.06] disabled:opacity-30 transition"
+          aria-label="Undo canvas stroke"
+          className="p-1.5 rounded-md text-[#9b9a95] hover:text-[#f3f3f2] hover:bg-white/[0.06] disabled:opacity-30 transition focus-ring"
           title="Undo (Ctrl+Z)"
         >
           <RotateCcw className="w-3.5 h-3.5" />
@@ -163,7 +175,8 @@ export const CanvasToolbar: React.FC<CanvasToolbarProps> = ({
           type="button"
           onClick={onRedo}
           disabled={!canRedo}
-          className="p-1 rounded-md text-[#9b9a95] hover:text-[#f3f3f2] hover:bg-white/[0.06] disabled:opacity-30 transition"
+          aria-label="Redo canvas stroke"
+          className="p-1.5 rounded-md text-[#9b9a95] hover:text-[#f3f3f2] hover:bg-white/[0.06] disabled:opacity-30 transition focus-ring"
           title="Redo (Ctrl+Y)"
         >
           <RotateCw className="w-3.5 h-3.5" />
@@ -172,7 +185,8 @@ export const CanvasToolbar: React.FC<CanvasToolbarProps> = ({
         <button
           type="button"
           onClick={onClear}
-          className="flex items-center gap-1 px-2 py-1 rounded-md text-xs font-mono-code text-[#cf2d56] hover:text-[#e0456d] bg-[#cf2d56]/10 hover:bg-[#cf2d56]/20 border border-[#cf2d56]/20 transition active:scale-95"
+          aria-label="Delete all canvas working on this page"
+          className="flex items-center gap-1 px-2.5 py-1.5 rounded-md text-xs font-mono-code text-[#cf2d56] hover:text-[#e0456d] bg-[#cf2d56]/10 hover:bg-[#cf2d56]/20 border border-[#cf2d56]/20 transition active:scale-95 focus-ring"
           title="Delete / Clear Working"
         >
           <Trash2 className="w-3.5 h-3.5" />
@@ -187,7 +201,8 @@ export const CanvasToolbar: React.FC<CanvasToolbarProps> = ({
             type="button"
             onClick={() => onPageChange(Math.max(1, currentPage - 1))}
             disabled={currentPage <= 1}
-            className="p-1 text-[#9b9a95] hover:text-[#f3f3f2] disabled:opacity-30 transition"
+            aria-label="Previous question page"
+            className="p-1.5 text-[#9b9a95] hover:text-[#f3f3f2] disabled:opacity-30 transition focus-ring"
           >
             <ChevronLeft className="w-3.5 h-3.5" />
           </button>
@@ -198,7 +213,8 @@ export const CanvasToolbar: React.FC<CanvasToolbarProps> = ({
             type="button"
             onClick={() => onPageChange(Math.min(totalPages, currentPage + 1))}
             disabled={currentPage >= totalPages}
-            className="p-1 text-[#9b9a95] hover:text-[#f3f3f2] disabled:opacity-30 transition"
+            aria-label="Next question page"
+            className="p-1.5 text-[#9b9a95] hover:text-[#f3f3f2] disabled:opacity-30 transition focus-ring"
           >
             <ChevronRight className="w-3.5 h-3.5" />
           </button>

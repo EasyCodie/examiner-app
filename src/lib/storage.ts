@@ -11,12 +11,14 @@ const SESSIONS_PREFIX = 'session:';
 const CONFIG_KEY = 'examiner:aistudio:config';
 
 export const DEFAULT_AI_CONFIG: AiStudioConfig = {
-  modelName: 'gemini-2.5-flash',
+  modelName: 'gemini-3.6-flash',
   gradingReasoningEffort: 'high',
   socraticReasoningEffort: 'minimal',
   thinkingBudgetGrading: 8192,
   thinkingBudgetSocratic: 0,
   temperature: 0.2,
+  ocrProvider: 'glm-ocr',
+  zaiApiKey: '',
 };
 
 // Config

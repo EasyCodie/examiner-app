@@ -177,4 +177,6 @@ export interface AiStudioConfig {
   thinkingBudgetSocratic: number; // e.g. 0 or 1024 tokens
   temperature: number;
   apiKey?: string;
+  zaiApiKey?: string;
+  ocrProvider?: 'glm-ocr' | 'gemini';
 }

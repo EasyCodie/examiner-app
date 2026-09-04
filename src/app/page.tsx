@@ -10,6 +10,7 @@ import {
   getAllExamSessions,
   deleteExamSession,
   clearAllExamSessions,
+  getAiConfig,
 } from '@/lib/storage';
 import { BUNDLED_MATH_AA_HL, BUNDLED_ECONOMICS_HL, MAY_2021_MATH_AA_HL_P1 } from '@/lib/samplePapers';
 import { useAppShell } from '@/components/common/AppShell';
@@ -215,8 +216,13 @@ export default function HomePage() {
       formData.append('paperFile', paperFile);
       formData.append('markschemeFile', markschemeFile);
 
+      const cfg = await getAiConfig();
       const response = await fetch('/api/ingest', {
         method: 'POST',
+        headers: {
+          ...(cfg.apiKey ? { 'x-gemini-key': cfg.apiKey } : {}),
+          ...(cfg.zaiApiKey ? { 'x-zai-key': cfg.zaiApiKey } : {}),
+        },
         body: formData,
       });
 
@@ -661,7 +667,8 @@ export default function HomePage() {
                 await clearAllExamSessions();
                 setPastSessions([]);
               }}
-              className="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-mono-code text-[#686763] hover:text-[#cf2d56] hover:bg-[#cf2d56]/10 border border-transparent hover:border-[#cf2d56]/20 transition active:scale-95"
+              aria-label="Delete all past exam sessions"
+              className="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-mono-code text-[#686763] hover:text-[#cf2d56] hover:bg-[#cf2d56]/10 border border-transparent hover:border-[#cf2d56]/20 transition active:scale-95 focus-ring"
               title="Delete all past exam sessions"
             >
               <Trash2 className="w-3 h-3" />
@@ -711,15 +718,17 @@ export default function HomePage() {
                           await deleteExamSession(sess.id);
                           setPastSessions((prev) => prev.filter((s) => s.id !== sess.id));
                         }}
+                        aria-label={`Delete exam session for ${sess.paperTitle}`}
                         title="Delete session"
-                        className="p-1.5 rounded text-[#686763] hover:text-[#cf2d56] hover:bg-[#cf2d56]/10 transition"
+                        className="p-1.5 rounded text-[#686763] hover:text-[#cf2d56] hover:bg-[#cf2d56]/10 transition focus-ring"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
 
                       <Link
                         href={res ? `/results/${sess.id}` : `/mock/${sess.paperId}`}
-                        className="p-1 rounded text-[#9b9a95] hover:text-[#f3f3f2] transition"
+                        aria-label={`View exam session results for ${sess.paperTitle}`}
+                        className="p-1 rounded text-[#9b9a95] hover:text-[#f3f3f2] transition focus-ring"
                         title="View session results"
                       >
                         <ChevronRight className="w-3.5 h-3.5" />

@@ -166,7 +166,7 @@ export default function SocraticLearnPage() {
   if (!manifest || !currentQuestion) {
     return (
       <div className="flex-1 flex items-center justify-center p-8">
-        <Sparkles className="w-8 h-8 text-cyan-400 animate-spin" />
+        <Sparkles className="w-8 h-8 text-[#f54e00] animate-spin" />
       </div>
     );
   }
@@ -174,9 +174,9 @@ export default function SocraticLearnPage() {
   const isStem = manifest.category === 'STEM';
 
   return (
-    <div className="flex-1 flex flex-col p-4 sm:p-6 max-w-7xl mx-auto w-full gap-5 select-none pb-16">
+    <div className="flex-1 flex flex-col p-4 sm:p-6 max-w-7xl mx-auto w-full gap-5 select-text pb-16">
       {/* Sticky Question Tabs Bar (DESIGN.md Cursor Dark Mode) */}
-      <div className="sticky top-14 z-20 flex items-center justify-between bg-[#141517]/95 backdrop-blur-md border border-white/[0.08] rounded-xl p-2.5 shadow-lg">
+      <div className="sticky top-12 z-20 flex items-center justify-between bg-[#141517]/95 backdrop-blur-md border border-white/[0.08] rounded-xl p-2.5 shadow-lg">
         <div className="flex items-center gap-1.5 overflow-x-auto">
           <span className="text-[10px] font-mono-code uppercase text-[#686763] font-semibold px-1">Q:</span>
           {manifest.questions.map((q, idx) => {
@@ -290,7 +290,7 @@ export default function SocraticLearnPage() {
                     {currentQuestion.syllabusSubtopic}
                   </span>
                 </div>
-                <h3 className="text-lg font-bold font-serif text-[#f3f3f2] mt-2">
+                <h3 className="text-lg font-medium text-[#f3f3f2] mt-2 tracking-tight">
                   {currentQuestion.number.replace(/^Question\s*/i, '')} ({currentQuestion.totalMarks} Marks)
                 </h3>
               </div>
@@ -318,7 +318,7 @@ export default function SocraticLearnPage() {
         </div>
 
         {/* RIGHT PANE (Col 8-12): Sticky Low-Latency Socratic Sidebar */}
-        <div className="lg:col-span-5 sticky top-28 h-[calc(100vh-130px)] min-h-[580px] max-h-[860px] flex flex-col">
+        <div className="lg:col-span-5 lg:sticky lg:top-24 h-auto lg:h-[calc(100vh-120px)] min-h-[500px] lg:max-h-[860px] flex flex-col">
           <SocraticSidebar
             question={currentQuestion}
             currentTier={currentTier}

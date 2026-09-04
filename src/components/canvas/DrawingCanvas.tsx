@@ -538,7 +538,7 @@ export const DrawingCanvas = forwardRef<DrawingCanvasRef, DrawingCanvasProps>(({
   return (
     <div
       ref={containerRef}
-      className={`relative w-full bg-white rounded-xl shadow-xl border border-slate-300 flex flex-col select-none text-slate-900 ${
+      className={`relative w-full bg-white rounded-xl shadow-xl border border-slate-300 flex flex-col select-text text-slate-900 ${
         compact ? 'p-5 sm:p-7 min-h-[760px]' : 'p-6 sm:p-10 min-h-[960px]'
       }`}
     >

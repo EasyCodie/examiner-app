@@ -61,11 +61,11 @@ export const SplitScreenEditor: React.FC<SplitScreenEditorProps> = ({
   };
 
   return (
-    <div className="flex flex-col lg:flex-row w-full h-[calc(100vh-140px)] gap-4 select-none">
+    <div className="flex flex-col lg:flex-row w-full h-auto min-h-[calc(100vh-140px)] lg:h-[calc(100vh-140px)] gap-4 select-text">
       {/* LEFT PANE: Authentic Question Prompt & IB Examiner Context */}
-      <div className="w-full lg:w-5/12 h-full flex flex-col bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
+      <div className="w-full lg:w-5/12 h-auto lg:h-full flex flex-col bg-[#141517] border border-white/[0.08] rounded-xl overflow-hidden shadow-xl">
         {/* Question Selector Tabs */}
-        <div className="flex items-center gap-2 p-3 bg-slate-950/80 border-b border-slate-800 overflow-x-auto">
+        <div className="flex items-center gap-2 p-3 bg-[#0c0d0e] border-b border-white/[0.08] overflow-x-auto">
           {questions.map((q, idx) => {
             const isAnswered = Boolean(submissions[q.id]?.textResponse?.trim());
             const isActive = idx === activeQuestionIndex;
@@ -74,14 +74,14 @@ export const SplitScreenEditor: React.FC<SplitScreenEditorProps> = ({
                 key={q.id}
                 type="button"
                 onClick={() => onSelectQuestion(idx)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all flex items-center gap-1.5 ${
+                className={`px-3 py-1.5 rounded-lg text-xs font-mono-code whitespace-nowrap transition-all flex items-center gap-1.5 focus-ring ${
                   isActive
-                    ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20 font-bold'
-                    : 'bg-slate-900 text-slate-400 hover:text-slate-200 hover:bg-slate-800 border border-slate-800'
+                    ? 'bg-[#f54e00] text-white shadow-sm font-medium'
+                    : 'bg-[#1a1b1e] text-[#9b9a95] hover:text-[#f3f3f2] hover:bg-[#222428] border border-white/[0.08]'
                 }`}
               >
                 <span>{q.number}</span>
-                {isAnswered && <CheckCircle2 className="w-3 h-3 text-emerald-400" />}
+                {isAnswered && <CheckCircle2 className="w-3 h-3 text-[#1f8a65]" />}
                 <span className="text-[10px] opacity-70">({q.totalMarks}m)</span>
               </button>
             );
@@ -89,43 +89,43 @@ export const SplitScreenEditor: React.FC<SplitScreenEditorProps> = ({
         </div>
 
         {/* Prompt Content */}
-        <div className="flex-1 p-6 overflow-y-auto space-y-6">
-          <div className="flex items-start justify-between gap-4 border-b border-slate-800 pb-4">
+        <div className="flex-1 p-5 sm:p-6 overflow-y-auto space-y-6">
+          <div className="flex items-start justify-between gap-4 border-b border-white/[0.08] pb-4">
             <div>
               <div className="flex items-center gap-2">
-                <span className="text-xs font-mono font-bold uppercase tracking-wider bg-blue-500/10 text-blue-400 border border-blue-500/30 px-2 py-0.5 rounded">
+                <span className="text-xs font-mono-code font-bold uppercase tracking-wider bg-[#f54e00]/10 text-[#f54e00] border border-[#f54e00]/20 px-2 py-0.5 rounded">
                   {currentQuestion.commandTerm}
                 </span>
-                <span className="text-xs text-slate-400 font-mono">
+                <span className="text-xs text-[#9b9a95] font-mono-code">
                   {currentQuestion.syllabusSubtopic}
                 </span>
               </div>
-              <h2 className="text-xl font-bold font-serif text-white mt-2">
+              <h2 className="text-lg font-medium text-[#f3f3f2] mt-2 tracking-tight">
                 {currentQuestion.number}
               </h2>
             </div>
             <div className="text-right">
-              <span className="text-lg font-bold font-mono text-amber-400 bg-amber-500/10 border border-amber-500/20 px-3 py-1 rounded-lg block">
+              <span className="text-sm font-semibold font-mono-code text-[#dfa88f] bg-[#1a1b1e] border border-white/[0.08] px-3 py-1 rounded-lg block">
                 {currentQuestion.totalMarks} Marks
               </span>
-              <span className="text-[10px] text-slate-500 font-mono mt-1 block">
+              <span className="text-[10px] text-[#686763] font-mono-code mt-1 block">
                 Target: {currentQuestion.totalMarks * 2} mins
               </span>
             </div>
           </div>
 
           {/* Question Text */}
-          <div className="bg-slate-950/60 p-4 rounded-xl border border-slate-800 text-slate-200 leading-relaxed text-sm">
+          <div className="bg-[#0c0d0e] p-4 rounded-xl border border-white/[0.08] text-[#f3f3f2] leading-relaxed text-sm">
             <MathRenderer content={currentQuestion.promptText} />
           </div>
 
           {/* Command Term Guidance Callout */}
-          <div className="p-3 rounded-xl bg-blue-950/20 border border-blue-800/40 text-xs text-blue-200">
-            <div className="font-semibold flex items-center gap-1.5 text-blue-300 mb-1">
+          <div className="p-3.5 rounded-xl bg-[#1a1b1e] border border-white/[0.08] text-xs text-[#9b9a95]">
+            <div className="font-semibold flex items-center gap-1.5 text-[#f54e00] mb-1 font-mono-code">
               <Sparkles className="w-3.5 h-3.5" />
               IB Command Term Requirement: {currentQuestion.commandTerm}
             </div>
-            <p className="text-slate-300 leading-relaxed">
+            <p className="text-[#9b9a95] leading-relaxed">
               {currentQuestion.commandTerm.toLowerCase().includes('evaluate')
                 ? 'Requires balanced assessment with multiple perspectives, weighing up strengths and limitations before drawing a substantiated conclusion.'
                 : currentQuestion.commandTerm.toLowerCase().includes('discuss')
@@ -135,27 +135,27 @@ export const SplitScreenEditor: React.FC<SplitScreenEditorProps> = ({
           </div>
 
           {/* Markscheme Criteria Peek (Collapsible) */}
-          <div className="border border-slate-800 rounded-xl overflow-hidden bg-slate-950/40">
+          <div className="border border-white/[0.08] rounded-xl overflow-hidden bg-[#0c0d0e]">
             <button
               type="button"
               onClick={() => setShowCriteriaHint(!showCriteriaHint)}
-              className="w-full flex items-center justify-between px-4 py-2.5 text-xs font-medium text-slate-400 hover:text-slate-200 transition"
+              className="w-full flex items-center justify-between px-4 py-2.5 text-xs font-medium text-[#9b9a95] hover:text-[#f3f3f2] transition focus-ring"
             >
-              <span className="flex items-center gap-1.5">
-                <HelpCircle className="w-3.5 h-3.5 text-amber-400" />
-                Examiner Assessment Criteria & Mark Codes
+              <span className="flex items-center gap-1.5 font-mono-code">
+                <HelpCircle className="w-3.5 h-3.5 text-[#dfa88f]" />
+                Examiner Assessment Criteria &amp; Mark Codes
               </span>
               {showCriteriaHint ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
             </button>
             {showCriteriaHint && (
-              <div className="p-4 border-t border-slate-800 space-y-2 text-xs">
+              <div className="p-4 border-t border-white/[0.08] space-y-2 text-xs font-mono-code">
                 {currentQuestion.markCodes.map((m) => (
-                  <div key={m.code} className="flex items-start gap-2 text-slate-300">
-                    <span className="font-mono text-amber-400 font-bold bg-amber-500/10 px-1.5 py-0.5 rounded text-[10px]">
+                  <div key={m.code} className="flex items-start gap-2 text-[#f3f3f2]">
+                    <span className="text-[#dfa88f] font-semibold bg-[#1a1b1e] border border-white/[0.08] px-1.5 py-0.5 rounded text-[10px]">
                       {m.code}
                     </span>
-                    <span className="flex-1 text-slate-400">{m.description}</span>
-                    <span className="text-slate-500 font-mono">[{m.marks}m]</span>
+                    <span className="flex-1 text-[#9b9a95]">{m.description}</span>
+                    <span className="text-[#686763]">[{m.marks}m]</span>
                   </div>
                 ))}
               </div>
@@ -165,49 +165,49 @@ export const SplitScreenEditor: React.FC<SplitScreenEditorProps> = ({
       </div>
 
       {/* RIGHT PANE: Structured Essay Composer & Inline Diagram Sketchpad */}
-      <div className="w-full lg:w-7/12 h-full flex flex-col bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
+      <div className="w-full lg:w-7/12 h-auto lg:h-full flex flex-col bg-[#141517] border border-white/[0.08] rounded-xl overflow-hidden shadow-xl">
         {/* Editor Toolbar Header */}
-        <div className="flex items-center justify-between px-4 py-2.5 bg-slate-950/80 border-b border-slate-800">
-          <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-2.5 bg-[#0c0d0e] border-b border-white/[0.08]">
+          <div className="flex flex-wrap items-center gap-1.5">
             <button
               type="button"
               onClick={() => insertTemplate('**Definition & Theoretical Context:**\n')}
-              className="text-[11px] font-medium text-slate-300 bg-slate-800 hover:bg-slate-700 px-2 py-1 rounded transition"
+              className="text-[11px] font-mono-code font-medium text-[#9b9a95] hover:text-[#f3f3f2] bg-[#1a1b1e] hover:bg-[#222428] border border-white/[0.08] px-2 py-1 rounded transition focus-ring"
             >
               + Definition
             </button>
             <button
               type="button"
               onClick={() => insertTemplate('**Diagram Analysis & Mechanism:**\nAs shown in the diagram, the initial equilibrium...')}
-              className="text-[11px] font-medium text-slate-300 bg-slate-800 hover:bg-slate-700 px-2 py-1 rounded transition"
+              className="text-[11px] font-mono-code font-medium text-[#9b9a95] hover:text-[#f3f3f2] bg-[#1a1b1e] hover:bg-[#222428] border border-white/[0.08] px-2 py-1 rounded transition focus-ring"
             >
               + Diagram Analysis
             </button>
             <button
               type="button"
               onClick={() => insertTemplate('**Real-World Example / Application:**\nFor instance, in the case of...')}
-              className="text-[11px] font-medium text-slate-300 bg-slate-800 hover:bg-slate-700 px-2 py-1 rounded transition"
+              className="text-[11px] font-mono-code font-medium text-[#9b9a95] hover:text-[#f3f3f2] bg-[#1a1b1e] hover:bg-[#222428] border border-white/[0.08] px-2 py-1 rounded transition focus-ring"
             >
               + Example
             </button>
             <button
               type="button"
               onClick={() => insertTemplate('**Evaluation & Conclusion (Stakeholder synthesis):**\nIn the short run vs long run, the most critical tradeoff is...')}
-              className="text-[11px] font-medium text-amber-300 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 px-2 py-1 rounded transition"
+              className="text-[11px] font-mono-code font-medium text-[#dfa88f] bg-[#dfa88f]/10 hover:bg-[#dfa88f]/20 border border-[#dfa88f]/30 px-2 py-1 rounded transition focus-ring"
             >
               + Evaluation
             </button>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2.5">
             {/* Diagram Toggle */}
             <button
               type="button"
               onClick={() => setShowDiagram(!showDiagram)}
-              className={`flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-medium transition ${
+              className={`flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-mono-code transition focus-ring ${
                 showDiagram
-                  ? 'bg-blue-600 text-white font-bold'
-                  : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+                  ? 'bg-[#f54e00] text-white font-medium shadow-sm'
+                  : 'bg-[#1a1b1e] text-[#9b9a95] hover:text-[#f3f3f2] border border-white/[0.08]'
               }`}
             >
               <PieChart className="w-3.5 h-3.5" />
@@ -215,8 +215,8 @@ export const SplitScreenEditor: React.FC<SplitScreenEditorProps> = ({
             </button>
 
             {/* Word Count Indicator */}
-            <div className="flex items-center gap-1.5 text-xs font-mono text-slate-400 bg-slate-900 px-2.5 py-1 rounded-lg border border-slate-800">
-              <FileText className="w-3.5 h-3.5 text-blue-400" />
+            <div className="flex items-center gap-1.5 text-xs font-mono-code text-[#9b9a95] bg-[#0c0d0e] px-2.5 py-1 rounded-lg border border-white/[0.08]">
+              <FileText className="w-3.5 h-3.5 text-[#f54e00]" />
               <span>{wordCount} words</span>
             </div>
           </div>
@@ -224,7 +224,7 @@ export const SplitScreenEditor: React.FC<SplitScreenEditorProps> = ({
 
         {/* Diagram Drawer if active */}
         {showDiagram && (
-          <div className="p-4 bg-slate-950 border-b border-slate-800 animate-in slide-in-from-top-2 duration-200">
+          <div className="p-4 bg-[#0c0d0e] border-b border-white/[0.08] animate-in slide-in-from-top-2 duration-200">
             <InlineDiagramCanvas
               initialImage={submission.diagramImageBase64}
               onSave={handleDiagramSave}
@@ -233,17 +233,18 @@ export const SplitScreenEditor: React.FC<SplitScreenEditorProps> = ({
         )}
 
         {/* Essay Text Area */}
-        <div className="flex-1 p-4 bg-slate-950/40 relative">
+        <div className="flex-1 p-4 bg-[#0c0d0e]/40 relative min-h-[360px]">
           <textarea
             value={submission.textResponse || ''}
             onChange={handleTextChange}
+            aria-label="Student essay response"
             placeholder={`Compose your examiner-grade response for ${currentQuestion.number} here...\n\nUse clear paragraph structures:\n1. Define key economic terms\n2. Introduce and refer to your diagram (curves, equilibria, shifts)\n3. Explain the transmission mechanism step-by-step\n4. Synthesize stakeholder tradeoffs and evaluate short-run vs long-run effects`}
-            className="w-full h-full bg-transparent text-slate-100 placeholder:text-slate-600 resize-none font-sans text-sm leading-relaxed outline-none focus:ring-0 select-text"
+            className="w-full h-full min-h-[340px] bg-transparent text-[#f3f3f2] placeholder:text-[#686763] resize-none font-sans text-sm leading-relaxed outline-none focus:ring-0 select-text"
           />
         </div>
 
         {/* Footer info */}
-        <div className="px-4 py-2 bg-slate-950 border-t border-slate-800 flex items-center justify-between text-[11px] text-slate-500 font-mono">
+        <div className="px-4 py-2 bg-[#0c0d0e] border-t border-white/[0.08] flex items-center justify-between text-[11px] text-[#686763] font-mono-code">
           <span>Autosaved locally to IndexedDB</span>
           <span>IB Examiner Marking Active</span>
         </div>

@@ -3,7 +3,7 @@
 import React, { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { ExamManifest } from '@/types/exam';
-import { saveManifest, savePdfBlob } from '@/lib/storage';
+import { saveManifest, savePdfBlob, getAiConfig } from '@/lib/storage';
 import {
   FileUp,
   FileCheck,
@@ -36,17 +36,22 @@ export const DualUploadDropzone: React.FC<DualUploadDropzoneProps> = ({ onManife
 
     setIsIngesting(true);
     setError(null);
-    setIngestStatus('Connecting to Gemini 3.8 Flash multimodal ingestion engine...');
+    setIngestStatus('Connecting to GLM-OCR & Gemini ingestion engine...');
 
     try {
+      const cfg = await getAiConfig();
       const formData = new FormData();
       formData.append('paperFile', paperFile);
       formData.append('markschemeFile', markschemeFile);
 
-      setIngestStatus('Parsing dual PDF documents into structured manifest schema...');
+      setIngestStatus('Parsing dual PDF documents with GLM-OCR & structuring manifest schema...');
 
       const response = await fetch('/api/ingest', {
         method: 'POST',
+        headers: {
+          ...(cfg.apiKey ? { 'x-gemini-key': cfg.apiKey } : {}),
+          ...(cfg.zaiApiKey ? { 'x-zai-key': cfg.zaiApiKey } : {}),
+        },
         body: formData,
       });
 
@@ -76,21 +81,18 @@ export const DualUploadDropzone: React.FC<DualUploadDropzoneProps> = ({ onManife
   };
 
   return (
-    <div className="bg-[#0f1219] border border-white/[0.08] rounded-2xl p-6 sm:p-8 shadow-2xl relative overflow-hidden">
-      {/* Subtle top edge glow */}
-      <div className="absolute top-0 left-1/3 w-1/3 h-[1px] bg-gradient-to-r from-transparent via-amber-500/50 to-transparent" />
-
+    <div className="bg-[#141517] border border-white/[0.08] rounded-xl p-6 sm:p-8 shadow-2xl relative overflow-hidden">
       <div className="mb-6">
         <div className="flex items-center gap-2">
-          <span className="text-[10px] font-mono-code font-bold uppercase tracking-wider text-blue-400 bg-blue-500/10 border border-blue-500/30 px-2 py-0.5 rounded">
+          <span className="text-[10px] font-mono-code font-semibold uppercase tracking-wider text-[#f54e00] bg-[#f54e00]/10 border border-[#f54e00]/20 px-2 py-0.5 rounded">
             Ground-Truth Ingestion Engine
           </span>
-          <span className="text-xs text-slate-400 font-mono-code">Dual-Document Alignment</span>
+          <span className="text-xs text-[#9b9a95] font-mono-code">Dual-Document Alignment</span>
         </div>
-        <h3 className="text-xl font-bold font-academic text-white mt-1.5">
+        <h3 className="text-lg font-medium text-[#f3f3f2] mt-2 tracking-tight">
           Examination Paper Ingestion
         </h3>
-        <p className="text-xs text-slate-300 mt-1 max-w-2xl leading-relaxed">
+        <p className="text-xs text-[#9b9a95] mt-1 max-w-2xl leading-relaxed">
           Upload an official IB Question Paper PDF alongside its matching Markscheme. The parser extracts question boundaries, mark allocations, and rubric criteria into a structured manifest.
         </p>
       </div>
@@ -99,10 +101,10 @@ export const DualUploadDropzone: React.FC<DualUploadDropzoneProps> = ({ onManife
         {/* Question Paper Dropzone */}
         <div
           onClick={() => paperInputRef.current?.click()}
-          className={`border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition flex flex-col items-center justify-center min-h-[170px] ${
+          className={`border rounded-xl p-6 text-center cursor-pointer transition flex flex-col items-center justify-center min-h-[170px] ${
             paperFile
-              ? 'border-blue-500/60 bg-blue-950/20 text-blue-200'
-              : 'border-white/[0.1] hover:border-white/[0.2] bg-[#08090d] text-slate-400 hover:text-slate-200'
+              ? 'border-[#f54e00]/60 bg-[#18191d] text-[#f3f3f2]'
+              : 'border-white/[0.08] hover:border-white/[0.18] bg-[#0c0d0e] text-[#9b9a95] hover:text-[#f3f3f2]'
           }`}
         >
           <input
@@ -116,19 +118,19 @@ export const DualUploadDropzone: React.FC<DualUploadDropzoneProps> = ({ onManife
           />
           {paperFile ? (
             <>
-              <FileCheck className="w-8 h-8 text-blue-400 mb-2" />
-              <span className="text-xs font-bold font-mono-code text-white truncate max-w-xs">{paperFile.name}</span>
-              <span className="text-[10px] text-slate-400 font-mono-code mt-1">
+              <FileCheck className="w-8 h-8 text-[#f54e00] mb-2" />
+              <span className="text-xs font-semibold font-mono-code text-[#f3f3f2] truncate max-w-xs">{paperFile.name}</span>
+              <span className="text-[10px] text-[#686763] font-mono-code mt-1">
                 {(paperFile.size / 1024 / 1024).toFixed(2)} MB • Question Paper PDF
               </span>
             </>
           ) : (
             <>
-              <div className="w-10 h-10 rounded-lg bg-[#181d27] border border-white/[0.08] flex items-center justify-center text-slate-400 mb-2.5">
+              <div className="w-10 h-10 rounded-lg bg-[#1a1b1e] border border-white/[0.08] flex items-center justify-center text-[#9b9a95] mb-2.5">
                 <FileUp className="w-5 h-5" />
               </div>
-              <span className="text-xs font-bold text-slate-200 font-mono-code">1. Question Paper PDF</span>
-              <span className="text-[10px] text-slate-500 font-mono-code mt-0.5">Click or drop official exam PDF</span>
+              <span className="text-xs font-medium text-[#f3f3f2] font-mono-code">1. Question Paper PDF</span>
+              <span className="text-[10px] text-[#686763] font-mono-code mt-0.5">Click or drop official exam PDF</span>
             </>
           )}
         </div>
@@ -136,10 +138,10 @@ export const DualUploadDropzone: React.FC<DualUploadDropzoneProps> = ({ onManife
         {/* Markscheme Dropzone */}
         <div
           onClick={() => markschemeInputRef.current?.click()}
-          className={`border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition flex flex-col items-center justify-center min-h-[170px] ${
+          className={`border rounded-xl p-6 text-center cursor-pointer transition flex flex-col items-center justify-center min-h-[170px] ${
             markschemeFile
-              ? 'border-amber-500/60 bg-amber-950/20 text-amber-200'
-              : 'border-white/[0.1] hover:border-white/[0.2] bg-[#08090d] text-slate-400 hover:text-slate-200'
+              ? 'border-[#f54e00]/60 bg-[#18191d] text-[#f3f3f2]'
+              : 'border-white/[0.08] hover:border-white/[0.18] bg-[#0c0d0e] text-[#9b9a95] hover:text-[#f3f3f2]'
           }`}
         >
           <input
@@ -153,37 +155,37 @@ export const DualUploadDropzone: React.FC<DualUploadDropzoneProps> = ({ onManife
           />
           {markschemeFile ? (
             <>
-              <FileCheck className="w-8 h-8 text-amber-400 mb-2" />
-              <span className="text-xs font-bold font-mono-code text-white truncate max-w-xs">{markschemeFile.name}</span>
-              <span className="text-[10px] text-slate-400 font-mono-code mt-1">
+              <FileCheck className="w-8 h-8 text-[#dfa88f] mb-2" />
+              <span className="text-xs font-semibold font-mono-code text-[#f3f3f2] truncate max-w-xs">{markschemeFile.name}</span>
+              <span className="text-[10px] text-[#686763] font-mono-code mt-1">
                 {(markschemeFile.size / 1024 / 1024).toFixed(2)} MB • Markscheme PDF
               </span>
             </>
           ) : (
             <>
-              <div className="w-10 h-10 rounded-lg bg-[#181d27] border border-white/[0.08] flex items-center justify-center text-slate-400 mb-2.5">
+              <div className="w-10 h-10 rounded-lg bg-[#1a1b1e] border border-white/[0.08] flex items-center justify-center text-[#9b9a95] mb-2.5">
                 <FileUp className="w-5 h-5" />
               </div>
-              <span className="text-xs font-bold text-slate-200 font-mono-code">2. Official Markscheme PDF</span>
-              <span className="text-[10px] text-slate-500 font-mono-code mt-0.5">Click or drop matching rubric PDF</span>
+              <span className="text-xs font-medium text-[#f3f3f2] font-mono-code">2. Official Markscheme PDF</span>
+              <span className="text-[10px] text-[#686763] font-mono-code mt-0.5">Click or drop matching rubric PDF</span>
             </>
           )}
         </div>
       </div>
 
       {error && (
-        <div className="mb-4 p-3.5 rounded-xl bg-rose-950/40 border border-rose-800/60 text-rose-300 text-xs flex items-center gap-2 font-mono-code">
-          <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
+        <div className="mb-4 p-3.5 rounded-xl bg-[#cf2d56]/10 border border-[#cf2d56]/30 text-[#cf2d56] text-xs flex items-center gap-2 font-mono-code">
+          <AlertCircle className="w-4 h-4 text-[#cf2d56] shrink-0" />
           <span>{error}</span>
         </div>
       )}
 
       {isIngesting && (
-        <div className="mb-4 p-4 rounded-xl bg-blue-950/40 border border-blue-800/60 text-blue-200 text-xs flex items-center gap-3">
-          <Sparkles className="w-5 h-5 text-blue-400 animate-spin shrink-0" />
+        <div className="mb-4 p-4 rounded-xl bg-[#0c0d0e] border border-[#f54e00]/30 text-xs flex items-center gap-3">
+          <Sparkles className="w-5 h-5 text-[#f54e00] animate-spin shrink-0" />
           <div>
-            <span className="font-bold block text-white mb-0.5 font-mono-code">Compiling Ground-Truth Manifest</span>
-            <span className="text-slate-300 font-mono-code">{ingestStatus}</span>
+            <span className="font-semibold block text-[#f3f3f2] mb-0.5 font-mono-code">Compiling Ground-Truth Manifest</span>
+            <span className="text-[#9b9a95] font-mono-code">{ingestStatus}</span>
           </div>
         </div>
       )}
@@ -192,12 +194,12 @@ export const DualUploadDropzone: React.FC<DualUploadDropzoneProps> = ({ onManife
         type="button"
         onClick={handleStartIngest}
         disabled={!paperFile || !markschemeFile || isIngesting}
-        className="w-full py-3.5 rounded-xl bg-amber-500 hover:bg-amber-400 disabled:opacity-40 text-black font-bold font-mono-code text-xs uppercase tracking-wider transition flex items-center justify-center gap-2 shadow-xl shadow-amber-500/20 amber-glow"
+        className="w-full py-3 rounded-xl cursor-btn-primary disabled:opacity-40 font-medium font-mono-code text-xs uppercase tracking-wider transition flex items-center justify-center gap-2 focus-ring"
       >
         {isIngesting ? (
           <>
             <Sparkles className="w-4 h-4 animate-spin" />
-            <span>Compiling with Gemini 3.8 Flash...</span>
+            <span>Compiling Manifest...</span>
           </>
         ) : (
           <>

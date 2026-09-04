@@ -4,6 +4,11 @@
 @import "tailwindcss";
 @import "katex/dist/katex.min.css";
 
+@theme {
+  --font-sans: 'Sora', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+}
+
 :root {
   --background: #0c0d0e;
   --foreground: #f3f3f2;
@@ -179,7 +184,12 @@ h1, h2, h3 {
   }
 }
 
-/* Custom minimal scrollbar */
+/* Custom minimal scrollbar (Webkit & Standard CSS for Firefox) */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #222428 #0c0d0e;
+}
+
 ::-webkit-scrollbar {
   width: 5px;
   height: 5px;
@@ -198,19 +208,28 @@ h1, h2, h3 {
   background: var(--cursor-surface-hover);
 }
 
+/* Accessible focus ring utility */
+.focus-ring {
+  outline: none;
+}
+.focus-ring:focus-visible {
+  outline: 2px solid var(--cursor-primary);
+  outline-offset: 2px;
+}
+
 /* Selection */
 ::selection {
   background: rgba(245, 78, 0, 0.3);
   color: #ffffff;
 }
 
-/* Math rendering typography - 20% size boost for enhanced clarity and legibility */
+/* Math rendering typography - calibrated for harmonious baseline alignment with Sora */
 .katex {
-  font-size: 1.2em;
+  font-size: 1.06em;
 }
 
 .math-content .katex {
-  font-size: 1.25em;
+  font-size: 1.08em;
 }
 
 .math-content .katex-display {
@@ -221,5 +240,5 @@ h1, h2, h3 {
 }
 
 .math-content .katex-display .katex {
-  font-size: 1.3em;
+  font-size: 1.2em;
 }

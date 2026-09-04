@@ -29,6 +29,7 @@ export async function POST(req: NextRequest) {
     }
 
     const clientKey = req.headers.get('x-gemini-key') || undefined;
+    const clientZaiKey = req.headers.get('x-zai-key') || undefined;
     const encoder = new TextEncoder();
 
     const stream = new ReadableStream({
@@ -36,6 +37,7 @@ export async function POST(req: NextRequest) {
         try {
           const generator = streamExamAssessment(manifest, submissions, {
             clientKey,
+            zaiKey: clientZaiKey,
             thinkingBudget,
             sessionId,
             timeRemainingSeconds,

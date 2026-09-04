@@ -47,6 +47,34 @@ function safeRenderKaTeX(tex: string, displayMode: boolean): string {
   }
 }
 
+const MATH_FUNCTIONS = new Set([
+  'sin', 'cos', 'tan', 'cot', 'sec', 'csc',
+  'arcsin', 'arccos', 'arctan',
+  'sinh', 'cosh', 'tanh',
+  'ln', 'log', 'exp',
+  'lim', 'max', 'min',
+  'det', 'dim', 'ker',
+  'gcd', 'lcm', 'mod',
+  'deg', 'arg',
+  'fof', 'gog', 'fog', 'gof',
+  'dx', 'dy', 'dt', 'du', 'dv', 'dz'
+]);
+
+function isProseWord(word: string): boolean {
+  const clean = word.toLowerCase().replace(/[^a-z]/g, '');
+  if (clean.length < 2) return false;
+  return !MATH_FUNCTIONS.has(clean);
+}
+
+function hasProseWords(str: string): boolean {
+  const words = str.match(/[a-zA-Z]+/g);
+  if (!words) return false;
+  for (const w of words) {
+    if (isProseWord(w)) return true;
+  }
+  return false;
+}
+
 /**
  * Smart Math Normalizer: Converts ASCII math notations commonly found
  * in raw exam prompts or LLM extractions into valid LaTeX syntax.
@@ -58,6 +86,9 @@ function normalizeAsciiMath(expr: string): string {
   if (/\\begin\{(aligned|matrix|pmatrix|bmatrix|vmatrix|cases|equation|align\*?|gather\*?|array)\}/.test(s)) {
     return s;
   }
+
+  // Normalize composite functions like (fof)(x) -> (f \circ f)(x)
+  s = s.replace(/\b([fgh])o([fgh])\b/gi, '$1 \\circ $2');
 
   // 1. Unicode mathematical symbols to standard LaTeX
   s = s
@@ -201,7 +232,7 @@ function parseLatexArrayToExamTable(arrayTex: string, lightMode = false): string
       const fontClass = isFirstCol ? 'font-semibold' : 'font-normal';
       const cellContent = cell ? safeRenderKaTeX(cell, false) : '&nbsp;';
 
-      html += `<td class="${cellBorderClass} ${bgClass} ${fontClass} text-center align-middle text-[17px]">${cellContent}</td>`;
+      html += `<td class="${cellBorderClass} ${bgClass} ${fontClass} text-center align-middle text-[15px]">${cellContent}</td>`;
     });
     html += '</tr>';
   });
@@ -210,7 +241,7 @@ function parseLatexArrayToExamTable(arrayTex: string, lightMode = false): string
   return html;
 }
 
-export const MathRenderer: React.FC<MathRendererProps> = ({
+export const MathRenderer: React.FC<MathRendererProps> = React.memo(({
   content,
   className = '',
   lightMode = false,
@@ -277,8 +308,9 @@ export const MathRenderer: React.FC<MathRendererProps> = ({
     });
 
     // PHASE 5: Detect and render un-delimited LaTeX commands (e.g. \frac{1}{2}, \sqrt{1+x})
+    // Strictly bounded so commands do not swallow trailing prose words.
     text = text.replace(
-      /(\\(?:int|frac|sqrt|sum|prod|lim|alpha|beta|gamma|theta|lambda|pi|Pi|sigma|Delta|Omega|times|cdot|le|ge|pm|infty|vec|partial|approx|ne|in|notin|mathbb)(?:\{[^}]*\}|\^\{[^}]*\}|_\{[^}]*\}|[a-zA-Z0-9+\-=*/^_\s])*(?:;|\b|$))/g,
+      /(\\(?:frac|sqrt|vec|mathbb)\{[^}]*\}(?:\{[^}]*\})?|\\(?:alpha|beta|gamma|theta|lambda|pi|Pi|sigma|Delta|Omega|times|cdot|le|ge|pm|infty|partial|approx|ne|in|notin)\b|\\(?:int|sum|prod|lim)(?:_\{[^}]*\}|\^\{[^}]*\}|_[a-zA-Z0-9]|\^[a-zA-Z0-9])*)/g,
       (match) => {
         if (match.includes('@@@MATH_TOKEN') || match.trim().length < 2) return match;
         return saveToken(safeRenderKaTeX(match.trim(), false));
@@ -305,8 +337,8 @@ export const MathRenderer: React.FC<MathRendererProps> = ({
           ? 'w-full max-w-3xl border-collapse border-2 border-slate-900 text-center font-serif my-6 shadow-sm mx-auto'
           : 'w-full max-w-3xl border-collapse border-2 border-white/60 text-center font-serif my-6 shadow-sm mx-auto';
         const cellClass = lightMode
-          ? 'border border-slate-800 px-8 py-4 text-slate-950 font-serif text-[17px]'
-          : 'border border-white/40 px-8 py-4 text-white font-serif text-[17px]';
+          ? 'border border-slate-800 px-8 py-4 text-slate-950 font-serif text-[15px]'
+          : 'border border-white/40 px-8 py-4 text-white font-serif text-[15px]';
 
         let tableHtml = `<div class="w-full overflow-x-auto my-6 flex justify-center"><table class="${tableClass}"><thead><tr>`;
         headers.forEach((h) => {
@@ -335,24 +367,35 @@ export const MathRenderer: React.FC<MathRendererProps> = ({
       }
     );
 
-    // PHASE 8: Equations with '=' and arrows '=>': e.g. "f'(x) = ...", "m^2/2 + m/2 = 7/4 => 4m^2 = 14"
-    text = text.replace(
-      /(?:^|(?<=[:\n;.]\s*))([a-zA-Z0-9+\-*/^().\s\\'_!><=]+?\s*=\s*[a-zA-Z0-9+\-*/^().\s\\'_!><=]+?)(?=[.,;!?]|\s+(?:for|where|with|and|or|since|hence|when)\b|$)/g,
-      (match, mathExpr) => {
-        if (match.includes('@@@MATH_TOKEN')) return match;
-        if (/^(it|this|that|which|there|here|where)\s*=/i.test(mathExpr.trim())) return match;
-        if (!/[0-9+\-*/^()'_!\\><]/.test(mathExpr)) return match;
-        return saveToken(safeRenderKaTeX(normalizeAsciiMath(mathExpr), false));
+    // PHASE 8: Clean un-delimited equations around '=', '≈', '≠', '<=', '>=' etc.
+    // Strictly bounded to protect natural English prose from being swallowed into KaTeX math mode.
+    const eqRegex = /(?:^|(?<=[\s,;:([{"']))([a-zA-Z0-9+\-*/^().'\\_]+(?:\s*[+\-*/]\s*[a-zA-Z0-9+\-*/^().'\\_]+)*)\s*(=|≈|≠|<=|>=|!=|\\le|\\ge|\\ne|\\approx)\s*([+-]?[a-zA-Z0-9+\-*/^().'\\_]+(?:\s*[+\-*/]\s*[a-zA-Z0-9+\-*/^().'\\_]+)*)(?=[.,;:!?)]|\s|$)/g;
+
+    text = text.replace(eqRegex, (match, lhs, op, rhs) => {
+      if (match.includes('@@@MATH_TOKEN')) return match;
+      if (hasProseWords(lhs) || hasProseWords(rhs)) return match;
+      if (!/[a-zA-Z0-9]/.test(lhs) || !/[a-zA-Z0-9]/.test(rhs)) return match;
+
+      // Balance trailing parens on rhs (e.g. "(at y ≈ 5.3)" -> math is "y ≈ 5.3", trailing ")" preserved in prose)
+      let cleanRhs = rhs.trim();
+      let trailingParen = '';
+      while (cleanRhs.endsWith(')') && (cleanRhs.split('(').length - 1 < cleanRhs.split(')').length)) {
+        cleanRhs = cleanRhs.slice(0, -1).trim();
+        trailingParen = ')' + trailingParen;
       }
-    );
+
+      const fullExpr = `${lhs.trim()} ${op} ${cleanRhs}`;
+      return saveToken(safeRenderKaTeX(normalizeAsciiMath(fullExpr), false)) + trailingParen;
+    });
 
     // PHASE 9: Standalone complex algebraic expressions with exponents, factorials or paren fractions
     text = text.replace(
-      /(?:^|(?<=[^a-zA-Z0-9_]|\s))((?:\(-?[0-9a-zA-Z\/+\-]+\)\^[0-9a-zA-Z+\-()]+|\([0-9a-zA-Z+\-]+\)!|\b[fghuvy]('{1,3}|\^\([a-zA-Z0-9+\-]+\))\([a-z0-9,\s]+\))[a-zA-Z0-9+\-*/^().\s\\'_!><]*)/g,
+      /(?:^|(?<=[^a-zA-Z0-9_]|\s))((?:\(-?[0-9a-zA-Z\/+\-]+\)\^[0-9a-zA-Z+\-()]+|\([0-9a-zA-Z+\-]+\)!|\b[fghuvy]('{1,3}|\^\([a-zA-Z0-9+\-]+\))\([a-z0-9,\s]+\)))(?=[.,;:!?)\s]|$)/g,
       (match, expr) => {
         const trimmed = expr.trim();
         if (trimmed.length < 3) return match;
         if (trimmed.includes('@@@MATH_TOKEN')) return match;
+        if (hasProseWords(trimmed)) return match;
         return saveToken(safeRenderKaTeX(normalizeAsciiMath(trimmed), false));
       }
     );
@@ -362,6 +405,7 @@ export const MathRenderer: React.FC<MathRendererProps> = ({
       /\b(-?[0-9]+(?:\.[0-9]+)?\s*(?:<=|<|>=|>|\\le|\\ge)\s*)?([a-zA-Z])\s*(?:<=|<|>=|>|\\le|\\ge)\s*(-?[0-9]+(?:\.[0-9]+)?|[a-zA-Z0-9_]+)\b/g,
       (match) => {
         if (match.includes('@@@MATH_TOKEN')) return match;
+        if (hasProseWords(match)) return match;
         const normalized = normalizeAsciiMath(match);
         return saveToken(safeRenderKaTeX(normalized, false));
       }
@@ -421,4 +465,6 @@ export const MathRenderer: React.FC<MathRendererProps> = ({
       dangerouslySetInnerHTML={{ __html: renderedHtml }}
     />
   );
-};
+});
+
+MathRenderer.displayName = 'MathRenderer';

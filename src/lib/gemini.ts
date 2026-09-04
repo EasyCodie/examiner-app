@@ -8,19 +8,19 @@ export function getGeminiClient(customApiKey?: string): GoogleGenAI | null {
   return new GoogleGenAI({ apiKey: key });
 }
 
-export const DEFAULT_MODEL = 'gemini-2.5-flash';
+export const DEFAULT_MODEL = 'gemini-3.6-flash';
 
 // Fast high-throughput models prioritized for multimodal PDF parsing
 export const INGESTION_MODELS = [
-  'gemini-2.5-flash',
-  'gemini-2.5-flash-lite',
-  'gemini-2.5-pro',
+  'gemini-3.6-flash',
+  'gemini-3.8-flash',
+  'gemini-flash-latest',
 ];
 
 export const FALLBACK_MODELS = [
-  'gemini-2.5-flash',
-  'gemini-2.5-flash-lite',
-  'gemini-2.5-pro',
+  'gemini-3.6-flash',
+  'gemini-3.8-flash',
+  'gemini-flash-latest',
 ];
 
 export async function generateWithTimeout<T>(

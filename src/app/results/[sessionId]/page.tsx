@@ -53,6 +53,7 @@ export default function ResultsPage() {
         headers: {
           'Content-Type': 'application/json',
           ...(cfg.apiKey ? { 'x-gemini-key': cfg.apiKey } : {}),
+          ...(cfg.zaiApiKey ? { 'x-zai-key': cfg.zaiApiKey } : {}),
         },
         body: JSON.stringify({
           manifest: m,
@@ -169,7 +170,7 @@ export default function ResultsPage() {
       <div className="flex-1 flex items-center justify-center p-8">
         <div className="text-center space-y-3">
           <Sparkles className="w-8 h-8 text-[#f54e00] animate-spin mx-auto" />
-          <p className="text-sm font-mono-code text-slate-400">Loading examination session...</p>
+          <p className="text-sm font-mono-code text-[#9b9a95]">Loading examination session...</p>
         </div>
       </div>
     );
@@ -178,14 +179,14 @@ export default function ResultsPage() {
   if (!session || !manifest) {
     return (
       <div className="flex-1 flex flex-col items-center justify-center p-8 text-center space-y-4">
-        <AlertCircle className="w-12 h-12 text-rose-400 mx-auto" />
-        <h2 className="text-xl font-bold text-white">Assessment Session Not Found</h2>
-        <p className="text-xs text-slate-400 max-w-md">
+        <AlertCircle className="w-12 h-12 text-[#cf2d56] mx-auto" />
+        <h2 className="text-xl font-medium text-[#f3f3f2]">Assessment Session Not Found</h2>
+        <p className="text-xs text-[#9b9a95] max-w-md">
           The requested exam evaluation could not be loaded from local storage.
         </p>
         <Link
           href="/"
-          className="px-4 py-2 bg-blue-600 hover:bg-blue-500 rounded-xl text-xs font-bold text-white transition"
+          className="px-4 py-2 cursor-btn-primary rounded-xl text-xs font-medium text-white transition"
         >
           Return to Exam Library
         </Link>
@@ -200,7 +201,7 @@ export default function ResultsPage() {
   const progressPct = totalQuestions > 0 ? Math.round((effectiveEvaluations.length / totalQuestions) * 100) : 0;
 
   return (
-    <div className="flex-1 p-4 sm:p-8 max-w-7xl mx-auto w-full space-y-8 select-none">
+    <div className="flex-1 p-4 sm:p-8 max-w-7xl mx-auto w-full space-y-8 select-text">
       {/* Top Header Bar */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-white/[0.08] pb-4">
         <div>

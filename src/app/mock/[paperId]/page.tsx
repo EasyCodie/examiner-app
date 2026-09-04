@@ -212,8 +212,8 @@ export default function MockExamPage() {
     return (
       <div className="flex-1 flex items-center justify-center p-8">
         <div className="text-center space-y-3">
-          <Sparkles className="w-8 h-8 text-blue-400 animate-spin mx-auto" />
-          <p className="text-sm font-mono-code text-slate-400">Loading authentic IB examination paper...</p>
+          <Sparkles className="w-8 h-8 text-[#f54e00] animate-spin mx-auto" />
+          <p className="text-sm font-mono-code text-[#9b9a95]">Loading authentic IB examination paper...</p>
         </div>
       </div>
     );
@@ -227,7 +227,7 @@ export default function MockExamPage() {
   };
 
   return (
-    <div className="flex-1 flex flex-col p-4 sm:p-6 max-w-5xl mx-auto w-full select-none pb-28">
+    <div className="flex-1 flex flex-col p-4 sm:p-6 max-w-5xl mx-auto w-full select-text pb-28">
       {/* 1. TOP EXAM HUD (Cursor Dark Mode) */}
       <div className="bg-[#141517] border border-white/[0.08] rounded-xl p-4 sm:p-5 mb-6 space-y-3.5 shadow-lg">
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">

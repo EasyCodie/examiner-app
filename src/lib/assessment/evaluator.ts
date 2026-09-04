@@ -9,6 +9,7 @@ import {
 import { getGeminiClient, DEFAULT_MODEL, FALLBACK_MODELS } from '@/lib/gemini';
 import { GRADING_SYSTEM_PROMPT } from '@/lib/prompts';
 import { GRADING_RESPONSE_SCHEMA } from '@/lib/schemas';
+import { transcribeStudentHandwriting, getZaiApiKey } from '@/lib/ocr/glmOcr';
 
 export type AssessmentEvent =
   | {
@@ -29,6 +30,7 @@ export type AssessmentEvent =
 
 export interface AssessmentOptions {
   clientKey?: string;
+  zaiKey?: string;
   thinkingBudget?: number;
   sessionId?: string;
   timeRemainingSeconds?: number;
@@ -36,14 +38,15 @@ export interface AssessmentOptions {
 
 /**
  * Evaluates a single exam question with multimodal artifacts, Error Carried Forward (ECF) context,
- * and automated failover to the local examiner simulation engine.
+ * GLM-OCR handwriting transcription, and automated failover to the local examiner simulation engine.
  */
 export async function evaluateSingleQuestion(
   question: QuestionItem,
   submission: QuestionSubmission | undefined,
   previousEvaluations: QuestionGrading[],
   clientKey?: string,
-  thinkingBudget = 8192
+  thinkingBudget = 8192,
+  zaiKey?: string
 ): Promise<{ evaluation: QuestionGrading; isSimulated: boolean }> {
   const safeSubmission: QuestionSubmission = submission || {
     questionId: question.id,
@@ -125,6 +128,22 @@ export async function evaluateSingleQuestion(
         .join('\n\n');
   }
 
+  // GLM-OCR Handwriting Transcription Pass if Z.AI key is available
+  let glmOcrSection = '';
+  const activeZaiKey = getZaiApiKey(zaiKey);
+  if (activeZaiKey && safeSubmission.canvasImageBase64) {
+    try {
+      const ocrResult = await transcribeStudentHandwriting(safeSubmission.canvasImageBase64, activeZaiKey);
+      if (ocrResult.hasContent) {
+        glmOcrSection = `\nGLM-OCR SOTA HIGH-PRECISION OCR TRANSCRIPTION OF STUDENT SCRIPT:\n${ocrResult.markdown}\nDetected Mathematical Formulas:\n${ocrResult.formulas.map((f) => `- $${f}$`).join('\n')}\n`;
+      } else {
+        glmOcrSection = `\nGLM-OCR SOTA OCR VERIFICATION: NO handwritten text or mathematical equations detected in this working box.\n`;
+      }
+    } catch (ocrErr) {
+      console.warn('GLM-OCR handwriting transcription pass encountered error, continuing with raw image:', ocrErr);
+    }
+  }
+
   const textualPrompt = `OFFICIAL IB EXAM QUESTION ASSESSMENT:
 Question Number: ${question.number}
 Command Term: ${question.commandTerm}
@@ -148,6 +167,12 @@ ${ecfContext}
 STUDENT SUBMISSION DETAILS:
 ${safeSubmission.textResponse ? `Written Text Response:\n${safeSubmission.textResponse}` : 'Handwritten working provided in attached page image(s).'}
 Time Spent: ${safeSubmission.timeSpentSeconds} seconds.
+${glmOcrSection}
+
+CRITICAL SUBPART ATTEMPT VERIFICATION:
+- Inspect whether the student attempted ALL subparts or only an initial subpart (e.g. only subpart (a)).
+- If subparts (b), (c), etc., are blank or absent from the student's working, you MUST award ZERO (0) marks for those unattempted subparts, setting awarded: false for all corresponding mark codes with reason: "No attempt or working recorded for this subpart".
+- NEVER award marks for unattempted subparts.
 
 Please evaluate the student's submission rigorously following IB examiner guidelines. Citing specific mark codes (M1, A1, R1, etc.), calculate marks awarded, verify ECF if an upstream error was propagated, provide margin annotations, and recommend targeted syllabus revision.`;
 
@@ -303,7 +328,8 @@ export async function* streamExamAssessment(
         submission,
         evaluations,
         options.clientKey,
-        thinkingBudget
+        thinkingBudget,
+        options.zaiKey
       );
 
       evaluations.push(evaluation);
@@ -377,20 +403,30 @@ function generateSimulatedGrading(
   const prevHadError = previousEvaluations.some((p) => p.marksAwarded < p.maxMarks);
   const triggerEcf = prevHadError && hasWork;
 
+  // Determine if question has subparts and calculate subpart distribution
+  const hasSubparts = Boolean(question.subparts && question.subparts.length > 1);
+  const partACount = (hasSubparts && question.subparts?.[0]?.markCodes?.length) || 3;
+
   const markBreakdown: AwardedMarkItem[] = question.markCodes.map((mc, idx) => {
     let awarded = false;
     let isEcf = false;
     let reason = 'Incomplete or unverified step.';
 
     if (hasWork) {
-      if (idx === 0) {
+      // If question has multiple subparts and the student only attempted subpart (a),
+      // only award marks within subpart (a) criteria!
+      const isBeyondPartA = hasSubparts && idx >= partACount;
+      if (isBeyondPartA) {
+        awarded = false;
+        reason = 'No working or solution provided for this subpart.';
+      } else if (idx === 0) {
         awarded = true;
         reason = `Valid method demonstrated according to markscheme criterion for ${mc.code}.`;
       } else if (triggerEcf && mc.type === 'M') {
         awarded = true;
         isEcf = true;
         reason = `[ECF Applied] Valid method correctly applied to intermediate value carried forward from previous subpart.`;
-      } else if (idx < question.markCodes.length - 1) {
+      } else if (idx < (hasSubparts ? partACount - 1 : question.markCodes.length - 1)) {
         awarded = true;
         reason = `Step properly calculated with correct algebraic progression.`;
       } else {
