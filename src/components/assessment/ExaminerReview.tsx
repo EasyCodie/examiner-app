@@ -18,14 +18,27 @@ interface ExaminerReviewProps {
   questions: QuestionItem[];
   submissions: Record<string, QuestionSubmission>;
   evaluations: QuestionGrading[];
+  selectedIndex?: number;
+  onSelectIndex?: (index: number) => void;
 }
 
 export const ExaminerReview: React.FC<ExaminerReviewProps> = ({
   questions,
   submissions,
   evaluations,
+  selectedIndex,
+  onSelectIndex,
 }) => {
-  const [selectedIndex, setSelectedIndex] = useState(0);
+  const [internalSelectedIndex, setInternalSelectedIndex] = useState(0);
+  const activeIndex = selectedIndex !== undefined ? selectedIndex : internalSelectedIndex;
+
+  const handleSelectIndex = (idx: number) => {
+    if (selectedIndex === undefined) {
+      setInternalSelectedIndex(idx);
+    }
+    onSelectIndex?.(idx);
+  };
+
   const [filter, setFilter] = useState<'ALL' | 'REVIEW' | 'MASTERED'>('ALL');
 
   const filteredQuestions = questions.filter((q) => {
@@ -39,14 +52,14 @@ export const ExaminerReview: React.FC<ExaminerReviewProps> = ({
     return true;
   });
 
-  const currentQuestion = questions[selectedIndex] || questions[0];
+  const currentQuestion = questions[activeIndex] || questions[0];
   const submission = submissions[currentQuestion.id];
   const evaluation = evaluations.find(
     (e) =>
       e.questionId === currentQuestion.id ||
       e.questionNumber === currentQuestion.number ||
       e.questionNumber?.replace(/^Question\s*/i, '').trim() === currentQuestion.number.replace(/^Question\s*/i, '').trim()
-  ) || evaluations[selectedIndex];
+  ) || evaluations[activeIndex];
 
   return (
     <div className="bg-[#141517] border border-white/[0.08] rounded-2xl overflow-hidden shadow-2xl">
@@ -60,7 +73,7 @@ export const ExaminerReview: React.FC<ExaminerReviewProps> = ({
                 e.questionNumber === q.number ||
                 e.questionNumber?.replace(/^Question\s*/i, '').trim() === q.number.replace(/^Question\s*/i, '').trim()
             ) || evaluations[idx];
-            const isSelected = idx === selectedIndex;
+            const isSelected = idx === activeIndex;
             const sub = submissions[q.id];
             const hasWork = Boolean(sub?.canvasImageBase64 || sub?.textResponse);
             const fullMarks = ev && ev.marksAwarded === ev.maxMarks;
@@ -74,7 +87,7 @@ export const ExaminerReview: React.FC<ExaminerReviewProps> = ({
               <button
                 key={q.id}
                 type="button"
-                onClick={() => setSelectedIndex(idx)}
+                onClick={() => handleSelectIndex(idx)}
                 className={`px-3 py-1.5 rounded-lg text-xs font-mono-code transition-all flex items-center gap-1.5 whitespace-nowrap border ${
                   isSelected
                     ? 'bg-[#f54e00] text-white font-semibold shadow-sm border-transparent'
@@ -164,20 +177,20 @@ export const ExaminerReview: React.FC<ExaminerReviewProps> = ({
           <div className="flex items-center gap-1.5 text-[#9b9a95] text-xs font-mono-code">
             <button
               type="button"
-              disabled={selectedIndex <= 0}
-              onClick={() => setSelectedIndex((prev) => prev - 1)}
+              disabled={activeIndex <= 0}
+              onClick={() => handleSelectIndex(activeIndex - 1)}
               className="p-1.5 rounded hover:text-white hover:bg-white/[0.06] disabled:opacity-30 transition"
               title="Previous Question"
             >
               <ChevronLeft className="w-4 h-4" />
             </button>
             <span>
-              {selectedIndex + 1} of {questions.length}
+              {activeIndex + 1} of {questions.length}
             </span>
             <button
               type="button"
-              disabled={selectedIndex >= questions.length - 1}
-              onClick={() => setSelectedIndex((prev) => prev + 1)}
+              disabled={activeIndex >= questions.length - 1}
+              onClick={() => handleSelectIndex(activeIndex + 1)}
               className="p-1.5 rounded hover:text-white hover:bg-white/[0.06] disabled:opacity-30 transition"
               title="Next Question"
             >

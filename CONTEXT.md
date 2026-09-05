@@ -33,5 +33,5 @@ The official percentage score thresholds mapping total marks to IB 1–7 scale g
 _Avoid_: Cutoffs, grade curve, score tiers
 
 **Syllabus Weakness Matrix**:
-A structured aggregation of student performance by syllabus subtopic, identifying mastered, developing, and critical areas.
+A structured diagnosis of student performance by syllabus subtopic, identifying mastered, developing, and critical areas either scoped to an active question or aggregated across the complete exam paper.
 _Avoid_: Topic breakdown, skill map, performance report

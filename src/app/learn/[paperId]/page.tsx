@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useSearchParams } from 'next/navigation';
 import {
   ExamManifest,
   QuestionItem,
@@ -23,7 +23,9 @@ import {
 
 export default function SocraticLearnPage() {
   const params = useParams();
+  const searchParams = useSearchParams();
   const paperId = params.paperId as string;
+  const questionParam = searchParams.get('question');
   const { setHeaderInfo } = useAppShell();
 
   const [manifest, setManifest] = useState<ExamManifest | null>(null);
@@ -59,18 +61,27 @@ export default function SocraticLearnPage() {
           paperId: m.id,
         });
 
-        // Initialize welcome message for first question
-        const q0 = m.questions[0];
-        if (q0) {
+        let targetIdx = 0;
+        if (questionParam) {
+          const qIdx = parseInt(questionParam, 10);
+          if (!isNaN(qIdx) && qIdx >= 0 && qIdx < m.questions.length) {
+            targetIdx = qIdx;
+            setSelectedQuestionIndex(qIdx);
+          }
+        }
+
+        // Initialize welcome message for the initial active question
+        const targetQ = m.questions[targetIdx];
+        if (targetQ) {
           setConversations((prev) => {
-            if (prev[q0.id]) return prev;
+            if (prev[targetQ.id]) return prev;
             return {
               ...prev,
-              [q0.id]: [
+              [targetQ.id]: [
                 {
-                  id: 'welcome-0',
+                  id: `welcome-${targetQ.id}`,
                   sender: 'tutor',
-                  text: `Welcome! Let's tackle **${q0.number.replace(/^Question\s*/i, '')}** together using our 4-tier pedagogical scaffold.\n\nWe start at **Tier 1: Command Term Anchor**. The command term here is **"${q0.commandTerm}"**. How are you thinking of setting up your first step?`,
+                  text: `Welcome! Let's tackle **${targetQ.number.replace(/^Question\s*/i, '')}** together using our 4-tier pedagogical scaffold.\n\nWe start at **Tier 1: Command Term Anchor**. The command term here is **"${targetQ.commandTerm}"**. How are you thinking of setting up your first step?`,
                   timestamp: new Date().toISOString(),
                   tierActive: 1,
                 },
@@ -80,9 +91,34 @@ export default function SocraticLearnPage() {
         }
       }
     });
-  }, [paperId, setHeaderInfo]);
+  }, [paperId, setHeaderInfo, questionParam]);
 
   const currentQuestion: QuestionItem | undefined = manifest?.questions[selectedQuestionIndex];
+
+  const handleSelectQuestion = (idx: number) => {
+    setSelectedQuestionIndex(idx);
+    setCurrentTier(1);
+    setIsMarkschemeUnlocked(false);
+
+    const q = manifest?.questions[idx];
+    if (q) {
+      setConversations((prev) => {
+        if (prev[q.id] && prev[q.id].length > 0) return prev;
+        return {
+          ...prev,
+          [q.id]: [
+            {
+              id: `welcome-${q.id}`,
+              sender: 'tutor',
+              text: `Welcome! Let's tackle **${q.number.replace(/^Question\s*/i, '')}** together using our 4-tier pedagogical scaffold.\n\nWe start at **Tier 1: Command Term Anchor**. The command term here is **"${q.commandTerm}"**. How are you thinking of setting up your first step?`,
+              timestamp: new Date().toISOString(),
+              tierActive: 1,
+            },
+          ],
+        };
+      });
+    }
+  };
 
   // Send message to Socratic tutor
   const handleSendMessage = async (userText: string, tier: PedagogicalTier) => {
@@ -185,11 +221,7 @@ export default function SocraticLearnPage() {
               <button
                 key={q.id}
                 type="button"
-                onClick={() => {
-                  setSelectedQuestionIndex(idx);
-                  setCurrentTier(1);
-                  setIsMarkschemeUnlocked(false);
-                }}
+                onClick={() => handleSelectQuestion(idx)}
                 className={`px-3 py-1.5 rounded-md text-xs font-mono-code whitespace-nowrap transition flex items-center justify-center ${
                   isSelected
                     ? 'bg-[#f54e00] text-white font-semibold shadow-sm'
@@ -206,7 +238,7 @@ export default function SocraticLearnPage() {
           <button
             type="button"
             disabled={selectedQuestionIndex <= 0}
-            onClick={() => setSelectedQuestionIndex((prev) => prev - 1)}
+            onClick={() => handleSelectQuestion(selectedQuestionIndex - 1)}
             className="p-1 hover:text-white disabled:opacity-30 transition"
             title="Previous Question"
           >
@@ -218,7 +250,7 @@ export default function SocraticLearnPage() {
           <button
             type="button"
             disabled={selectedQuestionIndex >= manifest.questions.length - 1}
-            onClick={() => setSelectedQuestionIndex((prev) => prev + 1)}
+            onClick={() => handleSelectQuestion(selectedQuestionIndex + 1)}
             className="p-1 hover:text-white disabled:opacity-30 transition"
             title="Next Question"
           >

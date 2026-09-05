@@ -10,6 +10,7 @@ import { GradeBoundaryCard } from '@/components/assessment/GradeBoundaryCard';
 import { ExaminerReview } from '@/components/assessment/ExaminerReview';
 import { SyllabusMatrix } from '@/components/assessment/SyllabusMatrix';
 import { AssessmentIntakeStage } from '@/components/assessment/AssessmentIntakeStage';
+import { synthesizeSyllabusBreakdown } from '@/lib/assessment/evaluator';
 import confetti from 'canvas-confetti';
 import {
   Sparkles,
@@ -33,6 +34,7 @@ export default function ResultsPage() {
   const [session, setSession] = useState<ExamSession | null>(null);
   const [manifest, setManifest] = useState<ExamManifest | null>(null);
   const [loading, setLoading] = useState(true);
+  const [selectedQuestionIndex, setSelectedQuestionIndex] = useState(0);
 
   // Satisfying animated intake stage until Question 1 is graded
   const [intakeStageActive, setIntakeStageActive] = useState<boolean>(isEvaluatingParam);
@@ -226,6 +228,18 @@ export default function ResultsPage() {
   const progressPct = totalQuestions > 0 ? Math.round((effectiveEvaluations.length / totalQuestions) * 100) : 0;
   const firstQuestionReady = liveEvaluations.length >= 1;
 
+  const activeQuestion = manifest.questions[selectedQuestionIndex] || manifest.questions[0];
+  const activeEvaluation = effectiveEvaluations.find(
+    (e) =>
+      e.questionId === activeQuestion?.id ||
+      e.questionNumber === activeQuestion?.number ||
+      e.questionNumber?.replace(/^Question\s*/i, '').trim() === activeQuestion?.number.replace(/^Question\s*/i, '').trim()
+  ) || effectiveEvaluations[selectedQuestionIndex];
+
+  const syllabusBreakdown =
+    session.gradingResults?.syllabusBreakdown ||
+    synthesizeSyllabusBreakdown(effectiveEvaluations);
+
   // Satisfying Senior Examiner Intake Stage until Question 1 is ready
   if (intakeStageActive && !skipIntake) {
     return (
@@ -405,18 +419,22 @@ export default function ResultsPage() {
           questions={manifest.questions}
           submissions={session.submissions || {}}
           evaluations={effectiveEvaluations}
+          selectedIndex={selectedQuestionIndex}
+          onSelectIndex={setSelectedQuestionIndex}
         />
       </section>
 
       {/* 3. Syllabus Subtopic Weakness Matrix & Targeted Actionable Drills */}
-      {isFinished && session.gradingResults && (
-        <section>
-          <SyllabusMatrix
-            syllabusBreakdown={session.gradingResults.syllabusBreakdown}
-            paperId={manifest.id}
-          />
-        </section>
-      )}
+      <section>
+        <SyllabusMatrix
+          syllabusBreakdown={syllabusBreakdown}
+          paperId={manifest.id}
+          activeQuestion={activeQuestion}
+          activeEvaluation={activeEvaluation}
+          activeQuestionIndex={selectedQuestionIndex}
+          allQuestions={manifest.questions}
+        />
+      </section>
     </div>
   );
 }
