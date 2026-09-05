@@ -81,18 +81,22 @@ export const ExaminerReview: React.FC<ExaminerReviewProps> = ({
                     : 'bg-[#1a1b1e] text-[#9b9a95] hover:text-[#f3f3f2] hover:bg-[#222428] border-white/[0.08]'
                 }`}
               >
-                {/* Diagnostic Heatmap Dot */}
-                <span
-                  className={`w-1.5 h-1.5 rounded-full shrink-0 ${
-                    fullMarks
-                      ? 'bg-emerald-400'
-                      : isPartial
-                      ? 'bg-[#dfa88f]'
-                      : isZero && hasWork
-                      ? 'bg-[#cf2d56]'
-                      : 'bg-white/20'
-                  }`}
-                />
+                {/* Diagnostic Heatmap Dot or Pending Loader */}
+                {ev ? (
+                  <span
+                    className={`w-1.5 h-1.5 rounded-full shrink-0 ${
+                      fullMarks
+                        ? 'bg-emerald-400'
+                        : isPartial
+                        ? 'bg-[#dfa88f]'
+                        : isZero && hasWork
+                        ? 'bg-[#cf2d56]'
+                        : 'bg-white/20'
+                    }`}
+                  />
+                ) : (
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#f54e00] animate-pulse shrink-0" />
+                )}
                 <span>{q.number.replace(/^Question\s*/i, '')}</span>
                 {ev ? (
                   <span
@@ -108,7 +112,11 @@ export const ExaminerReview: React.FC<ExaminerReviewProps> = ({
                   >
                     {ev.marksAwarded}/{ev.maxMarks}
                   </span>
-                ) : null}
+                ) : (
+                  <span className="text-[10px] font-mono-code text-[#686763] italic">
+                    Queued
+                  </span>
+                )}
               </button>
             );
           })}
@@ -428,7 +436,15 @@ export const ExaminerReview: React.FC<ExaminerReviewProps> = ({
                   </div>
                 ))
               ) : (
-                <div className="text-[#686763] text-xs font-mono-code italic">Grading breakdown is being compiled.</div>
+                <div className="p-5 bg-[#0c0d0e] border border-white/[0.08] rounded-xl text-center space-y-2">
+                  <div className="flex items-center justify-center gap-2 text-xs font-mono-code text-[#f3f3f2]">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#f54e00] animate-pulse" />
+                    <span>Evaluation Queued in Background</span>
+                  </div>
+                  <p className="text-[11px] font-mono-code text-[#686763] max-w-sm mx-auto">
+                    The Senior Examiner stream is currently grading earlier questions. This breakdown will populate automatically.
+                  </p>
+                </div>
               )}
             </div>
           </div>

@@ -1,4 +1,5 @@
 import { ExamManifest } from '@/types/exam';
+import { QUESTION_12_MATPLOTLIB_SVG } from '@/lib/graphRenderer';
 
 export const BUNDLED_MATH_AA_HL: ExamManifest = {
   id: 'math-aa-hl-specimen',
@@ -340,7 +341,7 @@ export const MAY_2021_MATH_AA_HL_P1: ExamManifest = {
         hasDiagram: true,
         type: 'function_graph',
         title: 'Graph of y = f(x)',
-        svgContent: '<svg viewBox="-50 -70 120 160" width="100%" height="220" xmlns="http://www.w3.org/2000/svg" class="stroke-slate-800 fill-none text-[10px] font-mono"><rect x="-45" y="-65" width="110" height="150" fill="#f8fafc" stroke="#cbd5e1" stroke-width="0.5"/><line x1="-45" y1="0" x2="65" y2="0" stroke="#0f172a" stroke-width="1.2"/><line x1="0" y1="85" x2="0" y2="-65" stroke="#0f172a" stroke-width="1.2"/><text x="66" y="3" fill="#0f172a" stroke="none">x</text><text x="-3" y="-66" fill="#0f172a" stroke="none">y</text><text x="-43" y="10" fill="#64748b" stroke="none">-4</text><text x="-23" y="10" fill="#64748b" stroke="none">-2</text><text x="-4" y="10" fill="#64748b" stroke="none">0</text><text x="18" y="10" fill="#64748b" stroke="none">2</text><text x="38" y="10" fill="#64748b" stroke="none">4</text><text x="58" y="10" fill="#64748b" stroke="none">6</text><text x="3" y="-38" fill="#64748b" stroke="none">4</text><text x="3" y="-58" fill="#64748b" stroke="none">6</text><text x="3" y="-78" fill="#64748b" stroke="none">8</text><text x="3" y="22" fill="#64748b" stroke="none">-2</text><text x="3" y="42" fill="#64748b" stroke="none">-4</text><text x="3" y="62" fill="#64748b" stroke="none">-6</text><path d="M -40 -40 L 0 -40 Q 20 -80 60 20" stroke="#0f172a" stroke-width="2" fill="none"/><circle cx="-40" cy="-40" r="2" fill="#0f172a"/><circle cx="60" cy="20" r="2" fill="#0f172a"/></svg>'
+        svgContent: QUESTION_12_MATPLOTLIB_SVG,
       },
       subparts: [
         {

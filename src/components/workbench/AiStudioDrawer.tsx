@@ -25,8 +25,10 @@ import {
   Cpu,
   RefreshCw,
   CheckCircle2,
-  AlertCircle
+  AlertCircle,
+  LineChart,
 } from 'lucide-react';
+import { renderCartesianGraph, CartesianGraphSpec, getQuestion12GraphSpec } from '@/lib/graphRenderer';
 
 interface AiStudioDrawerProps {
   isOpen: boolean;
@@ -34,9 +36,18 @@ interface AiStudioDrawerProps {
 }
 
 export const AiStudioDrawer: React.FC<AiStudioDrawerProps> = ({ isOpen, onClose }) => {
-  const [activeTab, setActiveTab] = useState<'reasoning' | 'prompts' | 'schemas' | 'apiKey'>('reasoning');
+  const [activeTab, setActiveTab] = useState<'reasoning' | 'prompts' | 'schemas' | 'apiKey' | 'graphs'>('reasoning');
   const [activePromptTab, setActivePromptTab] = useState<'grading' | 'socratic' | 'ingestion'>('grading');
   const [activeSchemaTab, setActiveSchemaTab] = useState<'grading' | 'socratic' | 'manifest'>('grading');
+
+  // Matplotlib Graph Studio state
+  const [graphSpec, setGraphSpec] = useState<CartesianGraphSpec>(getQuestion12GraphSpec('exam'));
+  const [renderedSvg, setRenderedSvg] = useState<string | null>(null);
+  const [isRenderingGraph, setIsRenderingGraph] = useState(false);
+  const [graphError, setGraphError] = useState<string | null>(null);
+  const [customExpr, setCustomExpr] = useState('6 - 0.5 * (x - 2)**2');
+  const [customDomain, setCustomDomain] = useState('-4, 6');
+  const [selectedTheme, setSelectedTheme] = useState<'exam' | 'obsidian'>('exam');
 
   const [config, setConfig] = useState<AiStudioConfig | null>(null);
   const [tempApiKey, setTempApiKey] = useState('');
@@ -115,6 +126,19 @@ export const AiStudioDrawer: React.FC<AiStudioDrawerProps> = ({ isOpen, onClose 
     navigator.clipboard.writeText(text);
     setCopied(label);
     setTimeout(() => setCopied(null), 2000);
+  };
+
+  const handleRenderGraph = async (specToRender: CartesianGraphSpec = graphSpec) => {
+    setIsRenderingGraph(true);
+    setGraphError(null);
+    try {
+      const svg = await renderCartesianGraph(specToRender);
+      setRenderedSvg(svg);
+    } catch (err: unknown) {
+      setGraphError(err instanceof Error ? err.message : 'Error rendering Cartesian graph');
+    } finally {
+      setIsRenderingGraph(false);
+    }
   };
 
   const activePromptText =
@@ -215,6 +239,22 @@ export const AiStudioDrawer: React.FC<AiStudioDrawerProps> = ({ isOpen, onClose 
           >
             <Key className="w-3.5 h-3.5" />
             <span>API Settings</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              setActiveTab('graphs');
+              if (!renderedSvg) handleRenderGraph();
+            }}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition font-medium focus-ring ${
+              activeTab === 'graphs'
+                ? 'bg-[#f54e00] text-white shadow-sm'
+                : 'text-[#9b9a95] hover:text-[#f3f3f2] hover:bg-[#1a1b1e]'
+            }`}
+          >
+            <LineChart className="w-3.5 h-3.5" />
+            <span>Graph Studio</span>
           </button>
         </div>
 
@@ -524,6 +564,277 @@ export const AiStudioDrawer: React.FC<AiStudioDrawerProps> = ({ isOpen, onClose 
                     <span>z.ai/manage-apikey</span>
                     <ExternalLink className="w-3 h-3" />
                   </a>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* 5. MATPLOTLIB GRAPH STUDIO */}
+          {activeTab === 'graphs' && (
+            <div className="space-y-5">
+              <div className="p-4 bg-[#1a1b1e] border border-white/[0.08] rounded-xl text-xs text-[#9b9a95]">
+                <div className="flex items-center justify-between mb-1.5">
+                  <span className="font-semibold text-[#f54e00] font-mono-code flex items-center gap-1.5">
+                    <LineChart className="w-4 h-4" />
+                    Python Matplotlib &amp; NumPy Cartesian Pipeline
+                  </span>
+                  <span className="text-[10px] font-mono-code text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full">
+                    Python 3.14 • Matplotlib 3.11
+                  </span>
+                </div>
+                <p className="leading-relaxed text-[#d6d5d1]">
+                  Vector Cartesian plane engine rendering authentic IB exam coordinate grids, piecewise functions,
+                  vertical/horizontal asymptotes, and shaded integration regions with genuine mathematical precision.
+                </p>
+              </div>
+
+              {/* Presets & Theme Bar */}
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5">
+                <div className="flex flex-wrap items-center gap-1.5 text-xs font-mono-code">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const spec = getQuestion12GraphSpec(selectedTheme);
+                      setGraphSpec(spec);
+                      handleRenderGraph(spec);
+                    }}
+                    className="px-2.5 py-1 bg-[#0c0d0e] hover:bg-[#1a1b1e] border border-white/[0.08] text-[#f3f3f2] rounded-lg transition"
+                  >
+                    Preset: Question 12
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const spec: CartesianGraphSpec = {
+                        title: 'Rational Curve with Asymptotes: f(x) = 1/(x-2) + 1',
+                        theme: selectedTheme,
+                        xRange: [-4, 8],
+                        yRange: [-6, 8],
+                        xStep: 2,
+                        yStep: 2,
+                        grid: true,
+                        showAxes: true,
+                        curves: [
+                          { expression: '1 / (x - 2) + 1', domain: [-4, 1.9], color: selectedTheme === 'exam' ? '#0f172a' : '#f54e00', width: 2.2 },
+                          { expression: '1 / (x - 2) + 1', domain: [2.1, 8], color: selectedTheme === 'exam' ? '#0f172a' : '#f54e00', width: 2.2 },
+                        ],
+                        asymptotes: [
+                          { type: 'vertical', value: 2, label: 'x = 2', color: '#cf2d56' },
+                          { type: 'horizontal', value: 1, label: 'y = 1', color: '#9fbbe0' },
+                        ],
+                        points: [
+                          { x: 0, y: 0.5, label: '(0, 0.5)', color: '#9fc9a2' },
+                          { x: 1, y: 0, label: '(1, 0)', color: '#9fc9a2' },
+                        ],
+                      };
+                      setGraphSpec(spec);
+                      handleRenderGraph(spec);
+                    }}
+                    className="px-2.5 py-1 bg-[#0c0d0e] hover:bg-[#1a1b1e] border border-white/[0.08] text-[#f3f3f2] rounded-lg transition"
+                  >
+                    Preset: Rational Curve
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const spec: CartesianGraphSpec = {
+                        title: 'Definite Integral: Area under y = 2*sin(x)',
+                        theme: selectedTheme,
+                        xRange: [-1, 7],
+                        yRange: [-3, 3],
+                        xStep: 1,
+                        yStep: 1,
+                        grid: true,
+                        showAxes: true,
+                        curves: [
+                          { expression: '2 * np.sin(x)', domain: [0, 6.28], label: 'y = 2 sin(x)', color: selectedTheme === 'exam' ? '#0f172a' : '#f54e00', width: 2.2 },
+                        ],
+                        shading: [
+                          { expression: '2 * np.sin(x)', domain: [0, 3.14159], color: 'rgba(245, 78, 0, 0.25)', label: 'Integral' },
+                        ],
+                        annotations: [
+                          { x: 1.57, y: 0.8, text: 'Area = 4', color: selectedTheme === 'exam' ? '#0f172a' : '#f3f3f2' }
+                        ]
+                      };
+                      setGraphSpec(spec);
+                      handleRenderGraph(spec);
+                    }}
+                    className="px-2.5 py-1 bg-[#0c0d0e] hover:bg-[#1a1b1e] border border-white/[0.08] text-[#f3f3f2] rounded-lg transition"
+                  >
+                    Preset: Trig &amp; Area
+                  </button>
+                </div>
+
+                {/* Theme Selector */}
+                <div className="flex items-center gap-1 bg-[#0c0d0e] p-1 rounded-lg border border-white/[0.08] text-xs font-mono-code">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectedTheme('exam');
+                      const updated = { ...graphSpec, theme: 'exam' as const };
+                      setGraphSpec(updated);
+                      handleRenderGraph(updated);
+                    }}
+                    className={`px-2 py-1 rounded transition ${
+                      selectedTheme === 'exam'
+                        ? 'bg-[#f54e00] text-white font-semibold'
+                        : 'text-[#9b9a95] hover:text-[#f3f3f2]'
+                    }`}
+                  >
+                    Exam Paper
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectedTheme('obsidian');
+                      const updated = { ...graphSpec, theme: 'obsidian' as const };
+                      setGraphSpec(updated);
+                      handleRenderGraph(updated);
+                    }}
+                    className={`px-2 py-1 rounded transition ${
+                      selectedTheme === 'obsidian'
+                        ? 'bg-[#f54e00] text-white font-semibold'
+                        : 'text-[#9b9a95] hover:text-[#f3f3f2]'
+                    }`}
+                  >
+                    Obsidian Dark
+                  </button>
+                </div>
+              </div>
+
+              {/* Custom Expression Row */}
+              <div className="p-4 bg-[#0c0d0e] border border-white/[0.08] rounded-xl space-y-3 text-xs">
+                <div className="font-semibold text-white font-mono-code flex items-center justify-between">
+                  <span>Custom Equation Plotter:</span>
+                  <span className="text-[10px] text-[#9b9a95]">Supports numpy math (x**2, sin(x), exp(x), log(x))</span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-12 gap-3">
+                  <div className="sm:col-span-8">
+                    <label className="text-[10px] font-mono-code text-[#9b9a95] block mb-1">
+                      Function f(x) =
+                    </label>
+                    <input
+                      type="text"
+                      value={customExpr}
+                      onChange={(e) => setCustomExpr(e.target.value)}
+                      placeholder="e.g. 6 - 0.5 * (x - 2)**2"
+                      className="w-full bg-[#141517] border border-white/[0.08] rounded-lg px-3 py-1.5 font-mono-code text-white outline-none focus:border-[#f54e00]"
+                    />
+                  </div>
+
+                  <div className="sm:col-span-4">
+                    <label className="text-[10px] font-mono-code text-[#9b9a95] block mb-1">
+                      Domain [x_min, x_max]
+                    </label>
+                    <input
+                      type="text"
+                      value={customDomain}
+                      onChange={(e) => setCustomDomain(e.target.value)}
+                      placeholder="-4, 6"
+                      className="w-full bg-[#141517] border border-white/[0.08] rounded-lg px-3 py-1.5 font-mono-code text-white outline-none focus:border-[#f54e00]"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex justify-end gap-2 pt-1">
+                  <button
+                    type="button"
+                    disabled={isRenderingGraph}
+                    onClick={() => {
+                      const domainParts = customDomain.split(',').map((p) => parseFloat(p.trim()));
+                      const dMin = isNaN(domainParts[0]) ? -5 : domainParts[0];
+                      const dMax = isNaN(domainParts[1]) ? 5 : domainParts[1];
+                      const spec: CartesianGraphSpec = {
+                        title: `f(x) = ${customExpr}`,
+                        theme: selectedTheme,
+                        xRange: [Math.floor(dMin - 1), Math.ceil(dMax + 1)],
+                        yRange: [-6, 8],
+                        xStep: 1,
+                        yStep: 1,
+                        grid: true,
+                        showAxes: true,
+                        curves: [
+                          {
+                            expression: customExpr,
+                            domain: [dMin, dMax],
+                            color: selectedTheme === 'exam' ? '#0f172a' : '#f54e00',
+                            width: 2.2,
+                          },
+                        ],
+                      };
+                      setGraphSpec(spec);
+                      handleRenderGraph(spec);
+                    }}
+                    className="px-4 py-1.5 cursor-btn-primary text-xs font-mono-code flex items-center gap-1.5 disabled:opacity-50"
+                  >
+                    {isRenderingGraph ? (
+                      <>
+                        <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                        <span>Rendering in Python...</span>
+                      </>
+                    ) : (
+                      <>
+                        <LineChart className="w-3.5 h-3.5" />
+                        <span>Plot with Matplotlib</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              {/* Error Notice */}
+              {graphError && (
+                <div className="p-3 bg-rose-950/40 border border-rose-800/50 rounded-xl text-xs text-rose-300 flex items-center gap-2 font-mono-code">
+                  <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
+                  <span>{graphError}</span>
+                </div>
+              )}
+
+              {/* Live Preview Canvas */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between text-xs font-mono-code text-[#9b9a95]">
+                  <span>Live Scalable SVG Preview:</span>
+                  {renderedSvg && (
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => copyToClipboard(renderedSvg, 'svg')}
+                        className="flex items-center gap-1 text-[#f54e00] hover:text-[#ff6a24] transition"
+                      >
+                        {copied === 'svg' ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
+                        <span>{copied === 'svg' ? 'Copied!' : 'Copy SVG'}</span>
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                <div
+                  className={`w-full rounded-xl border p-4 flex flex-col items-center justify-center transition-all ${
+                    selectedTheme === 'exam'
+                      ? 'bg-[#f8fafc] border-slate-300 shadow-inner'
+                      : 'bg-[#0c0d0e] border-white/[0.08]'
+                  }`}
+                >
+                  {isRenderingGraph ? (
+                    <div className="py-20 text-center space-y-2">
+                      <RefreshCw className="w-6 h-6 text-[#f54e00] animate-spin mx-auto" />
+                      <p className="text-xs font-mono-code text-[#9b9a95]">
+                        Executing Python Matplotlib subprocess...
+                      </p>
+                    </div>
+                  ) : renderedSvg ? (
+                    <div
+                      className="w-full max-w-lg flex justify-center [&>svg]:max-w-full [&>svg]:h-auto shadow-sm"
+                      dangerouslySetInnerHTML={{ __html: renderedSvg }}
+                    />
+                  ) : (
+                    <div className="py-20 text-center text-xs font-mono-code text-[#686763]">
+                      Click &quot;Plot with Matplotlib&quot; or select a preset above.
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

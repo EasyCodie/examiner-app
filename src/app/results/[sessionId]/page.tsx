@@ -9,6 +9,7 @@ import { useAppShell } from '@/components/common/AppShell';
 import { GradeBoundaryCard } from '@/components/assessment/GradeBoundaryCard';
 import { ExaminerReview } from '@/components/assessment/ExaminerReview';
 import { SyllabusMatrix } from '@/components/assessment/SyllabusMatrix';
+import { AssessmentIntakeStage } from '@/components/assessment/AssessmentIntakeStage';
 import confetti from 'canvas-confetti';
 import {
   Sparkles,
@@ -32,6 +33,11 @@ export default function ResultsPage() {
   const [session, setSession] = useState<ExamSession | null>(null);
   const [manifest, setManifest] = useState<ExamManifest | null>(null);
   const [loading, setLoading] = useState(true);
+
+  // Satisfying animated intake stage until Question 1 is graded
+  const [intakeStageActive, setIntakeStageActive] = useState<boolean>(isEvaluatingParam);
+  const [intakeTransitioningOut, setIntakeTransitioningOut] = useState<boolean>(false);
+  const [skipIntake, setSkipIntake] = useState<boolean>(false);
 
   // Live streaming evaluation state
   const [isStreaming, setIsStreaming] = useState(false);
@@ -143,6 +149,7 @@ export default function ResultsPage() {
 
             // If session is already finalized with grading results, display immediately
             if (s.gradingResults && s.gradingResults.evaluations.length > 0) {
+              setIntakeStageActive(false);
               setLoading(false);
               return;
             }
@@ -150,9 +157,11 @@ export default function ResultsPage() {
             // Otherwise, if evaluating query param is set, trigger streaming evaluation
             if (isEvaluatingParam && !streamInitiatedRef.current) {
               streamInitiatedRef.current = true;
+              setIntakeStageActive(true);
               setLoading(false);
               startEvaluationStream(m, s);
             } else {
+              setIntakeStageActive(false);
               setLoading(false);
             }
           } else {
@@ -164,6 +173,22 @@ export default function ResultsPage() {
       }
     });
   }, [sessionId, isEvaluatingParam, setHeaderInfo, startEvaluationStream]);
+
+  // Satisfying exit animation once Question 1 is evaluated
+  useEffect(() => {
+    if (liveEvaluations.length >= 1 && intakeStageActive && !intakeTransitioningOut) {
+      // 700ms grace period so the user sees the Q1 checkmark and celebration
+      const timer = setTimeout(() => {
+        setIntakeTransitioningOut(true);
+        // 400ms transition exit
+        const exitTimer = setTimeout(() => {
+          setIntakeStageActive(false);
+        }, 400);
+        return () => clearTimeout(exitTimer);
+      }, 700);
+      return () => clearTimeout(timer);
+    }
+  }, [liveEvaluations.length, intakeStageActive, intakeTransitioningOut]);
 
   if (loading) {
     return (
@@ -199,9 +224,36 @@ export default function ResultsPage() {
   const ecfCount = effectiveEvaluations.filter((e) => e.ecfApplied).length;
   const totalQuestions = manifest.questions.length;
   const progressPct = totalQuestions > 0 ? Math.round((effectiveEvaluations.length / totalQuestions) * 100) : 0;
+  const firstQuestionReady = liveEvaluations.length >= 1;
+
+  // Satisfying Senior Examiner Intake Stage until Question 1 is ready
+  if (intakeStageActive && !skipIntake) {
+    return (
+      <div className="flex-1 flex flex-col items-center justify-center p-4 sm:p-8 min-h-[75vh]">
+        <div
+          className={`w-full transition-all duration-400 ease-out ${
+            intakeTransitioningOut
+              ? 'opacity-0 scale-[0.97] -translate-y-3 pointer-events-none'
+              : 'opacity-100 scale-100 translate-y-0'
+          }`}
+        >
+          <AssessmentIntakeStage
+            manifest={manifest}
+            session={session}
+            isStreaming={isStreaming}
+            streamStatus={streamStatus}
+            streamError={streamError}
+            firstQuestionReady={firstQuestionReady}
+            onRetry={() => startEvaluationStream(manifest, session)}
+            onSkip={() => setSkipIntake(true)}
+          />
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="flex-1 p-4 sm:p-8 max-w-7xl mx-auto w-full space-y-8 select-text">
+    <div className="flex-1 p-4 sm:p-8 max-w-7xl mx-auto w-full space-y-8 select-text animate-in fade-in slide-in-from-bottom-2 duration-500">
       {/* Top Header Bar */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-white/[0.08] pb-4">
         <div>
@@ -254,13 +306,18 @@ export default function ResultsPage() {
 
       {/* Live Stream Progress HUD (when evaluating) */}
       {isStreaming && (
-        <div className="bg-[#141517] border border-[#f54e00]/30 rounded-xl p-4 sm:p-5 space-y-3 shadow-lg animate-in fade-in">
+        <div className="bg-[#141517] border border-[#f54e00]/30 rounded-xl p-4 sm:p-5 space-y-3 shadow-lg animate-in fade-in duration-300">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
             <div className="flex items-center gap-2.5">
               <Loader2 className="w-4 h-4 text-[#f54e00] animate-spin shrink-0" />
               <div>
-                <h3 className="text-sm font-semibold text-white tracking-tight">
-                  Senior Examiner Live Evaluation
+                <h3 className="text-sm font-semibold text-white tracking-tight flex items-center gap-2">
+                  <span>Senior Examiner Live Evaluation</span>
+                  {effectiveEvaluations.length >= 1 && (
+                    <span className="text-[10px] font-mono-code font-normal text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full">
+                      Question 1 Unlocked
+                    </span>
+                  )}
                 </h3>
                 <p className="text-xs text-[#9b9a95] font-mono-code mt-0.5">
                   {streamStatus}
@@ -284,7 +341,7 @@ export default function ResultsPage() {
               />
             </div>
             <div className="flex justify-between text-[10px] font-mono-code text-[#686763]">
-              <span>Immediate Reflection: Inspect completed questions below right now</span>
+              <span>Review Question 1 below while remaining questions stream in background</span>
               <span>{progressPct}%</span>
             </div>
           </div>
