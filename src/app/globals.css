@@ -10,30 +10,42 @@
 }
 
 :root {
-  --background: #0c0d0e;
-  --foreground: #f3f3f2;
+  --background: #090d16;
+  --foreground: #f8fafc;
 
-  /* Cursor Dark Mode Design Tokens */
-  --cursor-primary: #f54e00;
-  --cursor-primary-active: #d04200;
-  --cursor-canvas: #0c0d0e;
-  --cursor-canvas-soft: #141517;
-  --cursor-surface-card: #1a1b1e;
-  --cursor-surface-strong: #222428;
-  --cursor-surface-hover: #26282d;
+  /* Geneva Diplomatic Design Tokens */
+  --cursor-primary: #d97706;
+  --cursor-primary-active: #b45309;
+  --cursor-primary-hover: #f59e0b;
+  --cursor-canvas: #090d16;
+  --cursor-canvas-soft: #0e1522;
+  --cursor-surface-card: #131c2b;
+  --cursor-surface-strong: #1a263a;
+  --cursor-surface-hover: #1e2c44;
   --cursor-hairline: rgba(255, 255, 255, 0.08);
-  --cursor-hairline-strong: rgba(255, 255, 255, 0.16);
+  --cursor-hairline-strong: rgba(56, 189, 248, 0.20);
 
-  --cursor-text-strong: #f3f3f2;
-  --cursor-text-body: #9b9a95;
-  --cursor-text-muted: #686763;
+  --cursor-text-strong: #f8fafc;
+  --cursor-text-body: #94a3b8;
+  --cursor-text-muted: #64748b;
 
-  /* Cursor Agent Timeline Pastels */
-  --timeline-thinking: #dfa88f;
-  --timeline-read: #9fbbe0;
-  --timeline-grep: #9fc9a2;
-  --timeline-codes: #c0a8dd;
-  --timeline-done: #c08532;
+  /* Secondary / Diplomatic Azure */
+  --diplomatic-azure: #38bdf8;
+  --diplomatic-azure-deep: #0284c7;
+
+  /* Examination Evaluation Semantics */
+  --mark-method: #38bdf8;
+  --mark-accuracy: #10b981;
+  --mark-reasoning: #a78bfa;
+  --mark-ecf: #fbbf24;
+  --mark-error: #f43f5e;
+
+  /* Geneva Agent Timeline Pastels */
+  --timeline-thinking: #7dd3fc;
+  --timeline-read: #93c5fd;
+  --timeline-grep: #86efac;
+  --timeline-codes: #c4b5fd;
+  --timeline-done: #fcd34d;
 }
 
 body {
@@ -187,7 +199,7 @@ h1, h2, h3 {
 /* Custom minimal scrollbar (Webkit & Standard CSS for Firefox) */
 * {
   scrollbar-width: thin;
-  scrollbar-color: #222428 #0c0d0e;
+  scrollbar-color: #1a263a #090d16;
 }
 
 ::-webkit-scrollbar {
@@ -219,7 +231,7 @@ h1, h2, h3 {
 
 /* Selection */
 ::selection {
-  background: rgba(245, 78, 0, 0.3);
+  background: rgba(217, 119, 6, 0.35);
   color: #ffffff;
 }
 

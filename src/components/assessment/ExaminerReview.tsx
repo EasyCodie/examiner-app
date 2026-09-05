@@ -62,9 +62,9 @@ export const ExaminerReview: React.FC<ExaminerReviewProps> = ({
   ) || evaluations[activeIndex];
 
   return (
-    <div className="bg-[#141517] border border-white/[0.08] rounded-2xl overflow-hidden shadow-2xl">
+    <div className="bg-[var(--cursor-canvas-soft)] border border-white/[0.08] rounded-2xl overflow-hidden shadow-2xl">
       {/* Top Question Selector Bar with Diagnostic Heatmap */}
-      <div className="p-3 bg-[#0c0d0e] border-b border-white/[0.08] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 overflow-x-auto">
+      <div className="p-3 bg-[var(--cursor-canvas)] border-b border-white/[0.08] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 overflow-x-auto">
         <div className="flex items-center gap-1.5 overflow-x-auto max-w-full pb-1 sm:pb-0">
           {questions.map((q, idx) => {
             const ev = evaluations.find(
@@ -94,8 +94,8 @@ export const ExaminerReview: React.FC<ExaminerReviewProps> = ({
                 onClick={() => handleSelectIndex(idx)}
                 className={`px-3 py-1.5 rounded-lg text-xs font-mono-code transition-all flex items-center gap-1.5 whitespace-nowrap border ${
                   isSelected
-                    ? 'bg-[#f54e00] text-white font-semibold shadow-sm border-transparent'
-                    : 'bg-[#1a1b1e] text-[#9b9a95] hover:text-[#f3f3f2] hover:bg-[#222428] border-white/[0.08]'
+                    ? 'bg-[var(--cursor-primary)] text-white font-semibold shadow-sm border-transparent'
+                    : 'bg-[var(--cursor-surface-card)] text-[var(--cursor-text-body)] hover:text-[var(--cursor-text-strong)] hover:bg-[var(--cursor-surface-strong)] border-white/[0.08]'
                 }`}
               >
                 {/* Diagnostic Heatmap Dot or Pending Loader */}
@@ -105,14 +105,14 @@ export const ExaminerReview: React.FC<ExaminerReviewProps> = ({
                       fullMarks
                         ? 'bg-emerald-400'
                         : isPartial
-                        ? 'bg-[#dfa88f]'
+                        ? 'bg-amber-400'
                         : isZero && hasWork
                         ? 'bg-[#cf2d56]'
                         : 'bg-white/20'
                     }`}
                   />
                 ) : (
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#f54e00] animate-pulse shrink-0" />
+                  <span className="w-1.5 h-1.5 rounded-full bg-[var(--cursor-primary)] animate-pulse shrink-0" />
                 )}
                 <span>{q.number.replace(/^Question\s*/i, '')}</span>
                 {ev ? (
@@ -141,14 +141,14 @@ export const ExaminerReview: React.FC<ExaminerReviewProps> = ({
 
         <div className="flex items-center gap-3 shrink-0">
           {/* Quick Filter Segmented Control */}
-          <div className="flex items-center gap-0.5 bg-[#141517] p-0.5 rounded-lg border border-white/[0.08] text-[10px] font-mono-code">
+          <div className="flex items-center gap-0.5 bg-[var(--cursor-surface-strong)] p-0.5 rounded-lg border border-white/[0.08] text-[10px] font-mono-code">
             <button
               type="button"
               onClick={() => setFilter('ALL')}
               className={`px-2 py-1 rounded transition ${
                 filter === 'ALL'
                   ? 'bg-white/[0.12] text-white font-semibold'
-                  : 'text-[#9b9a95] hover:text-[#f3f3f2]'
+                  : 'text-[var(--cursor-text-muted)] hover:text-[var(--cursor-text-strong)]'
               }`}
             >
               All ({questions.length})
@@ -159,7 +159,7 @@ export const ExaminerReview: React.FC<ExaminerReviewProps> = ({
               className={`px-2 py-1 rounded transition ${
                 filter === 'REVIEW'
                   ? 'bg-white/[0.12] text-white font-semibold'
-                  : 'text-[#9b9a95] hover:text-[#f3f3f2]'
+                  : 'text-[var(--cursor-text-muted)] hover:text-[var(--cursor-text-strong)]'
               }`}
             >
               Needs Review
@@ -170,7 +170,7 @@ export const ExaminerReview: React.FC<ExaminerReviewProps> = ({
               className={`px-2 py-1 rounded transition ${
                 filter === 'MASTERED'
                   ? 'bg-white/[0.12] text-white font-semibold'
-                  : 'text-[#9b9a95] hover:text-[#f3f3f2]'
+                  : 'text-[var(--cursor-text-muted)] hover:text-[var(--cursor-text-strong)]'
               }`}
             >
               Mastered
@@ -178,7 +178,7 @@ export const ExaminerReview: React.FC<ExaminerReviewProps> = ({
           </div>
 
           {/* Chevrons */}
-          <div className="flex items-center gap-1.5 text-[#9b9a95] text-xs font-mono-code">
+          <div className="flex items-center gap-1.5 text-[var(--cursor-text-muted)] text-xs font-mono-code">
             <button
               type="button"
               disabled={activeIndex <= 0}
@@ -207,28 +207,28 @@ export const ExaminerReview: React.FC<ExaminerReviewProps> = ({
       {/* Main Side-by-Side Review Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-12 min-h-[600px]">
         {/* LEFT PANE (Col 1-6): Student's Submitted Work */}
-        <div className="lg:col-span-6 p-6 border-b lg:border-b-0 lg:border-r border-white/[0.08] bg-[#141517] flex flex-col">
+        <div className="lg:col-span-6 p-6 border-b lg:border-b-0 lg:border-r border-white/[0.08] bg-[var(--cursor-canvas-soft)] flex flex-col">
           <div className="flex items-center justify-between pb-3 border-b border-white/[0.08] mb-4">
             <div className="flex items-center gap-2">
-              <span className="text-xs font-semibold uppercase tracking-wider text-[#f3f3f2] font-mono-code">
+              <span className="text-xs font-semibold uppercase tracking-wider text-[var(--cursor-text-strong)] font-mono-code">
                 Student Work Submitted
               </span>
-              <span className="text-[10px] font-mono-code text-[#686763]">
+              <span className="text-[10px] font-mono-code text-[var(--cursor-text-muted)]">
                 ({submission?.timeSpentSeconds ? `${Math.round(submission.timeSpentSeconds / 60)} mins` : 'Timed session'})
               </span>
             </div>
             {evaluation?.ecfApplied && (
-              <span className="text-[11px] font-mono-code text-[#dfa88f] bg-[#dfa88f]/10 border border-[#dfa88f]/30 px-2 py-0.5 rounded-full flex items-center gap-1">
+              <span className="text-[11px] font-mono-code text-amber-400 bg-amber-400/10 border border-amber-400/30 px-2 py-0.5 rounded-full flex items-center gap-1">
                 <Sparkles className="w-3 h-3" /> ECF Protected
               </span>
             )}
           </div>
 
           {/* Prompt Review */}
-          <div className="bg-[#0c0d0e] p-3.5 rounded-xl border border-white/[0.08] mb-4 text-xs text-[#d6d5d1]">
+          <div className="bg-[var(--cursor-canvas)] p-3.5 rounded-xl border border-white/[0.08] mb-4 text-xs text-[#d6d5d1]">
             <div className="font-semibold text-white mb-1.5 font-mono-code flex items-center justify-between">
               <span>{currentQuestion.number.replace(/^Question\s*/i, '')}</span>
-              <span className="text-[11px] text-[#9b9a95]">[{currentQuestion.totalMarks} Marks]</span>
+              <span className="text-[11px] text-[var(--cursor-text-body)]">[{currentQuestion.totalMarks} Marks]</span>
             </div>
             <MathRenderer content={currentQuestion.promptText} />
 
@@ -271,7 +271,7 @@ export const ExaminerReview: React.FC<ExaminerReviewProps> = ({
                         {spScore ? (
                           <div className="flex items-center gap-1.5">
                             {spScore.ecfApplied && (
-                              <span className="text-[10px] font-mono-code text-[#dfa88f] bg-[#dfa88f]/10 border border-[#dfa88f]/30 px-1.5 py-0.5 rounded flex items-center gap-0.5">
+                              <span className="text-[10px] font-mono-code text-amber-400 bg-amber-400/10 border border-amber-400/30 px-1.5 py-0.5 rounded flex items-center gap-0.5">
                                 <Sparkles className="w-2.5 h-2.5" /> ECF
                               </span>
                             )}
@@ -419,16 +419,16 @@ export const ExaminerReview: React.FC<ExaminerReviewProps> = ({
         </div>
 
         {/* RIGHT PANE (Col 7-12): Authoritative Senior Examiner Mark Breakdown */}
-        <div className="lg:col-span-6 p-6 bg-[#141517] flex flex-col space-y-5">
+        <div className="lg:col-span-6 p-6 bg-[var(--cursor-canvas-soft)] flex flex-col space-y-5">
           {/* Score Header */}
           <div className="flex items-start justify-between border-b border-white/[0.08] pb-4">
             <div>
               <div className="flex items-center gap-2">
-                <span className="text-xs font-mono-code uppercase tracking-wider text-[#f54e00] font-semibold">
+                <span className="text-xs font-mono-code uppercase tracking-wider text-[var(--cursor-primary)] font-semibold">
                   Mark Breakdown
                 </span>
               </div>
-              <h3 className="text-base font-normal text-[#f3f3f2] mt-0.5">
+              <h3 className="text-base font-normal text-[var(--cursor-text-strong)] mt-0.5">
                 Evaluation &amp; Mark Allocation
               </h3>
             </div>
@@ -436,7 +436,7 @@ export const ExaminerReview: React.FC<ExaminerReviewProps> = ({
             <div className="text-right">
               <div className="text-2xl font-semibold font-mono-code text-white">
                 {evaluation?.marksAwarded ?? 0}{' '}
-                <span className="text-sm font-normal text-[#686763]">/ {currentQuestion.totalMarks}</span>
+                <span className="text-sm font-normal text-[var(--cursor-text-muted)]">/ {currentQuestion.totalMarks}</span>
               </div>
               <span className="text-[10px] font-mono-code text-emerald-400">
                 {Math.round(((evaluation?.marksAwarded ?? 0) / currentQuestion.totalMarks) * 100)}% Awarded
@@ -446,9 +446,9 @@ export const ExaminerReview: React.FC<ExaminerReviewProps> = ({
 
           {/* Examiner Notes */}
           {evaluation?.examinerNotes && (
-            <div className="p-3.5 bg-[#0c0d0e] rounded-xl border border-white/[0.08] text-xs text-[#d6d5d1] leading-relaxed">
+            <div className="p-3.5 bg-[var(--cursor-canvas)] rounded-xl border border-white/[0.08] text-xs text-[#d6d5d1] leading-relaxed">
               <div className="font-semibold text-white mb-1 flex items-center gap-1.5 font-mono-code">
-                <FileCheck className="w-3.5 h-3.5 text-[#f54e00]" />
+                <FileCheck className="w-3.5 h-3.5 text-[var(--cursor-primary)]" />
                 Senior Examiner Review Note:
               </div>
               <MathRenderer content={evaluation.examinerNotes} />
@@ -457,9 +457,9 @@ export const ExaminerReview: React.FC<ExaminerReviewProps> = ({
 
           {/* Error Carried Forward Explanation Card */}
           {evaluation?.ecfApplied && evaluation.ecfExplanation && (
-            <div className="p-3.5 bg-[#dfa88f]/10 border border-[#dfa88f]/30 rounded-xl text-xs text-[#dfa88f]">
-              <div className="font-semibold text-[#dfa88f] flex items-center gap-1.5 mb-1 font-mono-code">
-                <Sparkles className="w-4 h-4 text-[#dfa88f]" />
+            <div className="p-3.5 bg-amber-400/10 border border-amber-400/30 rounded-xl text-xs text-amber-300">
+              <div className="font-semibold text-amber-300 flex items-center gap-1.5 mb-1 font-mono-code">
+                <Sparkles className="w-4 h-4 text-amber-400" />
                 IB Error Carried Forward (ECF) Protocol Triggered:
               </div>
               <MathRenderer content={evaluation.ecfExplanation} className="opacity-95" />
@@ -468,7 +468,7 @@ export const ExaminerReview: React.FC<ExaminerReviewProps> = ({
 
           {/* Granular Mark Codes Breakdown Table */}
           <div>
-            <span className="text-xs font-semibold uppercase tracking-wider text-[#9b9a95] block mb-2.5 font-mono-code">
+            <span className="text-xs font-semibold uppercase tracking-wider text-[var(--cursor-text-body)] block mb-2.5 font-mono-code">
               Official Markscheme Criteria:
             </span>
             <div className="space-y-2">
@@ -478,8 +478,8 @@ export const ExaminerReview: React.FC<ExaminerReviewProps> = ({
                     key={mIdx}
                     className={`p-3 rounded-xl border transition-all text-xs ${
                       mb.awarded
-                        ? 'bg-[#0c0d0e] border-white/[0.08] text-[#f3f3f2]'
-                        : 'bg-[#cf2d56]/10 border-[#cf2d56]/20 text-[#f3f3f2]'
+                        ? 'bg-[var(--cursor-canvas)] border-white/[0.08] text-[var(--cursor-text-strong)]'
+                        : 'bg-[#cf2d56]/10 border-[#cf2d56]/20 text-[var(--cursor-text-strong)]'
                     }`}
                   >
                     <div className="flex items-center justify-between gap-2 mb-1.5">
@@ -491,7 +491,7 @@ export const ExaminerReview: React.FC<ExaminerReviewProps> = ({
                           marks={mb.marksAwarded}
                           isEcfApplied={mb.isEcfApplied}
                         />
-                        <span className="font-mono-code text-[11px] text-[#9b9a95]">
+                        <span className="font-mono-code text-[11px] text-[var(--cursor-text-body)]">
                           {mb.awarded ? `Awarded ${mb.marksAwarded}/${mb.maxMarks}m` : `Lost 0/${mb.maxMarks}m`}
                         </span>
                       </div>
@@ -511,12 +511,12 @@ export const ExaminerReview: React.FC<ExaminerReviewProps> = ({
                   </div>
                 ))
               ) : (
-                <div className="p-5 bg-[#0c0d0e] border border-white/[0.08] rounded-xl text-center space-y-2">
-                  <div className="flex items-center justify-center gap-2 text-xs font-mono-code text-[#f3f3f2]">
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#f54e00] animate-pulse" />
+                <div className="p-5 bg-[var(--cursor-canvas)] border border-white/[0.08] rounded-xl text-center space-y-2">
+                  <div className="flex items-center justify-center gap-2 text-xs font-mono-code text-[var(--cursor-text-strong)]">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[var(--cursor-primary)] animate-pulse" />
                     <span>Evaluation Queued in Background</span>
                   </div>
-                  <p className="text-[11px] font-mono-code text-[#686763] max-w-sm mx-auto">
+                  <p className="text-[11px] font-mono-code text-[var(--cursor-text-muted)] max-w-sm mx-auto">
                     The Senior Examiner stream is currently grading earlier questions. This breakdown will populate automatically.
                   </p>
                 </div>
@@ -526,12 +526,12 @@ export const ExaminerReview: React.FC<ExaminerReviewProps> = ({
 
           {/* Targeted Revision Drill Advice */}
           {evaluation?.revisionRecommendation && (
-            <div className="p-3.5 bg-[#0c0d0e] border border-white/[0.08] rounded-xl text-xs text-[#f3f3f2]">
-              <div className="font-semibold text-[#f54e00] flex items-center gap-1.5 mb-1 font-mono-code">
-                <Lightbulb className="w-3.5 h-3.5 text-[#f54e00]" />
+            <div className="p-3.5 bg-[var(--cursor-canvas)] border border-white/[0.08] rounded-xl text-xs text-[var(--cursor-text-strong)]">
+              <div className="font-semibold text-[var(--cursor-primary)] flex items-center gap-1.5 mb-1 font-mono-code">
+                <Lightbulb className="w-3.5 h-3.5 text-[var(--cursor-primary)]" />
                 Targeted Syllabus Drill: {evaluation.syllabusSubtopic}
               </div>
-              <MathRenderer content={evaluation.revisionRecommendation} className="text-[#9b9a95] mt-1" />
+              <MathRenderer content={evaluation.revisionRecommendation} className="text-[var(--cursor-text-body)] mt-1" />
             </div>
           )}
         </div>

@@ -39,8 +39,8 @@ const COMPILATION_PIPELINE: CompilationStep[] = [
   {
     stage: 'THINKING',
     pillLabel: 'Loading',
-    pastelBg: '#dfa88f',
-    pastelText: '#0c0d0e',
+    pastelBg: '#7dd3fc',
+    pastelText: '#090d16',
     substeps: [
       'Reading PDF binary streams...',
       'Verifying document structure & integrity...',
@@ -50,8 +50,8 @@ const COMPILATION_PIPELINE: CompilationStep[] = [
   {
     stage: 'READING',
     pillLabel: 'Reading',
-    pastelBg: '#9fbbe0',
-    pastelText: '#0c0d0e',
+    pastelBg: '#93c5fd',
+    pastelText: '#090d16',
     substeps: [
       'Scanning Question Paper & Markscheme...',
       'Extracting mathematical formulas & diagrams...',
@@ -61,8 +61,8 @@ const COMPILATION_PIPELINE: CompilationStep[] = [
   {
     stage: 'INDEXING',
     pillLabel: 'Indexing',
-    pastelBg: '#9fc9a2',
-    pastelText: '#0c0d0e',
+    pastelBg: '#86efac',
+    pastelText: '#090d16',
     substeps: [
       'Indexing question hierarchy (1, 2(a), 2(b)...)...',
       'Mapping command terms and mark allocations...',
@@ -72,8 +72,8 @@ const COMPILATION_PIPELINE: CompilationStep[] = [
   {
     stage: 'CODES',
     pillLabel: 'Rubrics',
-    pastelBg: '#c0a8dd',
-    pastelText: '#0c0d0e',
+    pastelBg: '#c4b5fd',
+    pastelText: '#090d16',
     substeps: [
       'Parsing official markscheme breakdown (M, A, R, N)...',
       'Compiling Error Carried Forward (ECF) rules...',
@@ -83,8 +83,8 @@ const COMPILATION_PIPELINE: CompilationStep[] = [
   {
     stage: 'DONE',
     pillLabel: 'Ready',
-    pastelBg: '#c08532',
-    pastelText: '#0c0d0e',
+    pastelBg: '#fcd34d',
+    pastelText: '#090d16',
     substeps: [
       'Assembling authentic exam booklet...',
       'Caching documents in local storage...',
@@ -268,10 +268,10 @@ export default function HomePage() {
     <div className="flex-1 flex flex-col items-center justify-center px-4 sm:px-6 py-16 max-w-3xl mx-auto w-full min-h-[90vh]">
       {/* Brand Anchor (Quiet standalone emblem on home screen) */}
       <div className="flex items-center gap-2 mb-10 select-none">
-        <div className="w-7 h-7 rounded-lg bg-[#141517] border border-white/[0.08] flex items-center justify-center text-[#f54e00]">
+        <div className="w-7 h-7 rounded-lg bg-[var(--cursor-surface-strong)] border border-white/[0.08] flex items-center justify-center text-[var(--cursor-primary)]">
           <Sparkles className="w-3.5 h-3.5" />
         </div>
-        <span className="text-sm font-medium tracking-tight text-[#f3f3f2]">
+        <span className="text-sm font-medium tracking-tight text-[var(--cursor-text-strong)]">
           IB Examiner
         </span>
       </div>
@@ -285,10 +285,10 @@ export default function HomePage() {
           className={`w-full space-y-8 ${direction === 'forward' ? 'animate-step-forward' : 'animate-step-back'}`}
         >
           <div className="space-y-2 text-center">
-            <h1 className="text-3xl sm:text-4xl text-[#f3f3f2] tracking-tight">
+            <h1 className="text-3xl sm:text-4xl text-[var(--cursor-text-strong)] tracking-tight">
               Upload your exam paper.
             </h1>
-            <p className="text-sm text-[#9b9a95] max-w-md mx-auto leading-relaxed">
+            <p className="text-sm text-[var(--cursor-text-muted)] max-w-md mx-auto leading-relaxed">
               Upload an official Question Paper and its matching Markscheme to begin.
             </p>
           </div>
@@ -300,8 +300,8 @@ export default function HomePage() {
               onClick={() => paperInputRef.current?.click()}
               className={`p-6 rounded-xl border text-center cursor-pointer transition-all duration-200 hover:-translate-y-0.5 hover:border-white/[0.18] active:scale-[0.99] flex flex-col items-center justify-center min-h-[150px] ${
                 paperFile
-                  ? 'bg-[#18191d] border-[#f54e00]/60 text-[#f3f3f2]'
-                  : 'bg-[#141517] border-white/[0.08] text-[#9b9a95] hover:text-[#f3f3f2]'
+                  ? 'bg-[var(--cursor-surface-strong)] border-[var(--cursor-primary)]/60 text-[var(--cursor-text-strong)]'
+                  : 'bg-[var(--cursor-surface-card)] border-white/[0.08] text-[var(--cursor-text-muted)] hover:text-[var(--cursor-text-strong)]'
               }`}
             >
               <input
@@ -315,21 +315,21 @@ export default function HomePage() {
               />
               {paperFile ? (
                 <div className="animate-step-enter flex flex-col items-center">
-                  <FileCheck className="w-5 h-5 text-[#f54e00] mb-2" />
-                  <span className="text-xs font-mono-code font-medium text-[#f3f3f2] truncate max-w-[220px]">
+                  <FileCheck className="w-5 h-5 text-[var(--cursor-primary)] mb-2" />
+                  <span className="text-xs font-mono-code font-medium text-[var(--cursor-text-strong)] truncate max-w-[220px]">
                     {paperFile.name}
                   </span>
-                  <span className="text-[10px] text-[#686763] font-mono-code mt-0.5">
+                  <span className="text-[10px] text-[var(--cursor-text-faint)] font-mono-code mt-0.5">
                     Question Paper • {(paperFile.size / 1024 / 1024).toFixed(2)} MB
                   </span>
                 </div>
               ) : (
                 <>
-                  <div className="w-9 h-9 rounded-lg bg-[#1a1b1e] border border-white/[0.08] flex items-center justify-center text-[#9b9a95] mb-2.5 transition-transform group-hover:scale-105">
+                  <div className="w-9 h-9 rounded-lg bg-[var(--cursor-surface-strong)] border border-white/[0.08] flex items-center justify-center text-[var(--cursor-text-muted)] mb-2.5 transition-transform group-hover:scale-105">
                     <FileUp className="w-4 h-4" />
                   </div>
-                  <span className="text-xs font-medium text-[#f3f3f2]">1. Question Paper PDF</span>
-                  <span className="text-[11px] text-[#686763] mt-0.5">Click or drag PDF</span>
+                  <span className="text-xs font-medium text-[var(--cursor-text-strong)]">1. Question Paper PDF</span>
+                  <span className="text-[11px] text-[var(--cursor-text-faint)] mt-0.5">Click or drag PDF</span>
                 </>
               )}
             </div>
@@ -339,8 +339,8 @@ export default function HomePage() {
               onClick={() => markschemeInputRef.current?.click()}
               className={`p-6 rounded-xl border text-center cursor-pointer transition-all duration-200 hover:-translate-y-0.5 hover:border-white/[0.18] active:scale-[0.99] flex flex-col items-center justify-center min-h-[150px] ${
                 markschemeFile
-                  ? 'bg-[#18191d] border-[#f54e00]/60 text-[#f3f3f2]'
-                  : 'bg-[#141517] border-white/[0.08] text-[#9b9a95] hover:text-[#f3f3f2]'
+                  ? 'bg-[var(--cursor-surface-strong)] border-[var(--cursor-primary)]/60 text-[var(--cursor-text-strong)]'
+                  : 'bg-[var(--cursor-surface-card)] border-white/[0.08] text-[var(--cursor-text-muted)] hover:text-[var(--cursor-text-strong)]'
               }`}
             >
               <input
@@ -354,28 +354,28 @@ export default function HomePage() {
               />
               {markschemeFile ? (
                 <div className="animate-step-enter flex flex-col items-center">
-                  <FileCheck className="w-5 h-5 text-[#f54e00] mb-2" />
-                  <span className="text-xs font-mono-code font-medium text-[#f3f3f2] truncate max-w-[220px]">
+                  <FileCheck className="w-5 h-5 text-[var(--cursor-primary)] mb-2" />
+                  <span className="text-xs font-mono-code font-medium text-[var(--cursor-text-strong)] truncate max-w-[220px]">
                     {markschemeFile.name}
                   </span>
-                  <span className="text-[10px] text-[#686763] font-mono-code mt-0.5">
+                  <span className="text-[10px] text-[var(--cursor-text-faint)] font-mono-code mt-0.5">
                     Markscheme • {(markschemeFile.size / 1024 / 1024).toFixed(2)} MB
                   </span>
                 </div>
               ) : (
                 <>
-                  <div className="w-9 h-9 rounded-lg bg-[#1a1b1e] border border-white/[0.08] flex items-center justify-center text-[#9b9a95] mb-2.5 transition-transform group-hover:scale-105">
+                  <div className="w-9 h-9 rounded-lg bg-[var(--cursor-surface-strong)] border border-white/[0.08] flex items-center justify-center text-[var(--cursor-text-muted)] mb-2.5 transition-transform group-hover:scale-105">
                     <FileUp className="w-4 h-4" />
                   </div>
-                  <span className="text-xs font-medium text-[#f3f3f2]">2. Markscheme PDF</span>
-                  <span className="text-[11px] text-[#686763] mt-0.5">Click or drag PDF</span>
+                  <span className="text-xs font-medium text-[var(--cursor-text-strong)]">2. Markscheme PDF</span>
+                  <span className="text-[11px] text-[var(--cursor-text-faint)] mt-0.5">Click or drag PDF</span>
                 </>
               )}
             </div>
           </div>
 
           {error && (
-            <div className="p-3 rounded-lg bg-[#cf2d56]/15 border border-[#cf2d56]/30 text-[#f3f3f2] text-xs flex items-center gap-2 font-mono-code">
+            <div className="p-3 rounded-lg bg-[#cf2d56]/15 border border-[#cf2d56]/30 text-[var(--cursor-text-strong)] text-xs flex items-center gap-2 font-mono-code">
               <AlertCircle className="w-4 h-4 text-[#cf2d56] shrink-0" />
               <span>{error}</span>
             </div>
@@ -395,24 +395,24 @@ export default function HomePage() {
 
           {/* Specimen Papers */}
           <div className="pt-4 border-t border-white/[0.08] space-y-3">
-            <span className="text-xs text-[#686763] block font-normal">Or choose a preloaded authentic paper:</span>
+            <span className="text-xs text-[var(--cursor-text-faint)] block font-normal">Or choose a preloaded authentic paper:</span>
 
             {/* Featured Full 12-Question Exam Paper */}
             <div
               onClick={() => handleSelectSpecimen(MAY_2021_MATH_AA_HL_P1)}
-              className="p-4 rounded-xl bg-[#18191d] border border-[#f54e00]/40 hover:border-[#f54e00] hover:-translate-y-0.5 active:scale-[0.99] cursor-pointer transition-all duration-200 group relative overflow-hidden"
+              className="p-4 rounded-xl bg-[var(--cursor-surface-card)] border border-[var(--cursor-primary)]/40 hover:border-[var(--cursor-primary)] hover:-translate-y-0.5 active:scale-[0.99] cursor-pointer transition-all duration-200 group relative overflow-hidden"
             >
               <div className="flex items-center justify-between text-[11px] font-mono-code mb-1.5">
-                <span className="text-[#f54e00] font-semibold flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#f54e00] animate-pulse" />
+                <span className="text-[var(--cursor-primary)] font-semibold flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[var(--cursor-primary)] animate-pulse" />
                   AUTHENTIC IB EXAM • 12 QUESTIONS (SEC A &amp; B)
                 </span>
-                <span className="text-[#9b9a95]">120m • 110 marks</span>
+                <span className="text-[var(--cursor-text-muted)]">120m • 110 marks</span>
               </div>
-              <h3 className="text-sm font-medium text-[#f3f3f2] group-hover:text-white transition">
+              <h3 className="text-sm font-medium text-[var(--cursor-text-strong)] group-hover:text-white transition">
                 Mathematics: Analysis &amp; Approaches HL (May 2021 TZ1)
               </h3>
-              <p className="text-xs text-[#9b9a95] mt-0.5">
+              <p className="text-xs text-[var(--cursor-text-muted)] mt-0.5">
                 Full 12-question official paper with function graphs, calculus, vectors, Maclaurin series &amp; induction.
               </p>
             </div>
@@ -421,16 +421,16 @@ export default function HomePage() {
               {/* Specimen 1: Math AA HL */}
               <div
                 onClick={() => handleSelectSpecimen(BUNDLED_MATH_AA_HL)}
-                className="p-4 rounded-xl bg-[#141517] border border-white/[0.08] hover:border-white/[0.18] hover:-translate-y-0.5 active:scale-[0.99] cursor-pointer transition-all duration-200 group"
+                className="p-4 rounded-xl bg-[var(--cursor-surface-card)] border border-white/[0.08] hover:border-white/[0.18] hover:-translate-y-0.5 active:scale-[0.99] cursor-pointer transition-all duration-200 group"
               >
-                <div className="flex items-center justify-between text-[11px] font-mono-code text-[#686763] mb-1.5">
+                <div className="flex items-center justify-between text-[11px] font-mono-code text-[var(--cursor-text-faint)] mb-1.5">
                   <span className="text-[#9fbbe0]">STEM</span>
                   <span>120m • 50 marks</span>
                 </div>
-                <h3 className="text-xs font-medium text-[#f3f3f2] group-hover:text-white transition">
+                <h3 className="text-xs font-medium text-[var(--cursor-text-strong)] group-hover:text-white transition">
                   Mathematics: Analysis &amp; Approaches HL
                 </h3>
-                <p className="text-xs text-[#686763] mt-0.5 line-clamp-1">
+                <p className="text-xs text-[var(--cursor-text-faint)] mt-0.5 line-clamp-1">
                   Paper 1 • Calculus, Vectors, Induction
                 </p>
               </div>
@@ -438,16 +438,16 @@ export default function HomePage() {
               {/* Specimen 2: Economics HL */}
               <div
                 onClick={() => handleSelectSpecimen(BUNDLED_ECONOMICS_HL)}
-                className="p-4 rounded-xl bg-[#141517] border border-white/[0.08] hover:border-white/[0.18] hover:-translate-y-0.5 active:scale-[0.99] cursor-pointer transition-all duration-200 group"
+                className="p-4 rounded-xl bg-[var(--cursor-surface-card)] border border-white/[0.08] hover:border-white/[0.18] hover:-translate-y-0.5 active:scale-[0.99] cursor-pointer transition-all duration-200 group"
               >
-                <div className="flex items-center justify-between text-[11px] font-mono-code text-[#686763] mb-1.5">
+                <div className="flex items-center justify-between text-[11px] font-mono-code text-[var(--cursor-text-faint)] mb-1.5">
                   <span className="text-[#c0a8dd]">Humanities</span>
                   <span>75m • 50 marks</span>
                 </div>
-                <h3 className="text-xs font-medium text-[#f3f3f2] group-hover:text-white transition">
+                <h3 className="text-xs font-medium text-[var(--cursor-text-strong)] group-hover:text-white transition">
                   Economics Higher Level
                 </h3>
-                <p className="text-xs text-[#686763] mt-0.5 line-clamp-1">
+                <p className="text-xs text-[var(--cursor-text-faint)] mt-0.5 line-clamp-1">
                   Paper 1 • Micro &amp; Macro Extended Response
                 </p>
               </div>
@@ -470,7 +470,7 @@ export default function HomePage() {
             </p>
           </div>
 
-          <div className="p-6 rounded-2xl bg-[#141517] border border-white/[0.08] space-y-5 shadow-2xl relative overflow-hidden">
+          <div className="p-6 rounded-2xl bg-[var(--cursor-surface-card)] border border-white/[0.08] space-y-5 shadow-2xl relative overflow-hidden">
             {/* Top 5 Phase Pills */}
             <div className="flex flex-wrap items-center justify-between gap-1.5 pb-4 border-b border-white/[0.08]">
               {COMPILATION_PIPELINE.map((p, idx) => {
@@ -489,13 +489,13 @@ export default function HomePage() {
                         : 'opacity-40'
                     }`}
                     style={{
-                      backgroundColor: isActive ? p.pastelBg : isCompleted ? '#1e2024' : '#141517',
-                      color: isActive ? p.pastelText : isCompleted ? '#9b9a95' : '#686763',
+                      backgroundColor: isActive ? p.pastelBg : isCompleted ? 'var(--cursor-surface-strong)' : 'var(--cursor-surface-card)',
+                      color: isActive ? p.pastelText : isCompleted ? 'var(--cursor-text-muted)' : 'var(--cursor-text-faint)',
                       border: isCompleted ? '1px solid rgba(255, 255, 255, 0.08)' : '1px solid transparent',
                     }}
                   >
                     {isCompleted && <Check className="w-3 h-3 text-[#1f8a65]" />}
-                    {isActive && <span className="w-1.5 h-1.5 rounded-full bg-[#0c0d0e] animate-ping" />}
+                    {isActive && <span className="w-1.5 h-1.5 rounded-full bg-[var(--cursor-canvas)] animate-ping" />}
                     <span>{p.pillLabel}</span>
                   </div>
                 );
@@ -504,21 +504,21 @@ export default function HomePage() {
 
             {/* Dynamic Status Log with Smooth Animation */}
             <div className="flex items-center justify-between text-xs font-mono-code pt-1">
-              <div className="flex items-center gap-2.5 text-[#f3f3f2] min-h-[24px]">
-                <span className="w-2 h-2 rounded-full bg-[#f54e00] animate-pulse shrink-0" />
+              <div className="flex items-center gap-2.5 text-[var(--cursor-text-strong)] min-h-[24px]">
+                <span className="w-2 h-2 rounded-full bg-[var(--cursor-primary)] animate-pulse shrink-0" />
                 <span key={compilingLog} className="animate-in fade-in slide-in-from-bottom-1 duration-200">
                   {compilingLog}
                 </span>
               </div>
-              <span className="text-[11px] text-[#686763] shrink-0 font-medium">
+              <span className="text-[11px] text-[var(--cursor-text-faint)] shrink-0 font-medium">
                 Phase {Math.min(5, COMPILATION_PIPELINE.findIndex((s) => s.stage === timelineStage) + 1)}/5
               </span>
             </div>
 
             {/* Continuous Glowing Progress Track */}
-            <div className="w-full h-1 bg-[#0c0d0e] rounded-full overflow-hidden relative">
+            <div className="w-full h-1 bg-[var(--cursor-canvas)] rounded-full overflow-hidden relative">
               <div
-                className="h-full bg-gradient-to-r from-[#f54e00]/40 via-[#f54e00] to-[#dfa88f] transition-all duration-500 rounded-full"
+                className="h-full bg-gradient-to-r from-[var(--cursor-primary)]/40 via-[var(--cursor-primary)] to-[#fcd34d] transition-all duration-500 rounded-full"
                 style={{
                   width: `${Math.min(100, ((COMPILATION_PIPELINE.findIndex((s) => s.stage === timelineStage) + 1) / 5) * 100)}%`,
                 }}
@@ -534,19 +534,19 @@ export default function HomePage() {
       {step === 'READY' && activeManifest && (
         <div key="ready-step" className="w-full space-y-6 animate-step-forward">
           <div className="space-y-1.5 text-center">
-            <h2 className="text-2xl sm:text-3xl text-[#f3f3f2] tracking-tight">
+            <h2 className="text-2xl sm:text-3xl text-[var(--cursor-text-strong)] tracking-tight">
               Select your mode.
             </h2>
-            <p className="text-xs text-[#9b9a95]">
+            <p className="text-xs text-[var(--cursor-text-muted)]">
               Choose between a timed mock exam or Socratic study.
             </p>
           </div>
 
           {/* Paper Summary Pill */}
-          <div className="p-4 rounded-xl bg-[#141517] border border-white/[0.08] flex items-center justify-between gap-3">
+          <div className="p-4 rounded-xl bg-[var(--cursor-surface-card)] border border-white/[0.08] flex items-center justify-between gap-3">
             <div className="space-y-1">
-              <div className="flex items-center gap-2 text-[10px] font-mono-code text-[#686763]">
-                <span className="text-[#f54e00] font-medium">{activeManifest.category}</span>
+              <div className="flex items-center gap-2 text-[10px] font-mono-code text-[var(--cursor-text-faint)]">
+                <span className="text-[var(--cursor-primary)] font-medium">{activeManifest.category}</span>
                 <span>•</span>
                 <span>{activeManifest.durationMinutes}m</span>
                 <span>•</span>
@@ -554,7 +554,7 @@ export default function HomePage() {
                 <span>•</span>
                 <span>{activeManifest.questions.length} questions</span>
               </div>
-              <h3 className="text-xs font-medium text-[#f3f3f2]">{activeManifest.title}</h3>
+              <h3 className="text-xs font-medium text-[var(--cursor-text-strong)]">{activeManifest.title}</h3>
             </div>
 
             <button
@@ -565,7 +565,7 @@ export default function HomePage() {
                 setPaperFile(null);
                 setMarkschemeFile(null);
               }}
-              className="px-2.5 py-1.5 rounded-md bg-[#1a1b1e] hover:bg-[#222428] border border-white/[0.08] text-xs font-mono-code text-[#9b9a95] hover:text-[#f3f3f2] active:scale-[0.98] transition shrink-0"
+              className="px-2.5 py-1.5 rounded-md bg-[var(--cursor-surface-strong)] hover:bg-[var(--cursor-surface-hover)] border border-white/[0.08] text-xs font-mono-code text-[var(--cursor-text-muted)] hover:text-[var(--cursor-text-strong)] active:scale-[0.98] transition shrink-0"
             >
               Change
             </button>
@@ -574,22 +574,22 @@ export default function HomePage() {
           {/* Two Mode Cards with Staggered Entrance */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
             {/* Mode 1: Timed Mock */}
-            <div className="animate-card-1 p-5 rounded-xl bg-[#141517] border border-white/[0.08] hover:border-white/[0.18] hover:-translate-y-0.5 flex flex-col justify-between space-y-4 transition-all duration-200">
+            <div className="animate-card-1 p-5 rounded-xl bg-[var(--cursor-surface-card)] border border-white/[0.08] hover:border-white/[0.18] hover:-translate-y-0.5 flex flex-col justify-between space-y-4 transition-all duration-200">
               <div className="space-y-2">
                 <div className="flex items-center justify-between text-xs">
-                  <span className="text-[10px] font-mono-code text-[#f54e00] uppercase font-semibold">
+                  <span className="text-[10px] font-mono-code text-[var(--cursor-primary)] uppercase font-semibold">
                     Exam Practice
                   </span>
-                  <span className="text-[#686763] font-mono-code flex items-center gap-1">
+                  <span className="text-[var(--cursor-text-faint)] font-mono-code flex items-center gap-1">
                     <Clock className="w-3 h-3" /> {activeManifest.durationMinutes}m
                   </span>
                 </div>
 
                 <div>
-                  <h3 className="text-base text-[#f3f3f2] font-normal">
+                  <h3 className="text-base text-[var(--cursor-text-strong)] font-normal">
                     Timed Mock Exam
                   </h3>
-                  <p className="text-xs text-[#9b9a95] mt-1.5 leading-relaxed">
+                  <p className="text-xs text-[var(--cursor-text-muted)] mt-1.5 leading-relaxed">
                     Practice under authentic countdown conditions.
                     {activeManifest.category === 'STEM'
                       ? ' Write calculations directly on the canvas.'
@@ -597,7 +597,7 @@ export default function HomePage() {
                   </p>
                 </div>
 
-                <div className="text-[10px] font-mono-code text-[#686763] pt-0.5">
+                <div className="text-[10px] font-mono-code text-[var(--cursor-text-faint)] pt-0.5">
                   Error Carried Forward (ECF) grading applied
                 </div>
               </div>
@@ -613,7 +613,7 @@ export default function HomePage() {
             </div>
 
             {/* Mode 2: Socratic Learn */}
-            <div className="animate-card-2 p-5 rounded-xl bg-[#141517] border border-white/[0.08] hover:border-white/[0.18] hover:-translate-y-0.5 flex flex-col justify-between space-y-4 transition-all duration-200">
+            <div className="animate-card-2 p-5 rounded-xl bg-[var(--cursor-surface-card)] border border-white/[0.08] hover:border-white/[0.18] hover:-translate-y-0.5 flex flex-col justify-between space-y-4 transition-all duration-200">
               <div className="space-y-2">
                 <div className="flex items-center justify-between text-xs">
                   <span className="text-[10px] font-mono-code text-[#9fbbe0] uppercase font-semibold">
@@ -622,15 +622,15 @@ export default function HomePage() {
                 </div>
 
                 <div>
-                  <h3 className="text-base text-[#f3f3f2] font-normal">
+                  <h3 className="text-base text-[var(--cursor-text-strong)] font-normal">
                     Socratic Learn Mode
                   </h3>
-                  <p className="text-xs text-[#9b9a95] mt-1.5 leading-relaxed">
+                  <p className="text-xs text-[var(--cursor-text-muted)] mt-1.5 leading-relaxed">
                     Work through each question step-by-step. Get hints and formula guidance without spoiling the solution.
                   </p>
                 </div>
 
-                <div className="text-[10px] font-mono-code text-[#686763] pt-0.5">
+                <div className="text-[10px] font-mono-code text-[var(--cursor-text-faint)] pt-0.5">
                   4-Tier hints &amp; formula assistance
                 </div>
               </div>
@@ -655,8 +655,8 @@ export default function HomePage() {
         <div className="w-full mt-12 pt-6 border-t border-white/[0.08] space-y-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <History className="w-3.5 h-3.5 text-[#686763]" />
-              <span className="text-xs font-mono-code text-[#9b9a95] uppercase tracking-wider">
+              <History className="w-3.5 h-3.5 text-[var(--cursor-text-faint)]" />
+              <span className="text-xs font-mono-code text-[var(--cursor-text-muted)] uppercase tracking-wider">
                 Past Sessions ({pastSessions.length})
               </span>
             </div>
@@ -668,7 +668,7 @@ export default function HomePage() {
                 setPastSessions([]);
               }}
               aria-label="Delete all past exam sessions"
-              className="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-mono-code text-[#686763] hover:text-[#cf2d56] hover:bg-[#cf2d56]/10 border border-transparent hover:border-[#cf2d56]/20 transition active:scale-95 focus-ring"
+              className="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-mono-code text-[var(--cursor-text-faint)] hover:text-[#cf2d56] hover:bg-[#cf2d56]/10 border border-transparent hover:border-[#cf2d56]/20 transition active:scale-95 focus-ring"
               title="Delete all past exam sessions"
             >
               <Trash2 className="w-3 h-3" />
@@ -676,19 +676,19 @@ export default function HomePage() {
             </button>
           </div>
 
-          <div className="divide-y divide-white/[0.06] rounded-xl bg-[#141517] border border-white/[0.08] overflow-hidden">
+          <div className="divide-y divide-white/[0.06] rounded-xl bg-[var(--cursor-surface-card)] border border-white/[0.08] overflow-hidden">
             {pastSessions.map((sess) => {
               const res = sess.gradingResults;
               return (
                 <div
                   key={sess.id}
-                  className="p-3.5 flex items-center justify-between gap-3 hover:bg-[#1a1b1e] transition group"
+                  className="p-3.5 flex items-center justify-between gap-3 hover:bg-[var(--cursor-surface-hover)] transition group"
                 >
                   <div className="space-y-0.5 min-w-0 flex-1">
-                    <span className="text-[10px] font-mono-code text-[#686763]">
+                    <span className="text-[10px] font-mono-code text-[var(--cursor-text-faint)]">
                       {new Date(sess.startedAt).toLocaleDateString()}
                     </span>
-                    <h4 className="text-xs text-[#f3f3f2] font-medium line-clamp-1">
+                    <h4 className="text-xs text-[var(--cursor-text-strong)] font-medium line-clamp-1">
                       {sess.paperTitle}
                     </h4>
                   </div>
@@ -696,10 +696,10 @@ export default function HomePage() {
                   <div className="flex items-center gap-3 shrink-0">
                     {res ? (
                       <div className="text-right">
-                        <span className="text-xs font-mono-code font-semibold text-[#f54e00] block">
+                        <span className="text-xs font-mono-code font-semibold text-[var(--cursor-primary)] block">
                           Grade {res.predictedGrade}
                         </span>
-                        <span className="text-[10px] font-mono-code text-[#686763]">
+                        <span className="text-[10px] font-mono-code text-[var(--cursor-text-faint)]">
                           {res.totalMarksAwarded}/{res.totalPossibleMarks} ({res.percentage}%)
                         </span>
                       </div>

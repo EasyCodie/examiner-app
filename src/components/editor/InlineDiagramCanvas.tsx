@@ -57,7 +57,7 @@ const TEMPLATE_CONFIGS: Record<AxisTemplate, { label: string }> = {
 
 const COLOR_PALETTE = [
   { name: 'Initial Curve', hex: '#2563eb' },
-  { name: 'Shifted Curve', hex: '#f54e00' },
+  { name: 'Shifted Curve', hex: '#d97706' },
   { name: 'Social Optimum', hex: '#10b981' },
   { name: 'Welfare Loss', hex: '#cf2d56' },
   { name: 'Reference Line', hex: '#334155' },
@@ -363,12 +363,12 @@ export const InlineDiagramCanvas = forwardRef<InlineDiagramCanvasRef, InlineDiag
     const currentLabelPreview = customLabelInput.trim() || activeStamp;
 
     return (
-      <div className="bg-[#141517] border border-white/[0.08] rounded-xl p-3.5 shadow-xl space-y-3">
+      <div className="bg-[var(--cursor-surface-card)] border border-white/[0.08] rounded-xl p-3.5 shadow-xl space-y-3">
         {/* Top Control Bar: Presets, Tools, Swatches, Undo */}
         <div className="flex flex-wrap items-center justify-between gap-2.5 pb-2 border-b border-white/[0.08]">
           {/* Axis Template Presets */}
-          <div className="flex items-center gap-1 bg-[#0c0d0e] p-1 rounded-lg border border-white/[0.06] text-xs font-mono-code">
-            <span className="text-[10px] text-[#686763] uppercase font-semibold px-1.5">Axes:</span>
+          <div className="flex items-center gap-1 bg-[var(--cursor-canvas)] p-1 rounded-lg border border-white/[0.06] text-xs font-mono-code">
+            <span className="text-[10px] text-[var(--cursor-text-faint)] uppercase font-semibold px-1.5">Axes:</span>
             {(Object.keys(TEMPLATE_CONFIGS) as AxisTemplate[]).map((tmpl) => (
               <button
                 key={tmpl}
@@ -376,8 +376,8 @@ export const InlineDiagramCanvas = forwardRef<InlineDiagramCanvasRef, InlineDiag
                 onClick={() => setActiveTemplate(tmpl)}
                 className={`px-2 py-0.5 rounded transition ${
                   activeTemplate === tmpl
-                    ? 'bg-[#f54e00] text-white font-semibold shadow-sm'
-                    : 'text-[#9b9a95] hover:text-[#f3f3f2] hover:bg-white/[0.04]'
+                    ? 'bg-[var(--cursor-primary)] text-white font-semibold shadow-sm'
+                    : 'text-[var(--cursor-text-muted)] hover:text-[var(--cursor-text-strong)] hover:bg-white/[0.04]'
                 }`}
               >
                 {TEMPLATE_CONFIGS[tmpl].label}
@@ -386,14 +386,14 @@ export const InlineDiagramCanvas = forwardRef<InlineDiagramCanvasRef, InlineDiag
           </div>
 
           {/* Tools: Curve vs Straight Line vs Text Label */}
-          <div className="flex items-center gap-1 bg-[#0c0d0e] p-1 rounded-lg border border-white/[0.06] text-xs font-mono-code">
+          <div className="flex items-center gap-1 bg-[var(--cursor-canvas)] p-1 rounded-lg border border-white/[0.06] text-xs font-mono-code">
             <button
               type="button"
               onClick={() => setActiveTool('curve')}
               className={`px-2.5 py-1 rounded flex items-center gap-1 transition ${
                 activeTool === 'curve'
                   ? 'bg-white/[0.12] text-white font-semibold'
-                  : 'text-[#9b9a95] hover:text-[#f3f3f2]'
+                  : 'text-[var(--cursor-text-muted)] hover:text-[var(--cursor-text-strong)]'
               }`}
               title="Smooth Curve Tool (for demand, supply, AD, SRAS, LRAS)"
             >
@@ -406,7 +406,7 @@ export const InlineDiagramCanvas = forwardRef<InlineDiagramCanvasRef, InlineDiag
               className={`px-2.5 py-1 rounded flex items-center gap-1 transition ${
                 activeTool === 'line'
                   ? 'bg-white/[0.12] text-white font-semibold'
-                  : 'text-[#9b9a95] hover:text-[#f3f3f2]'
+                  : 'text-[var(--cursor-text-muted)] hover:text-[var(--cursor-text-strong)]'
               }`}
               title="Straight Line Tool (for linear curves, price controls, guides)"
             >
@@ -418,8 +418,8 @@ export const InlineDiagramCanvas = forwardRef<InlineDiagramCanvasRef, InlineDiag
               onClick={() => setActiveTool('text')}
               className={`px-2.5 py-1 rounded flex items-center gap-1 transition ${
                 activeTool === 'text'
-                  ? 'bg-[#f54e00] text-white font-semibold shadow-sm'
-                  : 'text-[#9b9a95] hover:text-[#f3f3f2]'
+                  ? 'bg-[var(--cursor-primary)] text-white font-semibold shadow-sm'
+                  : 'text-[var(--cursor-text-muted)] hover:text-[var(--cursor-text-strong)]'
               }`}
               title="Label Tool (click canvas to place axis or curve labels)"
             >
@@ -429,7 +429,7 @@ export const InlineDiagramCanvas = forwardRef<InlineDiagramCanvasRef, InlineDiag
           </div>
 
           {/* Color Palette Swatches */}
-          <div className="flex items-center gap-1.5 bg-[#0c0d0e] p-1.5 rounded-lg border border-white/[0.06]">
+          <div className="flex items-center gap-1.5 bg-[var(--cursor-canvas)] p-1.5 rounded-lg border border-white/[0.06]">
             {COLOR_PALETTE.map((c) => (
               <button
                 key={c.hex}
@@ -438,7 +438,7 @@ export const InlineDiagramCanvas = forwardRef<InlineDiagramCanvasRef, InlineDiag
                 style={{ backgroundColor: c.hex }}
                 className={`w-4 h-4 rounded-full transition-all ${
                   activeColor === c.hex
-                    ? 'ring-2 ring-white ring-offset-2 ring-offset-[#0c0d0e] scale-110'
+                    ? 'ring-2 ring-white ring-offset-2 ring-offset-[var(--cursor-canvas)] scale-110'
                     : 'opacity-70 hover:opacity-100'
                 }`}
                 title={c.name}
@@ -452,7 +452,7 @@ export const InlineDiagramCanvas = forwardRef<InlineDiagramCanvasRef, InlineDiag
               type="button"
               onClick={handleUndo}
               disabled={items.length === 0}
-              className="p-1.5 rounded text-[#9b9a95] hover:text-[#f3f3f2] hover:bg-white/[0.06] disabled:opacity-30 transition"
+              className="p-1.5 rounded text-[var(--cursor-text-muted)] hover:text-[var(--cursor-text-strong)] hover:bg-white/[0.06] disabled:opacity-30 transition"
               title="Undo stroke"
             >
               <RotateCcw className="w-3.5 h-3.5" />
@@ -461,7 +461,7 @@ export const InlineDiagramCanvas = forwardRef<InlineDiagramCanvasRef, InlineDiag
               type="button"
               onClick={handleRedo}
               disabled={undoStack.length === 0}
-              className="p-1.5 rounded text-[#9b9a95] hover:text-[#f3f3f2] hover:bg-white/[0.06] disabled:opacity-30 transition"
+              className="p-1.5 rounded text-[var(--cursor-text-muted)] hover:text-[var(--cursor-text-strong)] hover:bg-white/[0.06] disabled:opacity-30 transition"
               title="Redo stroke"
             >
               <RotateCw className="w-3.5 h-3.5" />
@@ -481,8 +481,8 @@ export const InlineDiagramCanvas = forwardRef<InlineDiagramCanvasRef, InlineDiag
 
         {/* Secondary Bar when Text / Label tool is active */}
         {activeTool === 'text' && (
-          <div className="flex flex-wrap items-center gap-2 p-2 bg-[#0c0d0e] rounded-lg border border-white/[0.08] text-xs font-mono-code animate-in fade-in duration-150">
-            <div className="flex items-center gap-1 text-[#dfa88f]">
+          <div className="flex flex-wrap items-center gap-2 p-2 bg-[var(--cursor-canvas)] rounded-lg border border-white/[0.08] text-xs font-mono-code animate-in fade-in duration-150">
+            <div className="flex items-center gap-1 text-amber-400">
               <Tag className="w-3 h-3" />
               <span className="text-[10px] font-semibold uppercase">Click canvas to place:</span>
             </div>
@@ -500,7 +500,7 @@ export const InlineDiagramCanvas = forwardRef<InlineDiagramCanvasRef, InlineDiag
                   className={`px-1.5 py-0.5 rounded text-[11px] font-bold transition ${
                     activeStamp === notation && !customLabelInput
                       ? 'bg-white text-black shadow-sm'
-                      : 'bg-[#1a1b1e] text-[#9b9a95] hover:text-[#f3f3f2] border border-white/[0.08]'
+                      : 'bg-[var(--cursor-surface-card)] text-[var(--cursor-text-body)] hover:text-[var(--cursor-text-strong)] border border-white/[0.08]'
                   }`}
                 >
                   {notation}
@@ -510,13 +510,13 @@ export const InlineDiagramCanvas = forwardRef<InlineDiagramCanvasRef, InlineDiag
 
             {/* Custom Input */}
             <div className="flex items-center gap-1 ml-auto">
-              <span className="text-[10px] text-[#686763]">Custom:</span>
+              <span className="text-[10px] text-[var(--cursor-text-muted)]">Custom:</span>
               <input
                 type="text"
                 value={customLabelInput}
                 onChange={(e) => setCustomLabelInput(e.target.value)}
                 placeholder="e.g. MSB"
-                className="w-16 bg-[#141517] border border-white/[0.12] rounded px-1.5 py-0.5 text-xs text-[#f3f3f2] placeholder:text-[#686763] outline-none focus:border-[#f54e00]"
+                className="w-16 bg-[var(--cursor-canvas-soft)] border border-white/[0.12] rounded px-1.5 py-0.5 text-xs text-[var(--cursor-text-strong)] placeholder:text-[var(--cursor-text-muted)] outline-none focus:border-[var(--cursor-primary)]"
               />
             </div>
           </div>
@@ -540,8 +540,8 @@ export const InlineDiagramCanvas = forwardRef<InlineDiagramCanvasRef, InlineDiag
         </div>
 
         {/* Footer Candidate Status */}
-        <div className="flex items-center justify-between text-[11px] text-[#686763] font-mono-code pt-0.5">
-          <span className="text-[#9b9a95]">
+        <div className="flex items-center justify-between text-[11px] text-[var(--cursor-text-faint)] font-mono-code pt-0.5">
+          <span className="text-[var(--cursor-text-muted)]">
             {activeTool === 'text'
               ? `Placing label "${currentLabelPreview}" — click on canvas to position`
               : 'Draw curves and lines; use Label tool to mark axes & equilibria'}

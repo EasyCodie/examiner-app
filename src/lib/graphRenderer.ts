@@ -130,7 +130,7 @@ export function getQuestion12GraphSpec(theme: 'exam' | 'obsidian' = 'exam'): Car
           { domain: [-4, 0], expression: '4' },
           { domain: [0, 6], expression: '6 - 0.5 * (x - 2)**2' },
         ],
-        color: isExam ? '#0f172a' : '#f54e00',
+        color: isExam ? '#0f172a' : '#d97706',
         width: 2.2,
       },
     ],

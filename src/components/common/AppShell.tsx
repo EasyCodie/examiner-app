@@ -38,7 +38,7 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) 
 
   return (
     <AppShellContext.Provider value={{ setHeaderInfo }}>
-      <div className="min-h-screen flex flex-col bg-[#0c0d0e] text-[#f3f3f2]">
+      <div className="min-h-screen flex flex-col bg-[var(--cursor-canvas)] text-[var(--cursor-text-strong)]">
         {!isHomePage && (
           <Header
             paperTitle={headerInfo.paperTitle}
