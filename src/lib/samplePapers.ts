@@ -643,7 +643,7 @@ export const MAY_2021_MATH_AA_HL_P1: ExamManifest = {
           markCodes: [
             { code: 'M1', type: 'M', marks: 1, description: 'Total placements without restriction: 6^5 = 7776' },
             { code: 'M1', type: 'M', marks: 1, description: 'Placements where Amber and Brownie are together: 6 * 6^3 = 1296' },
-            { code: 'M1', type: 'M', marks: 1, description: 'Alternative: Amber has 6 choices, Brownie has 5 choices => 6 * 5 * 6^3' },
+            { code: 'M1', type: 'M', marks: 1, description: 'Subtracting forbidden arrangements: 7776 - 1296' },
             { code: 'A1', type: 'A', marks: 1, description: '6480 ways' }
           ],
           markschemeExcerpt: 'Total ways = 6^5. Amber and Brownie in same pen = 6 * 6^3 = 1296. Total valid = 7776 - 1296 = 6480.'
@@ -664,12 +664,13 @@ export const MAY_2021_MATH_AA_HL_P1: ExamManifest = {
         }
       ],
       markCodes: [
-        { code: 'M1', type: 'M', marks: 1, description: 'Total 6^5 = 7776' },
-        { code: 'M1', type: 'M', marks: 1, description: 'Same pen = 1296' },
+        { code: 'M1', type: 'M', marks: 1, description: 'Total placements without restriction: 6^5 = 7776' },
+        { code: 'M1', type: 'M', marks: 1, description: 'Placements where Amber and Brownie are together: 1296' },
+        { code: 'M1', type: 'M', marks: 1, description: 'Subtracting forbidden arrangements: 7776 - 1296' },
         { code: 'A1', type: 'A', marks: 1, description: '6480 ways (part a)' },
         { code: 'M1', type: 'M', marks: 1, description: 'Total 6P5 = 720' },
-        { code: 'M1', type: 'M', marks: 1, description: 'Boundary count = 7 edges' },
-        { code: 'M1', type: 'M', marks: 1, description: 'Adjacent = 336' },
+        { code: 'M1', type: 'M', marks: 1, description: 'Boundary count = 7 edges (14 ordered pairs)' },
+        { code: 'M1', type: 'M', marks: 1, description: 'Forbidden adjacent placements = 336' },
         { code: 'A1', type: 'A', marks: 1, description: '384 ways (part b)' }
       ],
       markschemeExcerpt: '(a) 6^5 - 6^4 = 6480. (b) 6P5 - 7 * 2 * 4P3 = 720 - 336 = 384.'
@@ -757,6 +758,7 @@ export const MAY_2021_MATH_AA_HL_P1: ExamManifest = {
         { code: 'M1', type: 'M', marks: 1, description: 'E(X) formula' },
         { code: 'A1', type: 'A', marks: 1, description: 'E(X) = 16/7' },
         { code: 'A1', type: 'A', marks: 1, description: '0 < r < 1' },
+        { code: 'M1', type: 'M', marks: 1, description: '3q + r = 1 => q = (1 - r)/3' },
         { code: 'A1', type: 'A', marks: 1, description: '0 < q < 1/3' },
         { code: 'M1', type: 'M', marks: 1, description: 'E(Y) = 4 - 6q' },
         { code: 'A1', type: 'A', marks: 2, description: '2 < E(Y) < 4' },
@@ -901,14 +903,15 @@ export const MAY_2021_MATH_AA_HL_P1: ExamManifest = {
         }
       ],
       markCodes: [
-        { code: 'A1', type: 'A', marks: 1, description: 'f\'(x)' },
-        { code: 'M1', type: 'M', marks: 1, description: 'f\'\'(x)' },
-        { code: 'AG', type: 'AG', marks: 1, description: 'f\'\'(x) shown' },
-        { code: 'R1', type: 'R', marks: 1, description: 'Induction base step' },
+        { code: 'A1', type: 'A', marks: 1, description: 'f\'(x) derivative' },
+        { code: 'M1', type: 'M', marks: 1, description: 'f\'\'(x) second derivative' },
+        { code: 'AG', type: 'AG', marks: 1, description: 'f\'\'(x) shown accurately' },
+        { code: 'R1', type: 'R', marks: 1, description: 'Induction base step verified' },
         { code: 'M1', type: 'M', marks: 2, description: 'Induction hypothesis & differentiation' },
-        { code: 'A1', type: 'A', marks: 3, description: 'Factorial and algebraic simplification' },
+        { code: 'A1', type: 'A', marks: 5, description: 'Factorial and algebraic simplification' },
         { code: 'R1', type: 'R', marks: 1, description: 'Induction conclusion' },
         { code: 'M1', type: 'M', marks: 3, description: 'Maclaurin series expansion & multiplication' },
+        { code: 'A1', type: 'A', marks: 1, description: 'Coefficient of x^2: m^2/2 + m/2 - 1/8' },
         { code: 'M1', type: 'M', marks: 2, description: 'Quadratic equation 4m^2 + 4m - 15 = 0' },
         { code: 'A1', type: 'A', marks: 2, description: 'm = 3/2, m = -5/2' }
       ],

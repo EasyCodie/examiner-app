@@ -66,11 +66,10 @@ export const CanvasToolbar: React.FC<CanvasToolbarProps> = ({
           type="button"
           onClick={() => setTool('pen')}
           aria-label="Fountain Pen tool"
-          className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-mono-code transition focus-ring ${
-            tool === 'pen'
+          className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-mono-code transition focus-ring ${tool === 'pen'
               ? 'bg-[#f54e00] text-white font-medium shadow-sm'
               : 'text-[#9b9a95] hover:text-[#f3f3f2]'
-          }`}
+            }`}
           title="Fountain Pen (P)"
         >
           <Pen className="w-3.5 h-3.5" />
@@ -81,11 +80,10 @@ export const CanvasToolbar: React.FC<CanvasToolbarProps> = ({
           type="button"
           onClick={() => setTool('highlighter')}
           aria-label="Fluorescent Highlighter tool"
-          className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-mono-code transition focus-ring ${
-            tool === 'highlighter'
+          className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-mono-code transition focus-ring ${tool === 'highlighter'
               ? 'bg-[#c08532] text-black font-semibold shadow-sm'
               : 'text-[#9b9a95] hover:text-[#f3f3f2]'
-          }`}
+            }`}
           title="Highlighter (H)"
         >
           <Highlighter className="w-3.5 h-3.5" />
@@ -96,11 +94,10 @@ export const CanvasToolbar: React.FC<CanvasToolbarProps> = ({
           type="button"
           onClick={() => setTool('eraser')}
           aria-label="Precision Eraser tool"
-          className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-mono-code transition focus-ring ${
-            tool === 'eraser'
+          className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-mono-code transition focus-ring ${tool === 'eraser'
               ? 'bg-[#cf2d56] text-white font-medium shadow-sm'
               : 'text-[#9b9a95] hover:text-[#f3f3f2]'
-          }`}
+            }`}
           title="Precision Eraser (E)"
         >
           <Eraser className="w-3.5 h-3.5" />
@@ -126,16 +123,14 @@ export const CanvasToolbar: React.FC<CanvasToolbarProps> = ({
               }}
               aria-label={`Select ${c.name} ink color`}
               title={c.name}
-              className={`w-7 h-7 rounded-md flex items-center justify-center transition-all focus-ring ${
-                isSelected ? 'bg-white/[0.12]' : 'hover:bg-white/[0.06]'
-              }`}
+              className={`w-7 h-7 rounded-md flex items-center justify-center transition-all focus-ring ${isSelected ? 'bg-white/[0.12]' : 'hover:bg-white/[0.06]'
+                }`}
             >
               <span
-                className={`w-3.5 h-3.5 rounded-full transition-transform border ${
-                  isSelected
+                className={`w-3.5 h-3.5 rounded-full transition-transform border ${isSelected
                     ? 'scale-125 ring-2 ring-[#f54e00] ring-offset-1 ring-offset-[#0c0d0e] border-white'
                     : 'border-white/20'
-                }`}
+                  }`}
                 style={{ backgroundColor: c.value }}
               />
             </button>

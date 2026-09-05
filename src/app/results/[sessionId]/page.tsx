@@ -48,8 +48,15 @@ export default function ResultsPage() {
   const [streamError, setStreamError] = useState<string | null>(null);
 
   const streamInitiatedRef = useRef(false);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   const startEvaluationStream = useCallback(async (m: ExamManifest, s: ExamSession) => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
+
     setIsStreaming(true);
     setStreamStatus('Connecting to Senior Examiner assessment stream...');
     setStreamError(null);
@@ -58,6 +65,7 @@ export default function ResultsPage() {
       const cfg = await getAiConfig();
       const res = await fetch('/api/evaluate-session', {
         method: 'POST',
+        signal: controller.signal,
         headers: {
           'Content-Type': 'application/json',
           ...(cfg.apiKey ? { 'x-gemini-key': cfg.apiKey } : {}),
@@ -82,6 +90,11 @@ export default function ResultsPage() {
       let buffer = '';
 
       while (true) {
+        if (controller.signal.aborted) {
+          await reader.cancel().catch(() => {});
+          break;
+        }
+
         const { done, value } = await reader.read();
         if (done) break;
 
@@ -90,7 +103,7 @@ export default function ResultsPage() {
         buffer = lines.pop() || '';
 
         for (const line of lines) {
-          if (!line.trim()) continue;
+          if (!line.trim() || controller.signal.aborted) continue;
           try {
             const event = JSON.parse(line);
 
@@ -129,11 +142,22 @@ export default function ResultsPage() {
         }
       }
     } catch (err: unknown) {
+      if (controller.signal.aborted || (err instanceof Error && err.name === 'AbortError')) {
+        return;
+      }
       console.error('Streaming assessment error:', err);
       const msg = err instanceof Error ? err.message : 'Error streaming exam evaluation.';
       setStreamError(msg);
       setIsStreaming(false);
     }
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
   }, []);
 
   useEffect(() => {

@@ -130,7 +130,7 @@ Remember: Guide the student Socratically without revealing final answers unless 
   }
 }
 
-function generateSimulatedSocraticResponse(
+export function generateSimulatedSocraticResponse(
   question: QuestionItem,
   tier: PedagogicalTier
 ) {
