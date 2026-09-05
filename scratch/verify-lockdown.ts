@@ -9,7 +9,7 @@ import {
   synthesizeSyllabusBreakdown,
   evaluateSingleQuestion,
 } from '../src/lib/assessment/evaluator';
-import { QuestionSubmission, QuestionGrading } from '../src/types/exam';
+import { QuestionSubmission, QuestionEvaluation, QuestionGrading } from '../src/types/exam';
 
 async function runLockdownVerification() {
   console.log('====================================================');
@@ -290,6 +290,71 @@ async function runLockdownVerification() {
     testQ.markCodes.forEach((mc) => {
       assert(t4.text.includes(mc.code), `Must list mark code ${mc.code}`);
     });
+  });
+
+  // 7. SUBPART EVALUATION & DISCRETE SCORING
+  console.log('\n--- 7. SUBPART EVALUATION & DISCRETE SCORING ---');
+  await test('Multi-part question yields structured subpartScores with marks and ECF status', async () => {
+    const q10 = MAY_2021_MATH_AA_HL_P1.questions.find((q) => q.number === '10') || MAY_2021_MATH_AA_HL_P1.questions[9];
+    assert(q10 && q10.subparts && q10.subparts.length > 0, 'Question 10 should have subparts');
+
+    const sub: QuestionSubmission = {
+      questionId: q10.id,
+      questionNumber: q10.number,
+      canvasImageBase64: 'data:image/png;base64,' + 'B'.repeat(3500),
+      timeSpentSeconds: 180,
+    };
+
+    const prevEvals: QuestionEvaluation[] = [
+      {
+        questionId: 'q9',
+        questionNumber: '9',
+        marksAwarded: 2,
+        maxMarks: 6,
+        examinerNotes: 'Upstream calculation error.',
+        marginAnnotations: [],
+        markBreakdown: [],
+        ecfApplied: false,
+        syllabusSubtopic: 'Calculus',
+        subtopicMasteryScore: 33,
+        revisionRecommendation: 'Review derivatives.',
+      },
+    ];
+
+    const { evaluation } = await evaluateSingleQuestion(q10, sub, prevEvals);
+    assert(evaluation.subpartScores, 'evaluation.subpartScores must be populated');
+
+    // Verify each subpart is present
+    q10.subparts.forEach((sp) => {
+      const spScore = evaluation.subpartScores![sp.partLetter];
+      assert(spScore, `Subpart score for ${sp.partLetter} must exist`);
+      assert.strictEqual(spScore.maxMarks, sp.totalMarks, `Subpart ${sp.partLetter} maxMarks should match subpart totalMarks`);
+      assert(typeof spScore.marksAwarded === 'number', `marksAwarded should be numeric for ${sp.partLetter}`);
+    });
+
+    // Verify subpartPartLetter is present in marginAnnotations
+    assert(
+      evaluation.marginAnnotations.some((a) => a.subpartPartLetter !== undefined),
+      'Margin annotations should anchor to subpart letters'
+    );
+  });
+
+  test('QuestionEvaluation is type-assignable to QuestionGrading alias', () => {
+    const testEval: QuestionEvaluation = {
+      questionId: 'q1',
+      questionNumber: '1',
+      marksAwarded: 5,
+      maxMarks: 5,
+      examinerNotes: 'Excellent.',
+      marginAnnotations: [],
+      markBreakdown: [],
+      ecfApplied: false,
+      syllabusSubtopic: 'Calculus',
+      subtopicMasteryScore: 100,
+      revisionRecommendation: 'Keep practicing.',
+    };
+    const backwardCompat: QuestionGrading = testEval;
+    assert.strictEqual(backwardCompat.marksAwarded, 5);
   });
 
   console.log('\n====================================================');

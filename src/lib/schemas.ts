@@ -115,13 +115,27 @@ export const MANIFEST_RESPONSE_SCHEMA = {
   required: ['title', 'subtitle', 'subjectCode', 'category', 'durationMinutes', 'totalMarks', 'instructions', 'gradeBoundaries', 'questions']
 };
 
-export const GRADING_RESPONSE_SCHEMA = {
+export const QUESTION_EVALUATION_SCHEMA = {
   type: 'object',
   properties: {
     questionId: { type: 'string' },
     questionNumber: { type: 'string' },
     marksAwarded: { type: 'integer', description: 'Total marks awarded for this question attempt' },
     maxMarks: { type: 'integer', description: 'Total possible marks' },
+    subpartScores: {
+      type: 'object',
+      description: 'Granular scores per lettered subpart e.g. "(a)", "(b)", "(c)" if the question has subquestions',
+      additionalProperties: {
+        type: 'object',
+        properties: {
+          marksAwarded: { type: 'integer', description: 'Marks awarded for this subpart' },
+          maxMarks: { type: 'integer', description: 'Maximum marks for this subpart' },
+          ecfApplied: { type: 'boolean', description: 'True if Error Carried Forward was credited in this subpart' },
+          reason: { type: 'string', description: 'Examiner justification for this subpart score' }
+        },
+        required: ['marksAwarded', 'maxMarks']
+      }
+    },
     examinerNotes: { type: 'string', description: 'Senior IB examiner feedback detailing the student\'s mathematical/economic reasoning' },
     marginAnnotations: {
       type: 'array',
@@ -130,7 +144,8 @@ export const GRADING_RESPONSE_SCHEMA = {
         properties: {
           label: { type: 'string', description: 'Annotation label e.g. M1 awarded, A0 lost, ECF applied' },
           type: { type: 'string', enum: ['tick', 'cross', 'ecf', 'comment'] },
-          text: { type: 'string', description: 'Brief annotation note' }
+          text: { type: 'string', description: 'Brief annotation note' },
+          subpartPartLetter: { type: 'string', description: 'Part letter e.g. "(a)", "(b)" this annotation belongs to' }
         },
         required: ['label', 'type', 'text']
       }
@@ -159,6 +174,9 @@ export const GRADING_RESPONSE_SCHEMA = {
   },
   required: ['questionId', 'questionNumber', 'marksAwarded', 'maxMarks', 'examinerNotes', 'marginAnnotations', 'markBreakdown', 'ecfApplied', 'syllabusSubtopic', 'subtopicMasteryScore', 'revisionRecommendation']
 };
+
+// Backward-compatible alias for existing call sites
+export const GRADING_RESPONSE_SCHEMA = QUESTION_EVALUATION_SCHEMA;
 
 export const SOCRATIC_RESPONSE_SCHEMA = {
   type: 'object',

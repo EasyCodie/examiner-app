@@ -3,12 +3,13 @@ import {
   ExamSession,
   QuestionItem,
   QuestionSubmission,
-  QuestionGrading,
+  QuestionEvaluation,
   AwardedMarkItem,
+  SubpartScoreItem,
 } from '@/types/exam';
 import { getGeminiClient, DEFAULT_MODEL, FALLBACK_MODELS } from '@/lib/gemini';
-import { GRADING_SYSTEM_PROMPT } from '@/lib/prompts';
-import { GRADING_RESPONSE_SCHEMA } from '@/lib/schemas';
+import { SENIOR_EXAMINER_PROMPT } from '@/lib/prompts';
+import { QUESTION_EVALUATION_SCHEMA } from '@/lib/schemas';
 import { transcribeStudentHandwriting, getZaiApiKey } from '@/lib/ocr/glmOcr';
 
 export type AssessmentEvent =
@@ -17,7 +18,7 @@ export type AssessmentEvent =
       questionIndex: number;
       totalQuestions: number;
       questionNumber: string;
-      evaluation: QuestionGrading;
+      evaluation: QuestionEvaluation;
     }
   | {
       type: 'session_complete';
@@ -38,16 +39,16 @@ export interface AssessmentOptions {
 
 /**
  * Evaluates a single exam question with multimodal artifacts, Error Carried Forward (ECF) context,
- * GLM-OCR handwriting transcription, and automated failover to the local examiner simulation engine.
+ * parallel GLM-OCR handwriting transcription, and automated failover to the local examiner simulation engine.
  */
 export async function evaluateSingleQuestion(
   question: QuestionItem,
   submission: QuestionSubmission | undefined,
-  previousEvaluations: QuestionGrading[],
+  previousEvaluations: QuestionEvaluation[],
   clientKey?: string,
   thinkingBudget = 8192,
   zaiKey?: string
-): Promise<{ evaluation: QuestionGrading; isSimulated: boolean }> {
+): Promise<{ evaluation: QuestionEvaluation; isSimulated: boolean }> {
   const safeSubmission: QuestionSubmission = submission || {
     questionId: question.id,
     questionNumber: question.number,
@@ -62,11 +63,24 @@ export async function evaluateSingleQuestion(
 
   // Unattempted questions receive authentic 0 marks without calling LLM
   if (!hasWork) {
-    const unattempted: QuestionGrading = {
+    const unattemptedSubpartScores: Record<string, SubpartScoreItem> = {};
+    if (question.subparts && question.subparts.length > 0) {
+      question.subparts.forEach((sp) => {
+        unattemptedSubpartScores[sp.partLetter] = {
+          marksAwarded: 0,
+          maxMarks: sp.totalMarks,
+          ecfApplied: false,
+          reason: 'No response recorded on the examination script.',
+        };
+      });
+    }
+
+    const unattempted: QuestionEvaluation = {
       questionId: question.id,
       questionNumber: question.number,
       marksAwarded: 0,
       maxMarks: question.totalMarks,
+      subpartScores: Object.keys(unattemptedSubpartScores).length > 0 ? unattemptedSubpartScores : undefined,
       examinerNotes: 'No response was recorded for this question during the examination.',
       marginAnnotations: [
         { label: 'Unattempted', type: 'cross', text: 'No working or answer provided.' },
@@ -101,11 +115,11 @@ export async function evaluateSingleQuestion(
   let ecfContext = '';
   if (previousEvaluations.length > 0) {
     ecfContext =
-      `\nPREVIOUS SUBPART EVALUATIONS IN THIS EXAM (FOR ERROR CARRIED FORWARD TRACKING):\n` +
+      `\nPREVIOUS QUESTION EVALUATIONS IN THIS EXAM (FOR REVISION CONTEXT):\n` +
       previousEvaluations
         .map(
           (prev) =>
-            `Subpart ${prev.questionNumber}: Awarded ${prev.marksAwarded}/${prev.maxMarks}. Notes: ${prev.examinerNotes}. ECF Status: ${
+            `Question ${prev.questionNumber}: Awarded ${prev.marksAwarded}/${prev.maxMarks}. Notes: ${prev.examinerNotes}. ECF Status: ${
               prev.ecfApplied ? 'ECF Applied' : 'Normal'
             }`
         )
@@ -115,7 +129,7 @@ export async function evaluateSingleQuestion(
   let subpartsText = '';
   if (question.subparts && question.subparts.length > 0) {
     subpartsText =
-      `\nSUBPARTS OF THIS QUESTION:\n` +
+      `\nSUBPARTS OF THIS QUESTION (EVALUATE SEQUENTIALLY FOR INTRA-QUESTION ECF):\n` +
       question.subparts
         .map(
           (sp) =>
@@ -131,16 +145,56 @@ export async function evaluateSingleQuestion(
   // GLM-OCR Handwriting Transcription Pass if Z.AI key is available
   let glmOcrSection = '';
   const activeZaiKey = getZaiApiKey(zaiKey);
-  if (activeZaiKey && safeSubmission.canvasImageBase64) {
-    try {
-      const ocrResult = await transcribeStudentHandwriting(safeSubmission.canvasImageBase64, activeZaiKey);
-      if (ocrResult.hasContent) {
-        glmOcrSection = `\nGLM-OCR SOTA HIGH-PRECISION OCR TRANSCRIPTION OF STUDENT SCRIPT:\n${ocrResult.markdown}\nDetected Mathematical Formulas:\n${ocrResult.formulas.map((f) => `- $${f}$`).join('\n')}\n`;
-      } else {
-        glmOcrSection = `\nGLM-OCR SOTA OCR VERIFICATION: NO handwritten text or mathematical equations detected in this working box.\n`;
+
+  if (activeZaiKey) {
+    // 1. Parallel OCR across subpart working boxes if provided
+    if (safeSubmission.subpartImages && Object.keys(safeSubmission.subpartImages).length > 0) {
+      const nonNullSubparts = Object.entries(safeSubmission.subpartImages).filter(
+        ([, img]) => img && img.length > 500
+      );
+
+      if (nonNullSubparts.length > 0) {
+        try {
+          const subpartOcrResults = await Promise.all(
+            nonNullSubparts.map(async ([partId, imgData]) => {
+              try {
+                const res = await transcribeStudentHandwriting(imgData, activeZaiKey);
+                return { partId, res };
+              } catch (subErr) {
+                console.warn(`GLM-OCR transcription failed for subpart ${partId}:`, subErr);
+                return { partId, res: null };
+              }
+            })
+          );
+
+          const validSubpartSnippets = subpartOcrResults
+            .filter((r) => r.res && r.res.hasContent)
+            .map(
+              (r) =>
+                `\n--- GLM-OCR SOTA OCR TRANSCRIPTION FOR ${r.partId.toUpperCase()} ---\n${r.res!.markdown}\nDetected Mathematical Formulas:\n${r.res!.formulas.map((f) => `- $${f}$`).join('\n')}`
+            );
+
+          if (validSubpartSnippets.length > 0) {
+            glmOcrSection += `\nGLM-OCR SUBPART BOX TRANSCRIPTIONS:\n${validSubpartSnippets.join('\n')}\n`;
+          }
+        } catch (ocrBatchErr) {
+          console.warn('Parallel GLM-OCR subpart transcription encountered batch error:', ocrBatchErr);
+        }
       }
-    } catch (ocrErr) {
-      console.warn('GLM-OCR handwriting transcription pass encountered error, continuing with raw image:', ocrErr);
+    }
+
+    // 2. OCR on composite canvas image if present and subpart OCR didn't already capture working
+    if (safeSubmission.canvasImageBase64 && !glmOcrSection) {
+      try {
+        const ocrResult = await transcribeStudentHandwriting(safeSubmission.canvasImageBase64, activeZaiKey);
+        if (ocrResult.hasContent) {
+          glmOcrSection = `\nGLM-OCR SOTA HIGH-PRECISION OCR TRANSCRIPTION OF STUDENT SCRIPT:\n${ocrResult.markdown}\nDetected Mathematical Formulas:\n${ocrResult.formulas.map((f) => `- $${f}$`).join('\n')}\n`;
+        } else {
+          glmOcrSection = `\nGLM-OCR SOTA OCR VERIFICATION: NO handwritten text or mathematical equations detected in this working box.\n`;
+        }
+      } catch (ocrErr) {
+        console.warn('GLM-OCR handwriting transcription pass encountered error, continuing with raw image:', ocrErr);
+      }
     }
   }
 
@@ -169,12 +223,14 @@ ${safeSubmission.textResponse ? `Written Text Response:\n${safeSubmission.textRe
 Time Spent: ${safeSubmission.timeSpentSeconds} seconds.
 ${glmOcrSection}
 
-CRITICAL SUBPART ATTEMPT VERIFICATION:
-- Inspect whether the student attempted ALL subparts or only an initial subpart (e.g. only subpart (a)).
-- If subparts (b), (c), etc., are blank or absent from the student's working, you MUST award ZERO (0) marks for those unattempted subparts, setting awarded: false for all corresponding mark codes with reason: "No attempt or working recorded for this subpart".
+CRITICAL INTRA-QUESTION ECF & SUBPART ATTEMPT PROTOCOL:
+- Evaluate subparts sequentially in order: (a) -> (b) -> (c).
+- Populate the 'subpartScores' object with the exact marks awarded and max marks for each lettered subpart (e.g. "(a)", "(b)", "(c)").
+- If an arithmetic or calculation slip occurred in Part (a), check if subsequent parts (b) and (c) correctly applied valid mathematical methods using that erroneous intermediate value. If so, award Method and Follow-Through marks under ECF without double penalty, set ecfApplied: true, and explain in ecfExplanation.
+- If subparts (b), (c), etc., are blank or absent from the student's working, you MUST award ZERO (0) marks for those unattempted subparts in 'subpartScores' and mark corresponding codes as awarded: false with reason: "No attempt or working recorded for this subpart".
 - NEVER award marks for unattempted subparts.
 
-Please evaluate the student's submission rigorously following IB examiner guidelines. Citing specific mark codes (M1, A1, R1, etc.), calculate marks awarded, verify ECF if an upstream error was propagated, provide margin annotations, and recommend targeted syllabus revision.`;
+Please evaluate the student's submission rigorously following IB examiner guidelines. Citing specific mark codes (M1, A1, R1, etc.), calculate marks awarded, populate subpartScores, verify ECF if an upstream error was propagated, provide margin annotations, and recommend targeted syllabus revision.`;
 
   contents.push(textualPrompt);
 
@@ -215,16 +271,17 @@ Please evaluate the student's submission rigorously following IB examiner guidel
     });
   }
 
-  const modelsToTry = [DEFAULT_MODEL, ...FALLBACK_MODELS];
+  // Deduplicate model fallbacks
+  const modelsToTry = Array.from(new Set([DEFAULT_MODEL, ...FALLBACK_MODELS]));
   for (const m of modelsToTry) {
     try {
       const response = await ai.models.generateContent({
         model: m,
         contents,
         config: {
-          systemInstruction: GRADING_SYSTEM_PROMPT,
+          systemInstruction: SENIOR_EXAMINER_PROMPT,
           responseMimeType: 'application/json',
-          responseSchema: GRADING_RESPONSE_SCHEMA,
+          responseSchema: QUESTION_EVALUATION_SCHEMA,
           thinkingConfig: {
             thinkingBudget: thinkingBudget > 0 ? thinkingBudget : 8192,
           },
@@ -233,10 +290,10 @@ Please evaluate the student's submission rigorously following IB examiner guidel
       });
 
       if (response.text) {
-        const gradingResult: QuestionGrading = JSON.parse(response.text);
-        gradingResult.questionId = question.id;
-        gradingResult.questionNumber = question.number;
-        return { evaluation: gradingResult, isSimulated: false };
+        const evaluationResult: QuestionEvaluation = JSON.parse(response.text);
+        evaluationResult.questionId = question.id;
+        evaluationResult.questionNumber = question.number;
+        return { evaluation: evaluationResult, isSimulated: false };
       }
     } catch (err) {
       console.warn(`Grading model ${m} unavailable for Question ${question.number}:`, err);
@@ -267,7 +324,7 @@ export function calculatePredictedGrade(scorePercentage: number, boundaries: Exa
  * Synthesizes the Syllabus Weakness Matrix from question evaluations.
  */
 export function synthesizeSyllabusBreakdown(
-  evaluations: QuestionGrading[]
+  evaluations: QuestionEvaluation[]
 ): NonNullable<ExamSession['gradingResults']>['syllabusBreakdown'] {
   const syllabusMap: Record<
     string,
@@ -314,7 +371,7 @@ export async function* streamExamAssessment(
   submissions: Record<string, QuestionSubmission>,
   options: AssessmentOptions = {}
 ): AsyncGenerator<AssessmentEvent, void, unknown> {
-  const evaluations: QuestionGrading[] = [];
+  const evaluations: QuestionEvaluation[] = [];
   const totalQuestions = manifest.questions.length;
   const thinkingBudget = options.thinkingBudget ?? 8192;
 
@@ -392,8 +449,8 @@ export async function* streamExamAssessment(
 function generateSimulatedGrading(
   question: QuestionItem,
   submission: QuestionSubmission,
-  previousEvaluations: QuestionGrading[]
-): QuestionGrading {
+  previousEvaluations: QuestionEvaluation[]
+): QuestionEvaluation {
   const hasWork = Boolean(
     (submission.canvasImageBase64 && submission.canvasImageBase64.length > 2000) ||
     (submission.textResponse && submission.textResponse.trim().length > 20) ||
@@ -450,11 +507,40 @@ function generateSimulatedGrading(
 
   const totalAwarded = markBreakdown.reduce((sum, m) => sum + m.marksAwarded, 0);
 
+  // Compute discrete subpart scores if question has subparts
+  const subpartScores: Record<string, SubpartScoreItem> = {};
+  if (question.subparts && question.subparts.length > 0) {
+    let codeIndex = 0;
+    question.subparts.forEach((sp, spIdx) => {
+      const numCodes = sp.markCodes?.length || Math.ceil(question.markCodes.length / question.subparts!.length);
+      const spCodes = markBreakdown.slice(codeIndex, codeIndex + numCodes);
+      codeIndex += numCodes;
+
+      const spMarksAwarded = spCodes.reduce((sum, m) => sum + m.marksAwarded, 0);
+      const spEcf = spCodes.some((m) => m.isEcfApplied);
+      const isAttempted = hasWork && (spIdx === 0 || spMarksAwarded > 0);
+
+      subpartScores[sp.partLetter] = {
+        marksAwarded: spMarksAwarded,
+        maxMarks: sp.totalMarks,
+        ecfApplied: spEcf,
+        reason: !isAttempted
+          ? `No working or solution recorded for Subpart ${sp.partLetter}.`
+          : spMarksAwarded === sp.totalMarks
+          ? `Full criteria achieved for Subpart ${sp.partLetter}.`
+          : spEcf
+          ? `Subpart ${sp.partLetter} method preserved under IB Error Carried Forward protocol.`
+          : `Calculated per markscheme criteria for Subpart ${sp.partLetter}.`,
+      };
+    });
+  }
+
   return {
     questionId: question.id,
     questionNumber: question.number,
     marksAwarded: totalAwarded,
     maxMarks: question.totalMarks,
+    subpartScores: Object.keys(subpartScores).length > 0 ? subpartScores : undefined,
     examinerNotes: hasWork
       ? `The student demonstrated solid engagement with command term "${question.commandTerm}". Method marks were secured through explicit working. ${
           triggerEcf ? 'Notice that Error Carried Forward (ECF) conventions were rigorously applied to ensure no double penalty occurred.' : ''
@@ -462,12 +548,27 @@ function generateSimulatedGrading(
       : `No sufficient working or text was provided for this question.`,
     marginAnnotations: hasWork
       ? [
-          { label: 'M1 Awarded', type: 'tick', text: 'Valid method step shown clearly.' },
-          ...(triggerEcf ? [{ label: 'ECF Applied', type: 'ecf' as const, text: 'Follow-through method credited without penalty.' }] : []),
+          {
+            label: 'M1 Awarded',
+            type: 'tick',
+            text: 'Valid method step shown clearly.',
+            subpartPartLetter: question.subparts?.[0]?.partLetter,
+          },
+          ...(triggerEcf
+            ? [
+                {
+                  label: 'ECF Applied',
+                  type: 'ecf' as const,
+                  text: 'Follow-through method credited without penalty.',
+                  subpartPartLetter: question.subparts?.[1]?.partLetter || question.subparts?.[0]?.partLetter,
+                },
+              ]
+            : []),
           {
             label: totalAwarded === question.totalMarks ? 'Full Marks' : 'Accuracy Slip',
             type: totalAwarded === question.totalMarks ? ('tick' as const) : ('cross' as const),
             text: totalAwarded === question.totalMarks ? 'Exact answer verified against markscheme.' : 'Check final constant/arithmetic step.',
+            subpartPartLetter: question.subparts?.[question.subparts.length - 1]?.partLetter,
           },
         ]
       : [{ label: 'No response', type: 'cross', text: 'Blank submission.' }],

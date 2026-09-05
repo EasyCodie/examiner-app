@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { QuestionItem, QuestionGrading } from '@/types/exam';
+import { QuestionItem, QuestionEvaluation } from '@/types/exam';
 import { MathRenderer } from '@/components/common/MathRenderer';
 import {
   Target,
@@ -29,7 +29,7 @@ interface SyllabusMatrixProps {
   syllabusBreakdown: SyllabusBreakdownItem[];
   paperId?: string;
   activeQuestion?: QuestionItem;
-  activeEvaluation?: QuestionGrading;
+  activeEvaluation?: QuestionEvaluation;
   activeQuestionIndex?: number;
   allQuestions?: QuestionItem[];
 }

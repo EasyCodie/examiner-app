@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { ExamSession, ExamManifest, QuestionGrading } from '@/types/exam';
+import { ExamSession, ExamManifest, QuestionEvaluation } from '@/types/exam';
 import { getExamSession, getManifestById, saveExamSession, getAiConfig } from '@/lib/storage';
 import { useAppShell } from '@/components/common/AppShell';
 import { GradeBoundaryCard } from '@/components/assessment/GradeBoundaryCard';
@@ -44,7 +44,7 @@ export default function ResultsPage() {
   // Live streaming evaluation state
   const [isStreaming, setIsStreaming] = useState(false);
   const [streamStatus, setStreamStatus] = useState<string>('');
-  const [liveEvaluations, setLiveEvaluations] = useState<QuestionGrading[]>([]);
+  const [liveEvaluations, setLiveEvaluations] = useState<QuestionEvaluation[]>([]);
   const [streamError, setStreamError] = useState<string | null>(null);
 
   const streamInitiatedRef = useRef(false);
@@ -108,7 +108,7 @@ export default function ResultsPage() {
             const event = JSON.parse(line);
 
             if (event.type === 'question_evaluated') {
-              const evalItem: QuestionGrading = event.evaluation;
+              const evalItem: QuestionEvaluation = event.evaluation;
               setLiveEvaluations((prev) => {
                 const next = [...prev, evalItem];
                 return next;

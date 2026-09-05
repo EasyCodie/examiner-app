@@ -7,3 +7,17 @@
 [2026-09-05T14:05:21.932Z] INGEST_SUCCESS - {"manifestId":"custom-1788617121930","questions":12,"gradeBoundaries":{"grade7":78,"grade6":65,"grade5":52,"grade4":38,"grade3":25,"grade2":13,"grade1":0}}
 [2026-09-05T14:37:34.589Z] INGEST_START - {"paper":{"name":"Mathematics_analysis_and_approaches_paper_1__TZ1_HL (2022).pdf","size":614754},"markscheme":{"name":"Mathematics_analysis_and_approaches_paper_1__TZ1_HL_markscheme (2022).pdf","size":1594551}}
 [2026-09-05T14:37:34.593Z] GLM_OCR_START - Dispatching layout parsing for paper & markscheme...
+[2026-09-05T14:39:50.616Z] INGEST_START - {"paper":{"name":"Mathematics_analysis_and_approaches_paper_1__TZ1_HL (2022).pdf","size":614754},"markscheme":{"name":"Mathematics_analysis_and_approaches_paper_1__TZ1_HL_markscheme (2022).pdf","size":1594551}}
+[2026-09-05T14:39:50.621Z] GLM_OCR_START - Dispatching layout parsing for paper & markscheme...
+[2026-09-05T14:40:38.152Z] GLM_OCR_SUCCESS - {"paperMarkdownChars":10359,"markschemeMarkdownChars":35836,"omittedMarkschemeBinary":true}
+[2026-09-05T14:40:38.154Z] GEMINI_ATTEMPT - {"model":"gemini-3.5-flash-lite","thinkingLevel":"low","partsCount":2}
+[2026-09-05T14:41:06.471Z] GEMINI_SUCCESS - {"model":"gemini-3.5-flash-lite","responseChars":37772}
+[2026-09-05T14:41:06.472Z] MANIFEST_PARSED - {"title":"Mathematics: analysis and approaches","totalMarks":110,"questionCount":12}
+[2026-09-05T14:41:06.473Z] INGEST_SUCCESS - {"manifestId":"custom-1788619266472","questions":12,"gradeBoundaries":{"grade7":80,"grade6":68,"grade5":56,"grade4":44,"grade3":32,"grade2":18,"grade1":0}}
+[2026-09-05T15:40:04.876Z] INGEST_START - {"paper":{"name":"Mathematics_analysis_and_approaches_paper_1__TZ1_HL (2022).pdf","size":614754},"markscheme":{"name":"Mathematics_analysis_and_approaches_paper_1__TZ1_HL_markscheme (2022).pdf","size":1594551}}
+[2026-09-05T15:40:04.882Z] GLM_OCR_START - Dispatching layout parsing for paper & markscheme...
+[2026-09-05T15:40:26.784Z] GLM_OCR_SUCCESS - {"paperMarkdownChars":10363,"markschemeMarkdownChars":35809,"omittedMarkschemeBinary":true}
+[2026-09-05T15:40:26.785Z] GEMINI_ATTEMPT - {"model":"gemini-3.5-flash-lite","thinkingLevel":"low","partsCount":2}
+[2026-09-05T15:40:49.145Z] GEMINI_SUCCESS - {"model":"gemini-3.5-flash-lite","responseChars":33499}
+[2026-09-05T15:40:49.146Z] MANIFEST_PARSED - {"title":"Mathematics: analysis and approaches Higher level","totalMarks":110,"questionCount":12}
+[2026-09-05T15:40:49.147Z] INGEST_SUCCESS - {"manifestId":"custom-1788622849146","questions":12,"gradeBoundaries":{"grade7":80,"grade6":67,"grade5":54,"grade4":41,"grade3":28,"grade2":15,"grade1":0}}

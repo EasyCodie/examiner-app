@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { QuestionItem, QuestionSubmission, QuestionGrading } from '@/types/exam';
+import { QuestionItem, QuestionSubmission, QuestionEvaluation } from '@/types/exam';
 import { MarkCodeBadge } from './MarkCodeBadge';
 import { MathRenderer } from '@/components/common/MathRenderer';
 import {
@@ -17,7 +17,7 @@ import {
 interface ExaminerReviewProps {
   questions: QuestionItem[];
   submissions: Record<string, QuestionSubmission>;
-  evaluations: QuestionGrading[];
+  evaluations: QuestionEvaluation[];
   selectedIndex?: number;
   onSelectIndex?: (index: number) => void;
 }
@@ -75,7 +75,11 @@ export const ExaminerReview: React.FC<ExaminerReviewProps> = ({
             ) || evaluations[idx];
             const isSelected = idx === activeIndex;
             const sub = submissions[q.id];
-            const hasWork = Boolean(sub?.canvasImageBase64 || sub?.textResponse);
+            const hasWork = Boolean(
+              sub?.canvasImageBase64 ||
+              sub?.textResponse ||
+              (sub?.subpartImages && Object.values(sub.subpartImages).some((img) => img && img.length > 500))
+            );
             const fullMarks = ev && ev.marksAwarded === ev.maxMarks;
             const isPartial = ev && ev.marksAwarded > 0 && ev.marksAwarded < ev.maxMarks;
             const isZero = ev && ev.marksAwarded === 0;
@@ -243,17 +247,75 @@ export const ExaminerReview: React.FC<ExaminerReviewProps> = ({
               </div>
             )}
 
-            {/* Subparts Breakdown */}
+            {/* Subparts Breakdown with Discrete Scores & Annotations */}
             {currentQuestion.subparts && currentQuestion.subparts.length > 0 && (
-              <div className="mt-3 pt-3 border-t border-white/[0.08] space-y-2">
-                {currentQuestion.subparts.map((sp) => (
-                  <div key={sp.id} className="bg-white/[0.02] p-2 rounded border border-white/[0.04]">
-                    <div className="font-semibold text-[#f3f3f2] font-mono-code text-[11px] mb-0.5">
-                      Subquestion {sp.partLetter} [{sp.totalMarks} marks]:
+              <div className="mt-3 pt-3 border-t border-white/[0.08] space-y-2.5">
+                {currentQuestion.subparts.map((sp) => {
+                  const spScore =
+                    evaluation?.subpartScores?.[sp.partLetter] ||
+                    evaluation?.subpartScores?.[sp.partLetter.replace(/[()]/g, '')] ||
+                    evaluation?.subpartScores?.[`(${sp.partLetter.replace(/[()]/g, '')})`];
+                  const spAnnotations = evaluation?.marginAnnotations?.filter(
+                    (a) =>
+                      a.subpartPartLetter === sp.partLetter ||
+                      a.subpartPartLetter === sp.partLetter.replace(/[()]/g, '')
+                  );
+
+                  return (
+                    <div key={sp.id} className="bg-white/[0.02] p-2.5 rounded-lg border border-white/[0.05] space-y-1.5">
+                      <div className="flex items-center justify-between gap-2 font-mono-code text-[11px]">
+                        <div className="flex items-center gap-1.5 font-semibold text-[#f3f3f2]">
+                          <span>Subquestion {sp.partLetter}</span>
+                          <span className="text-[#9b9a95]">[{sp.totalMarks} marks]</span>
+                        </div>
+                        {spScore ? (
+                          <div className="flex items-center gap-1.5">
+                            {spScore.ecfApplied && (
+                              <span className="text-[10px] font-mono-code text-[#dfa88f] bg-[#dfa88f]/10 border border-[#dfa88f]/30 px-1.5 py-0.5 rounded flex items-center gap-0.5">
+                                <Sparkles className="w-2.5 h-2.5" /> ECF
+                              </span>
+                            )}
+                            <span
+                              className={`px-2 py-0.5 rounded text-[10px] font-semibold ${
+                                spScore.marksAwarded === sp.totalMarks
+                                  ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/20'
+                                  : spScore.marksAwarded > 0
+                                  ? 'bg-amber-500/15 text-amber-300 border border-amber-500/20'
+                                  : 'bg-[#cf2d56]/15 text-[#cf2d56] border border-[#cf2d56]/20'
+                              }`}
+                            >
+                              {spScore.marksAwarded}/{sp.totalMarks} marks
+                            </span>
+                          </div>
+                        ) : null}
+                      </div>
+                      <MathRenderer content={sp.promptText} />
+                      {spScore?.reason && (
+                        <p className="text-[10px] font-mono-code text-[#9b9a95] italic pt-1 border-t border-white/[0.04]">
+                          {spScore.reason}
+                        </p>
+                      )}
+                      {spAnnotations && spAnnotations.length > 0 && (
+                        <div className="flex flex-wrap gap-1.5 pt-1">
+                          {spAnnotations.map((ann, aIdx) => (
+                            <span
+                              key={aIdx}
+                              className={`inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded border font-mono-code ${
+                                ann.type === 'tick'
+                                  ? 'bg-emerald-950/40 border-emerald-700/50 text-emerald-300'
+                                  : ann.type === 'ecf'
+                                  ? 'bg-amber-950/40 border-amber-700/50 text-amber-300'
+                                  : 'bg-rose-950/40 border-rose-700/50 text-rose-300'
+                              }`}
+                            >
+                              <span className="font-semibold">{ann.label}:</span> {ann.text}
+                            </span>
+                          ))}
+                        </div>
+                      )}
                     </div>
-                    <MathRenderer content={sp.promptText} />
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { evaluateSingleQuestion } from '@/lib/assessment/evaluator';
-import { QuestionItem, QuestionSubmission, QuestionGrading } from '@/types/exam';
+import { QuestionItem, QuestionSubmission, QuestionEvaluation } from '@/types/exam';
 
 export const dynamic = 'force-dynamic';
 
@@ -15,7 +15,7 @@ export async function POST(req: NextRequest) {
     }: {
       question: QuestionItem;
       submission: QuestionSubmission;
-      previousEvaluations?: QuestionGrading[];
+      previousEvaluations?: QuestionEvaluation[];
       thinkingBudget?: number;
     } = body;
 

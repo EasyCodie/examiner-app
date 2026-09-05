@@ -20,8 +20,12 @@ _Avoid_: Answer, input, response data
 The examiner-grade marking result for a single question, specifying awarded mark codes, margin annotations, syllabus subtopic mastery, and revision recommendations.
 _Avoid_: Question grading, score item, assessment detail
 
+**Subpart Evaluation**:
+The granular marking outcome for a specific lettered subquestion (e.g. (a), (b), (c)), specifying subpart marks awarded, max marks, and whether intra-question ECF was credited.
+_Avoid_: Subpart score, part grade, sub-score
+
 **Error Carried Forward (ECF)**:
-An official Senior Examiner marking convention that credits correct downstream method and reasoning even when calculated from an incorrect upstream value, preventing double penalization.
+An official Senior Examiner marking convention that credits correct downstream method and reasoning even when calculated from an incorrect upstream value, preventing double penalization. ECF applies primarily across sequential subparts within multi-part questions.
 _Avoid_: Follow-through, error propagation, partial credit
 
 **Mark Code**:

@@ -107,17 +107,26 @@ export interface AwardedMarkItem {
   isEcfApplied?: boolean;
 }
 
-export interface QuestionGrading {
+export interface SubpartScoreItem {
+  marksAwarded: number;
+  maxMarks: number;
+  ecfApplied?: boolean;
+  reason?: string;
+}
+
+export interface QuestionEvaluation {
   questionId: string;
   questionNumber: string;
   marksAwarded: number;
   maxMarks: number;
+  subpartScores?: Record<string, SubpartScoreItem>; // e.g. "(a)": { marksAwarded: 4, maxMarks: 4 }
   examinerNotes: string;
   marginAnnotations: {
     label: string;
     type: 'tick' | 'cross' | 'ecf' | 'comment';
     text: string;
-    coordinate?: { x: number; y: number };
+    subpartPartLetter?: string; // e.g. "(a)", "(b)"
+    coordinate?: { x: number; y: number }; // Deprecated: preserved for historical session compatibility
   }[];
   markBreakdown: AwardedMarkItem[];
   ecfApplied: boolean;
@@ -126,6 +135,9 @@ export interface QuestionGrading {
   subtopicMasteryScore: number; // 0 to 100%
   revisionRecommendation: string;
 }
+
+// Backward-compatible type alias for previously serialized IndexedDB mock sessions
+export type QuestionGrading = QuestionEvaluation;
 
 export interface ExamSession {
   id: string;
@@ -144,7 +156,7 @@ export interface ExamSession {
     percentage: number;
     predictedGrade: number; // 1 to 7
     reasoningEffortUsed: 'high' | 'minimal';
-    evaluations: QuestionGrading[];
+    evaluations: QuestionEvaluation[];
     syllabusBreakdown: {
       subtopic: string;
       marksAwarded: number;
