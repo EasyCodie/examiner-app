@@ -5,7 +5,6 @@ import { useParams, useRouter } from 'next/navigation';
 import {
   ExamManifest,
   QuestionSubmission,
-  ExamSession,
   CanvasStroke,
 } from '@/types/exam';
 import {
@@ -16,7 +15,7 @@ import { useAppShell } from '@/components/common/AppShell';
 import { DrawingCanvas, DrawingCanvasRef } from '@/components/canvas/DrawingCanvas';
 import { CanvasToolbar } from '@/components/canvas/CanvasToolbar';
 import { SplitScreenEditor } from '@/components/editor/SplitScreenEditor';
-import { renderStrokesToPng } from '@/lib/canvasUtils';
+import { compileMockSession } from '@/lib/session/submissionCompiler';
 import {
   Send,
   Sparkles,
@@ -140,132 +139,51 @@ export default function MockExamPage() {
     setIsSubmitting(true);
 
     try {
+      let livePageImage: string | undefined;
+      let activeBoxImages: Record<string, string> = {};
+
       if (isHumanities) {
         setGradingProgress('Compiling essay responses and economic diagram attachments...');
         setGradingPercentage(30);
+      } else {
+        setGradingProgress('Compiling submission and capturing canvas working...');
+        setGradingPercentage(5);
 
-        const finalSubmissions: Record<string, QuestionSubmission> = {};
-        const elapsedTotalSeconds = Math.max(0, manifest.durationMinutes * 60 - timeRemainingSeconds);
-        const timePerQuestion = Math.round(elapsedTotalSeconds / (manifest.questions.length || 1));
-
-        for (const q of manifest.questions) {
-          const sub = humanitiesSubmissions[q.id];
-          finalSubmissions[q.id] = {
-            questionId: q.id,
-            questionNumber: q.number,
-            textResponse: sub?.textResponse || '',
-            diagramImageBase64: sub?.diagramImageBase64 || undefined,
-            timeSpentSeconds: sub?.timeSpentSeconds || timePerQuestion,
-          };
-        }
-
-        setGradingPercentage(100);
-        setGradingProgress('Handing over to Senior Examiner evaluation stream...');
-
-        const sessionId = `session-${Date.now()}`;
-        const initialSession: ExamSession = {
-          id: sessionId,
-          paperId: manifest.id,
-          paperTitle: manifest.title,
-          subjectCategory: manifest.category,
-          mode: 'TIMED_MOCK',
-          startedAt: new Date().toISOString(),
-          timeRemainingSeconds,
-          durationSeconds: manifest.durationMinutes * 60,
-          submissions: finalSubmissions,
-        };
-
-        await saveExamSession(initialSession);
-        router.push(`/results/${sessionId}?evaluating=true`);
-        return;
-      }
-
-      setGradingProgress('Compiling submission and capturing canvas working...');
-      setGradingPercentage(5);
-
-      const updatedSubmissions = { ...submissions };
-
-      setGradingProgress('Rasterizing handwritten pages into high-res examiner scans...');
-
-      // Capture all pages accurately: active page from live DOM canvas, other pages from stored stroke vectors
-      const pageImages: Record<number, string> = {};
-      let activeBoxImages: Record<string, string> = {};
-
-      if (canvasRef.current) {
-        try {
-          const liveImg = await canvasRef.current.exportCompositeImage();
-          if (liveImg) pageImages[activePageNumber] = liveImg;
-          activeBoxImages = await canvasRef.current.exportBoxImages();
-        } catch {
-          const liveImg = canvasRef.current.getCanvasSnapshot();
-          if (liveImg) pageImages[activePageNumber] = liveImg;
-        }
-      }
-
-      for (const pageNum of distinctQuestionPages) {
-        if (!pageImages[pageNum]) {
-          const strokes = pageStrokes[pageNum] || [];
-          if (strokes.length > 0) {
-            pageImages[pageNum] = renderStrokesToPng(strokes);
+        if (canvasRef.current) {
+          try {
+            const liveImg = await canvasRef.current.exportCompositeImage();
+            if (liveImg) livePageImage = liveImg;
+            activeBoxImages = await canvasRef.current.exportBoxImages();
+          } catch {
+            const liveImg = canvasRef.current.getCanvasSnapshot();
+            if (liveImg) livePageImage = liveImg;
           }
         }
       }
 
-      for (const q of manifest.questions) {
-        const pageImg = pageImages[q.pageNumber];
-        const existingSub = updatedSubmissions[q.id];
-        const singleBoxImg = activeBoxImages[q.id] || (
-          pageBoxStrokes[q.pageNumber]?.[q.id]?.length
-            ? renderStrokesToPng(pageBoxStrokes[q.pageNumber][q.id])
-            : undefined
-        );
-        const canvasImg = singleBoxImg || pageImg || existingSub?.canvasImageBase64 || undefined;
+      setGradingPercentage(60);
+      setGradingProgress('Rasterizing handwritten pages into high-res examiner scans...');
 
-        // Subpart images mapping
-        const subImages: Record<string, string> = {};
-        if (q.subparts && q.subparts.length > 0) {
-          q.subparts.forEach((sub, sIdx) => {
-            const boxId = sub.id || `${q.id}_${sIdx}`;
-            if (activeBoxImages[boxId]) {
-              subImages[boxId] = activeBoxImages[boxId];
-            } else if (pageBoxStrokes[q.pageNumber]?.[boxId]?.length) {
-              subImages[boxId] = renderStrokesToPng(pageBoxStrokes[q.pageNumber][boxId]);
-            }
-          });
-        }
-
-        updatedSubmissions[q.id] = {
-          questionId: q.id,
-          questionNumber: q.number,
-          canvasImageBase64: canvasImg,
-          subpartImages: Object.keys(subImages).length > 0 ? subImages : undefined,
-          boxStrokes: pageBoxStrokes[q.pageNumber],
-          timeSpentSeconds: existingSub?.timeSpentSeconds || Math.round(
-            (manifest.durationMinutes * 60 - timeRemainingSeconds) / manifest.questions.length
-          ),
-        };
-      }
+      const { session } = compileMockSession({
+        manifest,
+        pageStrokes,
+        pageBoxStrokes,
+        activeBoxImages,
+        livePageImage,
+        activePageNumber,
+        distinctQuestionPages,
+        timeRemainingSeconds,
+        humanitiesSubmissions,
+        existingSubmissions: submissions,
+      });
 
       setGradingPercentage(100);
       setGradingProgress('Handing over to Senior Examiner evaluation stream...');
 
-      const sessionId = `session-${Date.now()}`;
-      const initialSession: ExamSession = {
-        id: sessionId,
-        paperId: manifest.id,
-        paperTitle: manifest.title,
-        subjectCategory: manifest.category,
-        mode: 'TIMED_MOCK',
-        startedAt: new Date().toISOString(),
-        timeRemainingSeconds,
-        durationSeconds: manifest.durationMinutes * 60,
-        submissions: updatedSubmissions,
-      };
-
-      await saveExamSession(initialSession);
+      await saveExamSession(session);
 
       // Transition immediately to the live results evaluation stream
-      router.push(`/results/${sessionId}?evaluating=true`);
+      router.push(`/results/${session.id}?evaluating=true`);
     } catch (err: unknown) {
       console.error('Submission error:', err);
       const msg = err instanceof Error ? err.message : 'Error submitting exam.';

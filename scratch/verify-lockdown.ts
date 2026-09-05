@@ -357,6 +357,112 @@ async function runLockdownVerification() {
     assert.strictEqual(backwardCompat.marksAwarded, 5);
   });
 
+  // 8. DEEP MODULE ARCHITECTURE & SEAM INTEGRATION
+  console.log('\n--- 8. DEEP MODULE ARCHITECTURE & SEAM INTEGRATION ---');
+  const { compileExamManifest } = await import('../src/lib/ingestion/compiler');
+  const { consultSocraticTutor } = await import('../src/lib/socratic/tutor');
+  const { compileMockSession } = await import('../src/lib/session/submissionCompiler');
+  const { examRepo, getAllManifests, getAiConfig } = await import('../src/lib/storage');
+
+  test('compileMockSession compiles STEM handwritten working into ExamSession entity', () => {
+    const paper = BUNDLED_MATH_AA_HL;
+    const q1 = paper.questions[0];
+    const { session, submissions } = compileMockSession({
+      manifest: paper,
+      pageStrokes: {
+        1: [{ points: [{ x: 10, y: 10, pressure: 0.5 }, { x: 20, y: 20, pressure: 0.5 }], color: '#ffffff', width: 2, tool: 'pen' }],
+      },
+      pageBoxStrokes: {},
+      activeBoxImages: { [q1.id]: 'data:image/png;base64,mockbox' },
+      activePageNumber: 1,
+      distinctQuestionPages: [1],
+      timeRemainingSeconds: 3000,
+    });
+
+    assert.strictEqual(session.paperId, paper.id);
+    assert.strictEqual(session.mode, 'TIMED_MOCK');
+    assert(session.submissions[q1.id], `Submission for ${q1.id} must exist`);
+    assert.strictEqual(submissions[q1.id], session.submissions[q1.id]);
+    assert.strictEqual(session.submissions[q1.id].canvasImageBase64, 'data:image/png;base64,mockbox');
+    assert(session.submissions[q1.id].timeSpentSeconds > 0, 'Time spent must be allocated');
+  });
+
+  test('compileMockSession compiles Humanities structured essays into ExamSession entity', () => {
+    const paper = BUNDLED_ECONOMICS_HL;
+    const q1 = paper.questions[0];
+    const { session, submissions } = compileMockSession({
+      manifest: paper,
+      pageStrokes: {},
+      pageBoxStrokes: {},
+      activePageNumber: 1,
+      distinctQuestionPages: [1],
+      timeRemainingSeconds: 2400,
+      humanitiesSubmissions: {
+        [q1.id]: {
+          questionId: q1.id,
+          questionNumber: q1.number,
+          textResponse: 'This is an in-depth macroeconomic essay evaluating negative externalities of consumption.',
+          timeSpentSeconds: 600,
+        },
+      },
+    });
+
+    assert.strictEqual(session.paperId, paper.id);
+    assert.strictEqual(session.subjectCategory, 'HUMANITIES');
+    assert(submissions[q1.id], 'Humanities submission for q1 must be preserved');
+    assert(submissions[q1.id]?.textResponse?.includes('macroeconomic essay'));
+  });
+
+  await test('consultSocraticTutor delivers tier-appropriate guidance via deep module seam', async () => {
+    const testQ = BUNDLED_MATH_AA_HL.questions[0];
+    const result = await consultSocraticTutor({
+      question: testQ,
+      messages: [],
+      requestedTier: 1,
+      userMessage: 'How do I begin this question?',
+    });
+
+    assert(result.message, 'Result must contain a tutor message');
+    assert.strictEqual(result.message.tierActive, 1);
+    assert.strictEqual(result.message.unlockedMarkscheme, false);
+    assert(result.message.text.includes(testQ.commandTerm), 'Must anchor on command term');
+  });
+
+  await test('examRepo exposes manifests, sessions, strokes, and config facets', async () => {
+    assert(examRepo.manifests && typeof examRepo.manifests.getAll === 'function');
+    assert(examRepo.sessions && typeof examRepo.sessions.getAll === 'function');
+    assert(examRepo.strokes && typeof examRepo.strokes.get === 'function');
+    assert(examRepo.config && typeof examRepo.config.get === 'function');
+
+    const config = await examRepo.config.get();
+    assert(config.modelName, 'Config must have modelName');
+
+    const manifests = await examRepo.manifests.getAll();
+    assert(manifests.length >= 2, 'Must include bundled sample papers');
+
+    const singleManifest = await examRepo.manifests.getById(BUNDLED_MATH_AA_HL.id);
+    assert(singleManifest !== null, 'Should retrieve bundled paper by id');
+    assert.strictEqual(singleManifest?.title, BUNDLED_MATH_AA_HL.title);
+
+    // Verify storage.ts facade backward compatibility
+    const facadeManifests = await getAllManifests();
+    assert.strictEqual(facadeManifests.length, manifests.length, 'Facade must return identical count');
+    const facadeConfig = await getAiConfig();
+    assert.strictEqual(facadeConfig.modelName, config.modelName, 'Facade config must match repo');
+  });
+
+  await test('compileExamManifest validates inputs and handles pipeline execution', async () => {
+    assert(typeof compileExamManifest === 'function', 'compileExamManifest must be an exported function');
+    let threw = false;
+    try {
+      await compileExamManifest(Buffer.from(''), Buffer.from(''));
+    } catch (err: unknown) {
+      threw = true;
+      assert(err instanceof Error, 'Should throw an Error instance on empty buffers');
+    }
+    assert(threw, 'compileExamManifest should fail when passed empty invalid buffers');
+  });
+
   console.log('\n====================================================');
   console.log(`  RESULTS: ${passedTests}/${totalTests} TESTS PASSED (100%)`);
   console.log('====================================================\n');

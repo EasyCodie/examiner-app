@@ -21,3 +21,9 @@
 [2026-09-05T15:40:49.145Z] GEMINI_SUCCESS - {"model":"gemini-3.5-flash-lite","responseChars":33499}
 [2026-09-05T15:40:49.146Z] MANIFEST_PARSED - {"title":"Mathematics: analysis and approaches Higher level","totalMarks":110,"questionCount":12}
 [2026-09-05T15:40:49.147Z] INGEST_SUCCESS - {"manifestId":"custom-1788622849146","questions":12,"gradeBoundaries":{"grade7":80,"grade6":67,"grade5":54,"grade4":41,"grade3":28,"grade2":15,"grade1":0}}
+[2026-09-05T18:49:46.546Z] INGEST_START - {"paperBytes":0,"markschemeBytes":0}
+[2026-09-05T18:49:46.547Z] INGEST_ERROR - Gemini API key missing
+[2026-09-05T18:50:02.842Z] INGEST_START - {"paperBytes":0,"markschemeBytes":0}
+[2026-09-05T18:50:02.843Z] INGEST_ERROR - Gemini API key missing
+[2026-09-05T18:51:11.065Z] INGEST_START - {"paperBytes":0,"markschemeBytes":0}
+[2026-09-05T18:51:11.065Z] INGEST_ERROR - Gemini API key missing
