@@ -1,8 +1,30 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { ThinkingLevel } from '@google/genai';
 import { getGeminiClient, INGESTION_MODELS, generateWithTimeout } from '@/lib/gemini';
 import { INGESTION_SYSTEM_PROMPT } from '@/lib/prompts';
 import { MANIFEST_RESPONSE_SCHEMA } from '@/lib/schemas';
 import { parseWithGlmOcr, getZaiApiKey } from '@/lib/ocr/glmOcr';
+
+import fs from 'fs';
+import path from 'path';
+
+function logPipeline(event: string, details?: unknown) {
+  const time = new Date().toISOString();
+  const detailStr = details
+    ? typeof details === 'string'
+      ? details
+      : JSON.stringify(details)
+    : '';
+  const line = `[${time}] ${event}${detailStr ? ' - ' + detailStr : ''}\n`;
+  console.log(line.trim());
+  try {
+    const scratchDir = path.join(process.cwd(), 'scratch');
+    if (!fs.existsSync(scratchDir)) fs.mkdirSync(scratchDir, { recursive: true });
+    fs.appendFileSync(path.join(scratchDir, 'pipeline.log'), line);
+  } catch {
+    // Non-fatal logging error
+  }
+}
 
 export async function POST(req: NextRequest) {
   try {
@@ -11,11 +33,17 @@ export async function POST(req: NextRequest) {
     const markschemeFile = formData.get('markschemeFile') as File | null;
 
     if (!paperFile || !markschemeFile) {
+      logPipeline('INGEST_ERROR', 'Missing paperFile or markschemeFile');
       return NextResponse.json(
         { error: 'Both Question Paper and Markscheme PDFs are required.' },
         { status: 400 }
       );
     }
+
+    logPipeline('INGEST_START', {
+      paper: { name: paperFile.name, size: paperFile.size },
+      markscheme: { name: markschemeFile.name, size: markschemeFile.size },
+    });
 
     const clientKey = req.headers.get('x-gemini-key') || undefined;
     const clientZaiKey = req.headers.get('x-zai-key') || undefined;
@@ -23,6 +51,7 @@ export async function POST(req: NextRequest) {
     const ai = getGeminiClient(clientKey);
 
     if (!ai) {
+      logPipeline('INGEST_ERROR', 'Gemini API key missing');
       return NextResponse.json(
         { error: 'Gemini API key is missing or not configured.' },
         { status: 401 }
@@ -33,18 +62,28 @@ export async function POST(req: NextRequest) {
     const markschemeBuffer = Buffer.from(await markschemeFile.arrayBuffer());
 
     let glmOcrContext = '';
+    let hasMarkschemeOcr = false;
     if (zaiKey) {
       try {
-        console.log('Running GLM-OCR layout parsing on Question Paper & Markscheme PDFs...');
+        logPipeline('GLM_OCR_START', 'Dispatching layout parsing for paper & markscheme...');
         const [paperOcr, markschemeOcr] = await Promise.all([
           parseWithGlmOcr(paperBuffer.toString('base64'), 'application/pdf', zaiKey),
           parseWithGlmOcr(markschemeBuffer.toString('base64'), 'application/pdf', zaiKey),
         ]);
 
-        glmOcrContext = `\n\n===============================\nGLM-OCR SOTA DOCUMENT RECOGNITION TRANSCRIPT:\n\nDOCUMENT 1 (QUESTION PAPER MARKDOWN):\n${paperOcr.md_results || 'N/A'}\n\nDOCUMENT 2 (MARKSCHEME MARKDOWN):\n${markschemeOcr.md_results || 'N/A'}\n===============================\nUse this high-precision GLM-OCR extracted Markdown and LaTeX equations to guarantee 100% question extraction accuracy, exact formulas, and correct mark schemes.`;
-        console.log('GLM-OCR layout parsing successfully completed.');
+        const msMd = markschemeOcr.md_results || '';
+        hasMarkschemeOcr = msMd.trim().length > 500;
+
+        glmOcrContext = `\n\n===============================\nGLM-OCR SOTA DOCUMENT RECOGNITION TRANSCRIPT:\n\nDOCUMENT 1 (QUESTION PAPER MARKDOWN):\n${paperOcr.md_results || 'N/A'}\n\nDOCUMENT 2 (MARKSCHEME MARKDOWN):\n${msMd || 'N/A'}\n===============================\nUse this high-precision GLM-OCR extracted Markdown and LaTeX equations to guarantee 100% question extraction accuracy, exact formulas, and correct mark schemes.`;
+        logPipeline('GLM_OCR_SUCCESS', {
+          paperMarkdownChars: paperOcr.md_results?.length || 0,
+          markschemeMarkdownChars: msMd.length,
+          omittedMarkschemeBinary: hasMarkschemeOcr,
+        });
       } catch (ocrErr) {
-        console.warn('GLM-OCR pre-parsing encountered error, continuing with direct multimodal PDF:', ocrErr);
+        logPipeline('GLM_OCR_WARNING', {
+          msg: ocrErr instanceof Error ? ocrErr.message : String(ocrErr),
+        });
       }
     }
 
@@ -55,16 +94,21 @@ export async function POST(req: NextRequest) {
       },
     };
 
-    const markschemePart = {
-      inlineData: {
-        data: markschemeBuffer.toString('base64'),
-        mimeType: 'application/pdf',
-      },
-    };
+    // When GLM-OCR has already extracted the markscheme text into Markdown,
+    // omit the 1.6MB markscheme binary PDF to avoid redundant vision rasterization
+    const modelContents: unknown[] = [paperPart];
+    if (!hasMarkschemeOcr) {
+      modelContents.push({
+        inlineData: {
+          data: markschemeBuffer.toString('base64'),
+          mimeType: 'application/pdf',
+        },
+      });
+    }
 
     const prompt = `Ingest these two official IB examination documents:
 Document 1: Official IB Question Paper PDF
-Document 2: Matching Official IB Markscheme PDF
+Document 2: Matching Official IB Markscheme ${hasMarkschemeOcr ? '(Provided in GLM-OCR transcript above)' : 'PDF'}
 ${glmOcrContext}
 
 CRITICAL INGESTION REQUIREMENTS:
@@ -72,20 +116,29 @@ CRITICAL INGESTION REQUIREMENTS:
 2. You MUST extract EVERY question from Section A AND Section B (typically 9 to 12 questions in total). Do NOT stop after Section A or after the first 2 questions.
 3. Extract complete exam metadata, subject category (STEM or HUMANITIES), official instructions, grade boundaries, and all questions with exact mark codes (M, A, R, N, AG, FT), page mappings, command terms, syllabus subtopics, and Error Carried Forward (ECF) rules.`;
 
+    modelContents.push(prompt);
+
     let responseText: string | undefined;
     let lastError: unknown;
 
     for (const modelName of INGESTION_MODELS) {
       try {
-        console.log(`Attempting document ingestion with model: ${modelName}...`);
+        logPipeline('GEMINI_ATTEMPT', {
+          model: modelName,
+          thinkingLevel: 'low',
+          partsCount: modelContents.length,
+        });
         const response = await generateWithTimeout(
           ai.models.generateContent({
             model: modelName,
-            contents: [paperPart, markschemePart, prompt],
+            contents: modelContents as never,
             config: {
               systemInstruction: INGESTION_SYSTEM_PROMPT,
               responseMimeType: 'application/json',
               responseSchema: MANIFEST_RESPONSE_SCHEMA,
+              thinkingConfig: {
+                thinkingLevel: ThinkingLevel.LOW,
+              },
               temperature: 0.1,
               maxOutputTokens: 65536,
             },
@@ -96,12 +149,18 @@ CRITICAL INGESTION REQUIREMENTS:
 
         if (response.text) {
           responseText = response.text;
-          console.log(`Document ingestion successfully completed using model: ${modelName}`);
+          logPipeline('GEMINI_SUCCESS', {
+            model: modelName,
+            responseChars: response.text.length,
+          });
           break;
         }
       } catch (err: unknown) {
         lastError = err;
-        console.warn(`Ingestion model ${modelName} encountered error, trying fallback...`, err);
+        logPipeline('GEMINI_FALLBACK', {
+          model: modelName,
+          error: err instanceof Error ? err.message : String(err),
+        });
         // Wait 500ms before attempting fallback model
         await new Promise((resolve) => setTimeout(resolve, 500));
       }
@@ -109,6 +168,7 @@ CRITICAL INGESTION REQUIREMENTS:
 
     if (!responseText) {
       const errMsg = lastError instanceof Error ? lastError.message : 'All Gemini models experienced capacity issues.';
+      logPipeline('GEMINI_ALL_FAILED', { error: errMsg });
       throw new Error(`Ingestion failed across available models: ${errMsg}`);
     }
 
@@ -118,6 +178,12 @@ CRITICAL INGESTION REQUIREMENTS:
     const manifestData = JSON.parse(cleanText);
     manifestData.id = `custom-${Date.now()}`;
     manifestData.createdAt = new Date().toISOString();
+
+    logPipeline('MANIFEST_PARSED', {
+      title: manifestData.title,
+      totalMarks: manifestData.totalMarks,
+      questionCount: manifestData.questions?.length,
+    });
 
     // Helper to sanitize SVG markup generated by Gemini
     const sanitizeSvg = (rawSvg?: string | null): string | undefined => {
@@ -227,10 +293,17 @@ CRITICAL INGESTION REQUIREMENTS:
       });
     }
 
+    logPipeline('INGEST_SUCCESS', {
+      manifestId: manifestData.id,
+      questions: manifestData.questions?.length,
+      gradeBoundaries: manifestData.gradeBoundaries,
+    });
+
     return NextResponse.json({ manifest: manifestData });
   } catch (error: unknown) {
-    console.error('Ingestion API Error:', error);
     const message = error instanceof Error ? error.message : 'Unknown error during document ingestion.';
+    logPipeline('INGEST_FATAL', { error: message });
+    console.error('Ingestion API Error:', error);
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }

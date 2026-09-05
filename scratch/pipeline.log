@@ -1,0 +1,9 @@
+[2026-09-05T14:03:07.763Z] INGEST_START - {"paper":{"name":"Mathematics_analysis_and_approaches_paper_1__TZ1_HL (2022).pdf","size":614754},"markscheme":{"name":"Mathematics_analysis_and_approaches_paper_1__TZ1_HL_markscheme (2022).pdf","size":1594551}}
+[2026-09-05T14:03:07.767Z] GLM_OCR_START - Dispatching layout parsing for paper & markscheme...
+[2026-09-05T14:03:52.382Z] GLM_OCR_SUCCESS - {"paperMarkdownChars":10360,"markschemeMarkdownChars":35850}
+[2026-09-05T14:03:52.384Z] GEMINI_ATTEMPT - {"model":"gemini-3.6-flash"}
+[2026-09-05T14:05:21.929Z] GEMINI_SUCCESS - {"model":"gemini-3.6-flash","responseChars":47439}
+[2026-09-05T14:05:21.930Z] MANIFEST_PARSED - {"title":"Mathematics: analysis and approaches Higher level","totalMarks":110,"questionCount":12}
+[2026-09-05T14:05:21.932Z] INGEST_SUCCESS - {"manifestId":"custom-1788617121930","questions":12,"gradeBoundaries":{"grade7":78,"grade6":65,"grade5":52,"grade4":38,"grade3":25,"grade2":13,"grade1":0}}
+[2026-09-05T14:37:34.589Z] INGEST_START - {"paper":{"name":"Mathematics_analysis_and_approaches_paper_1__TZ1_HL (2022).pdf","size":614754},"markscheme":{"name":"Mathematics_analysis_and_approaches_paper_1__TZ1_HL_markscheme (2022).pdf","size":1594551}}
+[2026-09-05T14:37:34.593Z] GLM_OCR_START - Dispatching layout parsing for paper & markscheme...
