@@ -144,7 +144,7 @@ export const SocraticSidebar: React.FC<SocraticSidebarProps> = ({
               <div
                 className={`max-w-[85%] rounded-xl p-3 text-xs leading-relaxed ${
                   isTutor
-                    ? 'bg-[#1a1b1e] border border-white/[0.08] text-[#f3f3f2]'
+                    ? 'bg-[#1a1b1e] border border-white/[0.08] text-[#f3f3f2] socratic-math'
                     : 'bg-[#222428] border border-white/[0.12] text-white'
                 }`}
               >
@@ -163,19 +163,19 @@ export const SocraticSidebar: React.FC<SocraticSidebarProps> = ({
                 {/* Content with LaTeX Math */}
                 <MathRenderer content={m.text} />
 
-                {/* Formula Highlight Callout */}
+                {/* Formula Highlight Callout with LaTeX Math Rendering */}
                 {m.formulaQuote && (
-                  <div className="mt-2 p-2 rounded-md bg-[#0c0d0e] border border-white/[0.06] text-[11px] font-mono-code text-[#9fbbe0]">
-                    <span className="font-semibold block text-[#9fbbe0] mb-0.5">Formula Clue:</span>
-                    {m.formulaQuote}
+                  <div className="mt-2.5 p-2.5 rounded-lg bg-[#0c0d0e] border border-[#9fbbe0]/20 text-[11px] text-[#9fbbe0]">
+                    <span className="font-semibold font-mono-code block text-[#9fbbe0] mb-1">Formula Clue:</span>
+                    <MathRenderer content={m.formulaQuote} className="text-[#9fbbe0] text-xs leading-relaxed" />
                   </div>
                 )}
 
-                {/* Diagnostic Step Highlight */}
+                {/* Diagnostic Step Highlight with LaTeX Math Rendering */}
                 {m.diagnosticHighlight && (
-                  <div className="mt-2 p-2 rounded-md bg-[#0c0d0e] border border-white/[0.06] text-[11px] font-mono-code text-[#9fc9a2]">
-                    <span className="font-semibold block text-[#9fc9a2] mb-0.5">Diagnostic Finding:</span>
-                    {m.diagnosticHighlight}
+                  <div className="mt-2.5 p-2.5 rounded-lg bg-[#0c0d0e] border border-[#9fc9a2]/20 text-[11px] text-[#9fc9a2]">
+                    <span className="font-semibold font-mono-code block text-[#9fc9a2] mb-1">Diagnostic Finding:</span>
+                    <MathRenderer content={m.diagnosticHighlight} className="text-[#9fc9a2] text-xs leading-relaxed" />
                   </div>
                 )}
               </div>

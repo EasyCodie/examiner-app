@@ -14,6 +14,7 @@ export async function POST(req: NextRequest) {
       studentSnapshotText,
       studentSnapshotImageBase64,
       userMessage,
+      thinkingBudget = 2048,
     }: {
       question: QuestionItem;
       messages: SocraticMessage[];
@@ -21,6 +22,7 @@ export async function POST(req: NextRequest) {
       studentSnapshotText?: string;
       studentSnapshotImageBase64?: string;
       userMessage?: string;
+      thinkingBudget?: number;
     } = body;
 
     const clientKey = req.headers.get('x-gemini-key') || undefined;
@@ -82,6 +84,8 @@ Remember: Guide the student Socratically without revealing final answers unless 
     const modelsToTry = [DEFAULT_MODEL, ...FALLBACK_MODELS];
     let lastError: unknown;
 
+    const effectiveBudget = typeof thinkingBudget === 'number' ? thinkingBudget : 2048;
+
     for (const m of modelsToTry) {
       try {
         const response = await ai.models.generateContent({
@@ -92,7 +96,7 @@ Remember: Guide the student Socratically without revealing final answers unless 
             responseMimeType: 'application/json',
             responseSchema: SOCRATIC_RESPONSE_SCHEMA,
             thinkingConfig: {
-              thinkingBudget: 0, // Zero thinking budget for minimal latency
+              thinkingBudget: effectiveBudget,
             },
             temperature: 0.3,
           },

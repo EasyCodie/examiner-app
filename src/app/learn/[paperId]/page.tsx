@@ -14,11 +14,13 @@ import { useAppShell } from '@/components/common/AppShell';
 import { SocraticSidebar } from '@/components/socratic/SocraticSidebar';
 import { DrawingCanvas, DrawingCanvasRef } from '@/components/canvas/DrawingCanvas';
 import { CanvasToolbar } from '@/components/canvas/CanvasToolbar';
+import { InlineDiagramCanvas } from '@/components/editor/InlineDiagramCanvas';
 import { MathRenderer } from '@/components/common/MathRenderer';
 import {
   Sparkles,
   ChevronLeft,
   ChevronRight,
+  PieChart,
 } from 'lucide-react';
 
 export default function SocraticLearnPage() {
@@ -47,8 +49,10 @@ export default function SocraticLearnPage() {
   const [canUndo, setCanUndo] = useState(false);
   const [canRedo, setCanRedo] = useState(false);
 
-  // Humanities text
+  // Humanities text & diagrams
   const [humanitiesText, setHumanitiesText] = useState<Record<string, string>>({});
+  const [humanitiesDiagrams, setHumanitiesDiagrams] = useState<Record<string, string>>({});
+  const [showHumanitiesDiagram, setShowHumanitiesDiagram] = useState(false);
 
   useEffect(() => {
     getManifestById(paperId).then((m) => {
@@ -140,8 +144,10 @@ export default function SocraticLearnPage() {
     try {
       // Capture student snapshot
       let snapshotImg = '';
-      if (canvasRef.current) {
+      if (manifest?.category === 'STEM' && canvasRef.current) {
         snapshotImg = canvasRef.current.getCanvasSnapshot();
+      } else if (manifest?.category === 'HUMANITIES') {
+        snapshotImg = humanitiesDiagrams[currentQuestion.id] || '';
       }
 
       const cfg = await getAiConfig();
@@ -159,6 +165,7 @@ export default function SocraticLearnPage() {
           userMessage: userText,
           studentSnapshotImageBase64: snapshotImg,
           studentSnapshotText: humanitiesText[currentQuestion.id] || '',
+          thinkingBudget: cfg.thinkingBudgetSocratic ?? 2048,
         }),
       });
 
@@ -331,10 +338,107 @@ export default function SocraticLearnPage() {
                 <MathRenderer content={currentQuestion.promptText} />
               </div>
 
-              <div className="flex-1 flex flex-col">
-                <label className="text-xs font-mono-code font-semibold text-[#9b9a95] uppercase tracking-wider mb-1.5">
-                  Your Draft Response:
-                </label>
+              <div className="flex-1 flex flex-col space-y-3">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-mono-code font-semibold text-[#9b9a95] uppercase tracking-wider">
+                    Your Draft Response:
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => setShowHumanitiesDiagram(!showHumanitiesDiagram)}
+                    className={`flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-mono-code transition ${
+                      showHumanitiesDiagram
+                        ? 'bg-[#f54e00] text-white font-medium shadow-sm'
+                        : humanitiesDiagrams[currentQuestion.id]
+                        ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
+                        : 'bg-[#0c0d0e] text-[#9b9a95] hover:text-[#f3f3f2] border border-white/[0.08]'
+                    }`}
+                  >
+                    <PieChart className="w-3.5 h-3.5" />
+                    <span>
+                      {showHumanitiesDiagram
+                        ? 'Hide Diagram'
+                        : humanitiesDiagrams[currentQuestion.id]
+                        ? 'Diagram Attached (Edit)'
+                        : '+ Economic Diagram'}
+                    </span>
+                  </button>
+                </div>
+
+                {showHumanitiesDiagram && (
+                  <div className="animate-in slide-in-from-top-2 duration-200">
+                    <InlineDiagramCanvas
+                      initialImage={humanitiesDiagrams[currentQuestion.id]}
+                      onSave={(img) =>
+                        setHumanitiesDiagrams((prev) => ({ ...prev, [currentQuestion.id]: img }))
+                      }
+                    />
+                  </div>
+                )}
+
+                {/* Pedagogical Essay Scaffolding Toolbar */}
+                <div className="flex flex-wrap items-center gap-1.5 pt-1">
+                  <span className="text-[10px] font-mono-code uppercase font-semibold text-[#686763] mr-1">
+                    Scaffolding:
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const snippet = '**Definition & Theoretical Context:**\n';
+                      const existing = humanitiesText[currentQuestion.id] || '';
+                      setHumanitiesText((prev) => ({
+                        ...prev,
+                        [currentQuestion.id]: existing ? `${existing}\n\n${snippet}` : snippet,
+                      }));
+                    }}
+                    className="text-[10px] font-mono-code font-medium text-[#9b9a95] hover:text-[#f3f3f2] bg-[#0c0d0e] hover:bg-[#1a1b1e] border border-white/[0.08] px-2 py-0.5 rounded transition"
+                  >
+                    + Definition
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const snippet = '**Diagram Analysis & Mechanism:**\nAs shown in the diagram, the initial equilibrium...';
+                      const existing = humanitiesText[currentQuestion.id] || '';
+                      setHumanitiesText((prev) => ({
+                        ...prev,
+                        [currentQuestion.id]: existing ? `${existing}\n\n${snippet}` : snippet,
+                      }));
+                    }}
+                    className="text-[10px] font-mono-code font-medium text-[#9b9a95] hover:text-[#f3f3f2] bg-[#0c0d0e] hover:bg-[#1a1b1e] border border-white/[0.08] px-2 py-0.5 rounded transition"
+                  >
+                    + Diagram Analysis
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const snippet = '**Real-World Example / Application:**\nFor instance, in the case of...';
+                      const existing = humanitiesText[currentQuestion.id] || '';
+                      setHumanitiesText((prev) => ({
+                        ...prev,
+                        [currentQuestion.id]: existing ? `${existing}\n\n${snippet}` : snippet,
+                      }));
+                    }}
+                    className="text-[10px] font-mono-code font-medium text-[#9b9a95] hover:text-[#f3f3f2] bg-[#0c0d0e] hover:bg-[#1a1b1e] border border-white/[0.08] px-2 py-0.5 rounded transition"
+                  >
+                    + Example
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const snippet = '**Evaluation & Conclusion (Stakeholder synthesis):**\nIn the short run vs long run, the most critical tradeoff is...';
+                      const existing = humanitiesText[currentQuestion.id] || '';
+                      setHumanitiesText((prev) => ({
+                        ...prev,
+                        [currentQuestion.id]: existing ? `${existing}\n\n${snippet}` : snippet,
+                      }));
+                    }}
+                    className="text-[10px] font-mono-code font-medium text-[#dfa88f] bg-[#dfa88f]/10 hover:bg-[#dfa88f]/20 border border-[#dfa88f]/30 px-2 py-0.5 rounded transition"
+                  >
+                    + Evaluation
+                  </button>
+                </div>
+
                 <textarea
                   value={humanitiesText[currentQuestion.id] || ''}
                   onChange={(e) => {
@@ -342,7 +446,7 @@ export default function SocraticLearnPage() {
                     setHumanitiesText((prev) => ({ ...prev, [currentQuestion.id]: text }));
                   }}
                   placeholder="Draft your thoughts or write your working here..."
-                  className="flex-1 min-h-[320px] bg-[#0c0d0e] border border-white/[0.08] rounded-xl p-4 text-xs font-mono-code text-[#f3f3f2] placeholder:text-[#686763] outline-none focus:border-[#f54e00]"
+                  className="flex-1 min-h-[300px] bg-[#0c0d0e] border border-white/[0.08] rounded-xl p-4 text-xs font-mono-code text-[#f3f3f2] placeholder:text-[#686763] outline-none focus:border-[#f54e00]"
                 />
               </div>
             </div>

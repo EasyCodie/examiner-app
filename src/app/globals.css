@@ -242,3 +242,13 @@ h1, h2, h3 {
 .math-content .katex-display .katex {
   font-size: 1.2em;
 }
+
+/* Socratic Tutor chat math expressions: 20% larger for optimal formula inspection */
+.socratic-math .katex {
+  font-size: 1.3em;
+}
+
+.socratic-math .katex-display .katex {
+  font-size: 1.44em;
+}
+

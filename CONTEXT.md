@@ -35,3 +35,11 @@ _Avoid_: Cutoffs, grade curve, score tiers
 **Syllabus Weakness Matrix**:
 A structured diagnosis of student performance by syllabus subtopic, identifying mastered, developing, and critical areas either scoped to an active question or aggregated across the complete exam paper.
 _Avoid_: Topic breakdown, skill map, performance report
+
+**Authentic Exam Condition**:
+Strict replication of official IB examination rules and visual constraints during a Timed Mock Exam, where candidate-facing materials present solely the question identifier, stimulus text, and mark allocations, completely stripped of syllabus classifications, markscheme criteria, command term definitions, or structured essay templates.
+_Avoid_: Test mode, raw exam, unfiltered view
+
+**Pedagogical Scaffolding**:
+Structured guidance mechanisms (such as command term definitions, formula hints, essay structure templates, and markscheme rubrics) strictly confined to Socratic Learn Mode or post-evaluation review, engineered to teach without prematurely leaking assessment solutions.
+_Avoid_: Hints, cheat codes, training wheels

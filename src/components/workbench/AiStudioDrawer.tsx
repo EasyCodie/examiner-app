@@ -268,7 +268,7 @@ export const AiStudioDrawer: React.FC<AiStudioDrawerProps> = ({ isOpen, onClose 
                   Dynamic Reasoning Effort in Gemini 3.8 Flash:
                 </span>
                 <p className="leading-relaxed">
-                  The platform dynamically tunes Gemini&apos;s thinking budget depending on task complexity. High reasoning effort is engaged for official grading passes (verifying multi-step algebra and calculating ECF), while minimal thinking budget is used for Socratic conversation to achieve instant sub-second response times.
+                  The platform dynamically tunes Gemini&apos;s thinking budget depending on task complexity. High reasoning effort is engaged for official grading passes (verifying multi-step algebra and calculating ECF), while a dedicated thinking budget (default 2048 tokens) empowers the Socratic Tutor to independently solve problems first and provide cohesive, empathetic guidance.
                 </p>
               </div>
 
@@ -313,28 +313,28 @@ export const AiStudioDrawer: React.FC<AiStudioDrawerProps> = ({ isOpen, onClose 
                       Socratic Learn Mode Thinking Budget
                     </h3>
                     <p className="text-[11px] text-[#9b9a95]">
-                      Minimal thinking budget delivers immediate, low-latency conversational feedback
+                      Empowers the tutor to solve problems internally and diagnose working cohesively
                     </p>
                   </div>
                   <span className="text-xs font-mono-code font-semibold text-[#9fbbe0] bg-[#141517] px-2.5 py-1 rounded-lg border border-white/[0.08]">
-                    {config?.thinkingBudgetSocratic === 0 ? 'Zero / Sub-Second' : `${config?.thinkingBudgetSocratic} tokens`}
+                    {config?.thinkingBudgetSocratic === 0 ? 'Zero / Sub-Second' : `${config?.thinkingBudgetSocratic ?? 2048} tokens`}
                   </span>
                 </div>
 
                 <input
                   type="range"
                   min={0}
-                  max={2048}
+                  max={4096}
                   step={256}
-                  value={config?.thinkingBudgetSocratic ?? 0}
+                  value={config?.thinkingBudgetSocratic ?? 2048}
                   onChange={(e) => handleSaveBudget('thinkingBudgetSocratic', Number(e.target.value))}
                   className="w-full accent-[#f54e00] cursor-pointer h-2 bg-[#1a1b1e] rounded-lg appearance-none"
                 />
 
                 <div className="flex justify-between text-[10px] font-mono-code text-[#686763]">
-                  <span className="text-[#9fbbe0] font-semibold">Sub-Second Instant (0 tokens)</span>
-                  <span>Light Reflection (1024)</span>
-                  <span>Pondered (2048)</span>
+                  <span>Instant / Zero (0)</span>
+                  <span className="text-[#9fbbe0] font-semibold">Recommended Collaborative (2048)</span>
+                  <span>Deep Proofs (4096)</span>
                 </div>
               </div>
             </div>

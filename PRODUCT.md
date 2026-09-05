@@ -20,7 +20,7 @@ Unlike generic AI study chatbots or broad flashcard tools, IB Examiner anchors e
   - *STEM Subjects*: High-resolution drawing canvas overlaid on rendered exam booklets, supporting stylus/touch input, ballpoint/highlighter strokes, and composite page flattening for vision-based grading.
   - *Humanities Subjects*: Split-screen prompt viewer and structured essay composer with word count, scaffolded insertion templates, and an inline economic/scientific diagram sketchpad.
 - **Senior Examiner Evaluation**: High reasoning effort assessment pass (`thinkingBudget: 8192`) providing granular mark breakdowns (`M1`, `A1`, `R1`, `AG`), simulated margin annotations, and IB 1–7 grade boundary predictions.
-- **Socratic Learn Mode**: Low-latency AI dialogue (`thinkingBudget: 0`) structured across a 4-tier pedagogical scaffold (Tier 1: Command Term Anchor, Tier 2: Formula Booklet/Model Clue, Tier 3: Diagnostic Clue, Tier 4: Unlock Official Markscheme).
+- **Socratic Learn Mode**: Collaborative AI dialogue with dedicated reasoning budget (`thinkingBudget: 2048`) structured across a 4-tier pedagogical scaffold (Tier 1: Command Term Anchor, Tier 2: Formula Booklet/Model Clue, Tier 3: Diagnostic Clue, Tier 4: Unlock Official Markscheme).
 - **Google AI Studio Telemetry Drawer**: Slide-out workbench allowing students and power users to inspect system prompts, tune reasoning budgets, and view structured JSON schemas.
 
 ## Capabilities and Constraints

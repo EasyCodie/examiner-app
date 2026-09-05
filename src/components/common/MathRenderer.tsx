@@ -307,10 +307,10 @@ export const MathRenderer: React.FC<MathRendererProps> = React.memo(({
       return saveToken(codeHtml);
     });
 
-    // PHASE 5: Detect and render un-delimited LaTeX commands (e.g. \frac{1}{2}, \sqrt{1+x})
+    // PHASE 5: Detect and render un-delimited LaTeX commands (e.g. \frac{1}{2}, \sqrt{1+x}, \text{IQR})
     // Strictly bounded so commands do not swallow trailing prose words.
     text = text.replace(
-      /(\\(?:frac|sqrt|vec|mathbb)\{[^}]*\}(?:\{[^}]*\})?|\\(?:alpha|beta|gamma|theta|lambda|pi|Pi|sigma|Delta|Omega|times|cdot|le|ge|pm|infty|partial|approx|ne|in|notin)\b|\\(?:int|sum|prod|lim)(?:_\{[^}]*\}|\^\{[^}]*\}|_[a-zA-Z0-9]|\^[a-zA-Z0-9])*)/g,
+      /(\\(?:frac|sqrt|vec|mathbb|mathbf|mathrm|text|operatorname)\{[^}]*\}(?:\{[^}]*\})?|\\(?:alpha|beta|gamma|theta|lambda|pi|Pi|sigma|Delta|Omega|times|cdot|le|ge|pm|infty|partial|approx|ne|in|notin|sin|cos|tan|cot|sec|csc|ln|log|exp|circ)\b|\\(?:int|sum|prod|lim)(?:_\{[^}]*\}|\^\{[^}]*\}|_[a-zA-Z0-9]|\^[a-zA-Z0-9])*)/g,
       (match) => {
         if (match.includes('@@@MATH_TOKEN') || match.trim().length < 2) return match;
         return saveToken(safeRenderKaTeX(match.trim(), false));
@@ -455,13 +455,13 @@ export const MathRenderer: React.FC<MathRendererProps> = React.memo(({
     return text;
   }, [content, lightMode]);
 
-  const baseStyle = lightMode
-    ? 'text-slate-900 leading-relaxed math-content'
-    : 'text-[#f3f3f2] leading-relaxed math-content';
+  const hasCustomTextColor = /\btext-/.test(className);
+  const defaultTextColor = lightMode ? 'text-slate-900' : 'text-[#f3f3f2]';
+  const baseStyle = `${hasCustomTextColor ? '' : defaultTextColor} leading-relaxed math-content`;
 
   return (
     <div
-      className={`${baseStyle} ${className}`}
+      className={`${baseStyle} ${className}`.trim()}
       dangerouslySetInnerHTML={{ __html: renderedHtml }}
     />
   );

@@ -15,6 +15,7 @@ import {
 import { useAppShell } from '@/components/common/AppShell';
 import { DrawingCanvas, DrawingCanvasRef } from '@/components/canvas/DrawingCanvas';
 import { CanvasToolbar } from '@/components/canvas/CanvasToolbar';
+import { SplitScreenEditor } from '@/components/editor/SplitScreenEditor';
 import { renderStrokesToPng } from '@/lib/canvasUtils';
 import {
   Send,
@@ -34,7 +35,31 @@ export default function MockExamPage() {
   const [manifest, setManifest] = useState<ExamManifest | null>(null);
   const [currentPage, setCurrentPage] = useState<number>(1);
 
-  // Drawing state
+  // Humanities vs STEM branch
+  const isHumanities = manifest?.category === 'HUMANITIES';
+  const [humanitiesQuestionIndex, setHumanitiesQuestionIndex] = useState<number>(0);
+  const [humanitiesSubmissions, setHumanitiesSubmissions] = useState<Record<string, QuestionSubmission>>({});
+
+  const handleUpdateHumanitiesSubmission = (
+    questionId: string,
+    text: string,
+    diagramBase64?: string
+  ) => {
+    setHumanitiesSubmissions((prev) => ({
+      ...prev,
+      [questionId]: {
+        ...(prev[questionId] || {
+          questionId,
+          questionNumber: manifest?.questions.find((q) => q.id === questionId)?.number || '',
+        }),
+        textResponse: text,
+        diagramImageBase64: diagramBase64,
+        timeSpentSeconds: prev[questionId]?.timeSpentSeconds || 0,
+      },
+    }));
+  };
+
+  // Drawing state (STEM)
   const [tool, setTool] = useState<'pen' | 'highlighter' | 'eraser'>('pen');
   const [color, setColor] = useState<string>('#0f172a');
   const [width, setWidth] = useState<number>(2.5);
@@ -43,7 +68,7 @@ export default function MockExamPage() {
   const [pageStrokes, setPageStrokes] = useState<Record<number, CanvasStroke[]>>({});
   const [pageBoxStrokes, setPageBoxStrokes] = useState<Record<number, Record<string, CanvasStroke[]>>>({});
 
-  // Submissions mapping
+  // Submissions mapping (STEM)
   const [submissions] = useState<Record<string, QuestionSubmission>>({});
 
   // Background timer (for completion tracking without visual pressure)
@@ -113,10 +138,51 @@ export default function MockExamPage() {
     if (!manifest) return;
     setShowSubmitModal(false);
     setIsSubmitting(true);
-    setGradingProgress('Compiling submission and capturing canvas working...');
-    setGradingPercentage(5);
 
     try {
+      if (isHumanities) {
+        setGradingProgress('Compiling essay responses and economic diagram attachments...');
+        setGradingPercentage(30);
+
+        const finalSubmissions: Record<string, QuestionSubmission> = {};
+        const elapsedTotalSeconds = Math.max(0, manifest.durationMinutes * 60 - timeRemainingSeconds);
+        const timePerQuestion = Math.round(elapsedTotalSeconds / (manifest.questions.length || 1));
+
+        for (const q of manifest.questions) {
+          const sub = humanitiesSubmissions[q.id];
+          finalSubmissions[q.id] = {
+            questionId: q.id,
+            questionNumber: q.number,
+            textResponse: sub?.textResponse || '',
+            diagramImageBase64: sub?.diagramImageBase64 || undefined,
+            timeSpentSeconds: sub?.timeSpentSeconds || timePerQuestion,
+          };
+        }
+
+        setGradingPercentage(100);
+        setGradingProgress('Handing over to Senior Examiner evaluation stream...');
+
+        const sessionId = `session-${Date.now()}`;
+        const initialSession: ExamSession = {
+          id: sessionId,
+          paperId: manifest.id,
+          paperTitle: manifest.title,
+          subjectCategory: manifest.category,
+          mode: 'TIMED_MOCK',
+          startedAt: new Date().toISOString(),
+          timeRemainingSeconds,
+          durationSeconds: manifest.durationMinutes * 60,
+          submissions: finalSubmissions,
+        };
+
+        await saveExamSession(initialSession);
+        router.push(`/results/${sessionId}?evaluating=true`);
+        return;
+      }
+
+      setGradingProgress('Compiling submission and capturing canvas working...');
+      setGradingPercentage(5);
+
       const updatedSubmissions = { ...submissions };
 
       setGradingProgress('Rasterizing handwritten pages into high-res examiner scans...');
@@ -227,14 +293,18 @@ export default function MockExamPage() {
   };
 
   return (
-    <div className="flex-1 flex flex-col p-4 sm:p-6 max-w-5xl mx-auto w-full select-text pb-28">
+    <div
+      className={`flex-1 flex flex-col p-4 sm:p-6 mx-auto w-full select-text ${
+        isHumanities ? 'max-w-7xl pb-12' : 'max-w-5xl pb-28'
+      }`}
+    >
       {/* 1. TOP EXAM HUD (Cursor Dark Mode) */}
       <div className="bg-[#141517] border border-white/[0.08] rounded-xl p-4 sm:p-5 mb-6 space-y-3.5 shadow-lg">
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
           {/* Left: Paper Badge */}
           <div className="flex items-center gap-2">
             <span className="text-[11px] font-mono-code uppercase bg-[#1a1b1e] border border-white/[0.08] px-2.5 py-1 rounded text-[#9b9a95]">
-              Authentic Exam Paper
+              {isHumanities ? 'Humanities • Extended Response' : 'Authentic Exam Paper'}
             </span>
           </div>
 
@@ -258,134 +328,152 @@ export default function MockExamPage() {
           </div>
         </div>
 
-        {/* Question Navigator & Page Jumper Row */}
-        <div className="flex items-center justify-between pt-3 border-t border-white/[0.06] gap-2">
-          <div className="flex items-center gap-1.5 overflow-x-auto">
-            <span className="text-[10px] font-mono-code uppercase text-[#686763] font-semibold px-1">Q:</span>
-            {manifest.questions.map((q) => {
-              const isActive = q.pageNumber === currentPage;
-              return (
-                <button
-                  key={q.id}
-                  type="button"
-                  onClick={() => setCurrentPage(q.pageNumber)}
-                  className={`px-3 py-1 rounded-md text-xs font-mono-code transition flex items-center justify-center ${
-                    isActive
-                      ? 'bg-[#f54e00] text-white font-semibold shadow-sm'
-                      : 'bg-[#0c0d0e] text-[#9b9a95] hover:text-white border border-white/[0.06]'
-                  }`}
-                >
-                  <span>{q.number.replace(/^Question\s*/i, '')}</span>
-                </button>
-              );
-            })}
-          </div>
+        {/* Question Navigator & Page Jumper Row (Only for STEM multi-page paper) */}
+        {!isHumanities && (
+          <div className="flex items-center justify-between pt-3 border-t border-white/[0.06] gap-2">
+            <div className="flex items-center gap-1.5 overflow-x-auto">
+              <span className="text-[10px] font-mono-code uppercase text-[#686763] font-semibold px-1">Q:</span>
+              {manifest.questions.map((q) => {
+                const isActive = q.pageNumber === currentPage;
+                return (
+                  <button
+                    key={q.id}
+                    type="button"
+                    onClick={() => setCurrentPage(q.pageNumber)}
+                    className={`px-3 py-1 rounded-md text-xs font-mono-code transition flex items-center justify-center ${
+                      isActive
+                        ? 'bg-[#f54e00] text-white font-semibold shadow-sm'
+                        : 'bg-[#0c0d0e] text-[#9b9a95] hover:text-white border border-white/[0.06]'
+                    }`}
+                  >
+                    <span>{q.number.replace(/^Question\s*/i, '')}</span>
+                  </button>
+                );
+              })}
+            </div>
 
-          <div className="flex items-center gap-1 text-xs text-[#9b9a95] font-mono-code shrink-0 pl-2">
-            <button
-              type="button"
-              disabled={currentQuestionPageIndex <= 1}
-              onClick={() => handlePageChange(Math.max(1, currentQuestionPageIndex - 1))}
-              className="p-1 hover:text-white disabled:opacity-30 transition"
-              title="Previous Page"
-            >
-              <ChevronLeft className="w-4 h-4" />
-            </button>
-            <span className="px-1 text-[11px]">
-              Page {currentQuestionPageIndex} / {totalQuestionPages}
-            </span>
-            <button
-              type="button"
-              disabled={currentQuestionPageIndex >= totalQuestionPages}
-              onClick={() => handlePageChange(Math.min(totalQuestionPages, currentQuestionPageIndex + 1))}
-              className="p-1 hover:text-white disabled:opacity-30 transition"
-              title="Next Page"
-            >
-              <ChevronRight className="w-4 h-4" />
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* 2. MAIN WORKSPACE: Authentic Drawing Canvas Sheet */}
-      <div className="w-full flex flex-col items-center">
-        {/* Official Exam Instructions Drawer */}
-        {manifest.instructions && manifest.instructions.length > 0 && (
-          <div className="w-full max-w-4xl bg-[#141517] border border-white/[0.08] rounded-xl overflow-hidden mb-4 shadow-sm">
-            <button
-              type="button"
-              onClick={() => setShowInstructions(!showInstructions)}
-              className="w-full px-4 py-2.5 flex items-center justify-between text-left hover:bg-white/[0.02] transition"
-            >
-              <div className="flex items-center gap-2 text-xs font-mono-code text-[#f3f3f2]">
-                <Info className="w-3.5 h-3.5 text-[#f54e00]" />
-                <span className="font-semibold">Official Examination Instructions</span>
-                <span className="text-[10px] text-[#9b9a95]">({manifest.instructions.length} rules)</span>
-              </div>
-              <span className="text-xs text-[#9b9a95] font-mono-code">
-                {showInstructions ? 'Hide ▲' : 'View ▼'}
+            <div className="flex items-center gap-1 text-xs text-[#9b9a95] font-mono-code shrink-0 pl-2">
+              <button
+                type="button"
+                disabled={currentQuestionPageIndex <= 1}
+                onClick={() => handlePageChange(Math.max(1, currentQuestionPageIndex - 1))}
+                className="p-1 hover:text-white disabled:opacity-30 transition"
+                title="Previous Page"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+              <span className="px-1 text-[11px]">
+                Page {currentQuestionPageIndex} / {totalQuestionPages}
               </span>
-            </button>
-            {showInstructions && (
-              <div className="px-4 py-3 bg-[#0c0d0e] border-t border-white/[0.06] text-xs text-[#9b9a95] space-y-1.5 font-mono-code">
-                {manifest.instructions.map((inst, idx) => (
-                  <div key={idx} className="flex items-start gap-2">
-                    <span className="text-[#f54e00] font-bold">•</span>
-                    <span className="leading-relaxed">{inst}</span>
-                  </div>
-                ))}
-              </div>
-            )}
+              <button
+                type="button"
+                disabled={currentQuestionPageIndex >= totalQuestionPages}
+                onClick={() => handlePageChange(Math.min(totalQuestionPages, currentQuestionPageIndex + 1))}
+                className="p-1 hover:text-white disabled:opacity-30 transition"
+                title="Next Page"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
           </div>
         )}
-
-        <div className="w-full max-w-4xl">
-          <DrawingCanvas
-            key={`canvas-page-${activePageNumber}`}
-            ref={canvasRef}
-            pageNumber={activePageNumber}
-            questionsOnPage={questionsOnCurrentPage}
-            paperTitle={manifest.title}
-            tool={tool}
-            color={color}
-            width={width}
-            initialStrokes={pageStrokes[activePageNumber] || []}
-            boxStrokes={pageBoxStrokes[activePageNumber]}
-            onBoxStrokesChange={(boxes) => {
-              setPageBoxStrokes((prev) => ({ ...prev, [activePageNumber]: boxes }));
-            }}
-            onStrokesChange={(updated) => {
-              setPageStrokes((prev) => ({ ...prev, [activePageNumber]: updated }));
-            }}
-            onToolChange={(undoAvail, redoAvail) => {
-              setCanUndo(undoAvail);
-              setCanRedo(redoAvail);
-            }}
-          />
-        </div>
       </div>
 
-      {/* 3. FLOATING GLASSMORPHIC TOOL DOCK (Bottom Bar) */}
-      <div className="fixed bottom-5 left-0 right-0 z-30 px-4 pointer-events-none flex justify-center">
-        <div className="pointer-events-auto">
-          <CanvasToolbar
-            tool={tool}
-            setTool={setTool}
-            color={color}
-            setColor={setColor}
-            width={width}
-            setWidth={setWidth}
-            canUndo={canUndo}
-            canRedo={canRedo}
-            onUndo={() => canvasRef.current?.undo()}
-            onRedo={() => canvasRef.current?.redo()}
-            onClear={() => canvasRef.current?.clear()}
-            currentPage={currentQuestionPageIndex}
-            totalPages={totalQuestionPages}
-            onPageChange={handlePageChange}
+      {/* 2. MAIN WORKSPACE */}
+      {isHumanities ? (
+        /* Humanities: Split-Screen Essay & Diagram Composer */
+        <div className="w-full">
+          <SplitScreenEditor
+            questions={manifest.questions}
+            activeQuestionIndex={humanitiesQuestionIndex}
+            onSelectQuestion={setHumanitiesQuestionIndex}
+            submissions={humanitiesSubmissions}
+            onUpdateSubmission={handleUpdateHumanitiesSubmission}
           />
         </div>
-      </div>
+      ) : (
+        /* STEM: Authentic Drawing Canvas Sheet */
+        <div className="w-full flex flex-col items-center">
+          {/* Official Exam Instructions Drawer */}
+          {manifest.instructions && manifest.instructions.length > 0 && (
+            <div className="w-full max-w-4xl bg-[#141517] border border-white/[0.08] rounded-xl overflow-hidden mb-4 shadow-sm">
+              <button
+                type="button"
+                onClick={() => setShowInstructions(!showInstructions)}
+                className="w-full px-4 py-2.5 flex items-center justify-between text-left hover:bg-white/[0.02] transition"
+              >
+                <div className="flex items-center gap-2 text-xs font-mono-code text-[#f3f3f2]">
+                  <Info className="w-3.5 h-3.5 text-[#f54e00]" />
+                  <span className="font-semibold">Official Examination Instructions</span>
+                  <span className="text-[10px] text-[#9b9a95]">({manifest.instructions.length} rules)</span>
+                </div>
+                <span className="text-xs text-[#9b9a95] font-mono-code">
+                  {showInstructions ? 'Hide ▲' : 'View ▼'}
+                </span>
+              </button>
+              {showInstructions && (
+                <div className="px-4 py-3 bg-[#0c0d0e] border-t border-white/[0.06] text-xs text-[#9b9a95] space-y-1.5 font-mono-code">
+                  {manifest.instructions.map((inst, idx) => (
+                    <div key={idx} className="flex items-start gap-2">
+                      <span className="text-[#f54e00] font-bold">•</span>
+                      <span className="leading-relaxed">{inst}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          <div className="w-full max-w-4xl">
+            <DrawingCanvas
+              key={`canvas-page-${activePageNumber}`}
+              ref={canvasRef}
+              pageNumber={activePageNumber}
+              questionsOnPage={questionsOnCurrentPage}
+              paperTitle={manifest.title}
+              tool={tool}
+              color={color}
+              width={width}
+              initialStrokes={pageStrokes[activePageNumber] || []}
+              boxStrokes={pageBoxStrokes[activePageNumber]}
+              onBoxStrokesChange={(boxes) => {
+                setPageBoxStrokes((prev) => ({ ...prev, [activePageNumber]: boxes }));
+              }}
+              onStrokesChange={(updated) => {
+                setPageStrokes((prev) => ({ ...prev, [activePageNumber]: updated }));
+              }}
+              onToolChange={(undoAvail, redoAvail) => {
+                setCanUndo(undoAvail);
+                setCanRedo(redoAvail);
+              }}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* 3. FLOATING GLASSMORPHIC TOOL DOCK (Only for STEM handwritten canvas) */}
+      {!isHumanities && (
+        <div className="fixed bottom-5 left-0 right-0 z-30 px-4 pointer-events-none flex justify-center">
+          <div className="pointer-events-auto">
+            <CanvasToolbar
+              tool={tool}
+              setTool={setTool}
+              color={color}
+              setColor={setColor}
+              width={width}
+              setWidth={setWidth}
+              canUndo={canUndo}
+              canRedo={canRedo}
+              onUndo={() => canvasRef.current?.undo()}
+              onRedo={() => canvasRef.current?.redo()}
+              onClear={() => canvasRef.current?.clear()}
+              currentPage={currentQuestionPageIndex}
+              totalPages={totalQuestionPages}
+              onPageChange={handlePageChange}
+            />
+          </div>
+        </div>
+      )}
 
       {/* Submission Confirmation Modal */}
       {showSubmitModal && (
