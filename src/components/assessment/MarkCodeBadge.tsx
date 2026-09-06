@@ -28,7 +28,7 @@ export const MarkCodeBadge: React.FC<MarkCodeBadgeProps> = ({
     return (
       <span
         className={`inline-flex items-center gap-1 font-mono-code font-semibold rounded-lg border ${sizeClasses} bg-[#e8a55a]/15 border-[#e8a55a]/40 text-[#e8a55a]`}
-        title="Error Carried Forward (ECF): Method mark preserved to avoid double penalty"
+        title="Follow-through mark (ECF): Full credit awarded because your method was correct, despite an earlier slip"
       >
         <span className="w-1.5 h-1.5 rounded-full bg-[#e8a55a] animate-pulse" />
         <span>{code}</span>
@@ -42,7 +42,7 @@ export const MarkCodeBadge: React.FC<MarkCodeBadgeProps> = ({
     return (
       <span
         className={`inline-flex items-center gap-1 font-mono-code font-semibold rounded-lg border ${sizeClasses} bg-[#c64545]/15 border-[#c64545]/35 text-[#c64545]`}
-        title="Mark forfeited or not demonstrated in student working"
+        title="Mark not awarded: This step was missing or incorrect in your working"
       >
         <span className="w-1.5 h-1.5 rounded-full bg-[#c64545]" />
         <span>{code}</span>

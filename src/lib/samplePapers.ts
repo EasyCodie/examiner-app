@@ -4,7 +4,7 @@ import { QUESTION_12_MATPLOTLIB_SVG } from '@/lib/graphRenderer';
 export const BUNDLED_MATH_AA_HL: ExamManifest = {
   id: 'math-aa-hl-specimen',
   title: 'Mathematics: analysis and approaches HL',
-  subtitle: 'Paper 1 (Non-Calculator) — Authentic Examiner Specimen',
+  subtitle: 'Paper 1 (Non-Calculator) - Authentic Examiner Specimen',
   subjectCode: 'MATH_AA_HL_P1',
   category: 'STEM',
   durationMinutes: 120,
@@ -197,7 +197,7 @@ export const BUNDLED_MATH_AA_HL: ExamManifest = {
 export const BUNDLED_ECONOMICS_HL: ExamManifest = {
   id: 'econ-hl-specimen',
   title: 'Economics Higher Level',
-  subtitle: 'Paper 1 (Extended Response) — Authentic Examiner Specimen',
+  subtitle: 'Paper 1 (Extended Response) - Authentic Examiner Specimen',
   subjectCode: 'ECON_HL_P1',
   category: 'HUMANITIES',
   durationMinutes: 75,
@@ -227,7 +227,7 @@ export const BUNDLED_ECONOMICS_HL: ExamManifest = {
       pageNumber: 1,
       totalMarks: 10,
       commandTerm: 'Explain',
-      syllabusSubtopic: 'Topic 2.8: Market failure — negative externalities of consumption',
+      syllabusSubtopic: 'Topic 2.8: Market failure - negative externalities of consumption',
       promptText: 'Explain how the consumption of demerit goods (such as petrol-powered vehicles or tobacco) leads to market failure.\n\nSupport your answer with an accurately labeled negative externality of consumption diagram showing the marginal private benefit (MPB), marginal social benefit (MSB), and resulting welfare loss.',
       diagramRequired: true,
       markCodes: [
@@ -245,7 +245,7 @@ export const BUNDLED_ECONOMICS_HL: ExamManifest = {
       pageNumber: 2,
       totalMarks: 15,
       commandTerm: 'Evaluate',
-      syllabusSubtopic: 'Topic 2.8 & 2.11: Government intervention — indirect carbon taxes vs command-and-control regulation',
+      syllabusSubtopic: 'Topic 2.8 & 2.11: Government intervention - indirect carbon taxes vs command-and-control regulation',
       promptText: 'Evaluate the view that implementing an indirect carbon tax is the most effective government policy to correct market failure arising from carbon-intensive production and consumption.',
       diagramRequired: true,
       markCodes: [
@@ -301,7 +301,7 @@ export const BUNDLED_ECONOMICS_HL: ExamManifest = {
 export const MAY_2021_MATH_AA_HL_P1: ExamManifest = {
   id: 'math-aa-hl-may-2021',
   title: 'Mathematics: analysis and approaches HL',
-  subtitle: 'Paper 1 (Non-Calculator) — May 2021 (TZ1)',
+  subtitle: 'Paper 1 (Non-Calculator) - May 2021 (TZ1)',
   subjectCode: 'MATH_AA_HL_P1',
   category: 'STEM',
   durationMinutes: 120,

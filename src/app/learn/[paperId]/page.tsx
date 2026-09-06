@@ -85,7 +85,7 @@ export default function SocraticLearnPage() {
                 {
                   id: `welcome-${targetQ.id}`,
                   sender: 'tutor',
-                  text: `Welcome! Let's tackle **${targetQ.number.replace(/^Question\s*/i, '')}** together using our 4-tier pedagogical scaffold.\n\nWe start at **Tier 1: Command Term Anchor**. The command term here is **"${targetQ.commandTerm}"**. How are you thinking of setting up your first step?`,
+                  text: `Welcome! Let's work through Question ${targetQ.number.replace(/^Question\s*/i, '')} together step by step.\n\nTo start, take a look at the command term: **"${targetQ.commandTerm}"**. How would you like to set up your first step?`,
                   timestamp: new Date().toISOString(),
                   tierActive: 1,
                 },
@@ -114,7 +114,7 @@ export default function SocraticLearnPage() {
             {
               id: `welcome-${q.id}`,
               sender: 'tutor',
-              text: `Welcome! Let's tackle **${q.number.replace(/^Question\s*/i, '')}** together using our 4-tier pedagogical scaffold.\n\nWe start at **Tier 1: Command Term Anchor**. The command term here is **"${q.commandTerm}"**. How are you thinking of setting up your first step?`,
+              text: `Welcome! Let's work through Question ${q.number.replace(/^Question\s*/i, '')} together step by step.\n\nTo start, take a look at the command term: **"${q.commandTerm}"**. How would you like to set up your first step?`,
               timestamp: new Date().toISOString(),
               tierActive: 1,
             },
@@ -203,7 +203,7 @@ export default function SocraticLearnPage() {
   const handleUnlockMarkscheme = async () => {
     setCurrentTier(4);
     setIsMarkschemeUnlocked(true);
-    await handleSendMessage('Please reveal the official Senior Examiner markscheme breakdown and mark codes.', 4);
+    await handleSendMessage('Please reveal the official markscheme breakdown and mark codes.', 4);
   };
 
   if (!manifest || !currentQuestion) {
@@ -358,7 +358,7 @@ export default function SocraticLearnPage() {
                         ? 'Hide Diagram'
                         : humanitiesDiagrams[currentQuestion.id]
                           ? 'Diagram Attached (Edit)'
-                          : '+ Economic Diagram'}
+                          : '+ Add Diagram'}
                     </span>
                   </button>
                 </div>
@@ -374,10 +374,10 @@ export default function SocraticLearnPage() {
                   </div>
                 )}
 
-                {/* Pedagogical Essay Scaffolding Toolbar */}
+                {/* Essay Structure Helper Toolbar */}
                 <div className="flex flex-wrap items-center gap-1.5 pt-1">
                   <span className="text-[10px] font-mono-code uppercase font-semibold text-[#706e6a] mr-1">
-                    Scaffolding:
+                    Structure Helpers:
                   </span>
                   <button
                     type="button"

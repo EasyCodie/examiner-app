@@ -14,26 +14,26 @@ interface ScaffoldLadderProps {
 const TIERS: { tier: PedagogicalTier; title: string; subtitle: string; icon: React.ComponentType<{ className?: string }> }[] = [
   {
     tier: 1,
-    title: 'Tier 1: Command Term',
-    subtitle: 'Clarify operational scope & requirements',
+    title: 'Step 1: Command Term',
+    subtitle: 'Understand what the question is asking',
     icon: Target,
   },
   {
     tier: 2,
-    title: 'Tier 2: Formula & Model',
-    subtitle: 'Point to formula booklet or theoretical model',
+    title: 'Step 2: Formula & Concept',
+    subtitle: 'Key formulas, definitions, and concepts',
     icon: BookOpen,
   },
   {
     tier: 3,
-    title: 'Tier 3: Step Diagnostic',
-    subtitle: 'Pinpoint arithmetic/logical roadblock',
+    title: 'Step 3: Check Your Working',
+    subtitle: 'Spot and fix algebraic or logical errors',
     icon: Stethoscope,
   },
   {
     tier: 4,
-    title: 'Tier 4: Official Markscheme',
-    subtitle: 'Full mark codes & Senior Examiner rubric',
+    title: 'Step 4: Full Markscheme',
+    subtitle: 'Complete mark breakdown and scoring steps',
     icon: Unlock,
   },
 ];
@@ -49,14 +49,14 @@ export const ScaffoldLadder: React.FC<ScaffoldLadderProps> = ({
       <div className="flex items-center justify-between border-b border-[#e6dfd8] pb-2.5">
         <div>
           <h3 className="text-xs font-semibold uppercase tracking-wider text-[#141413] font-mono-code">
-            4-Tier Pedagogical Scaffold
+            Step-by-Step Guidance
           </h3>
           <p className="text-[11px] text-[#706e6a]">
-            Progressive guidance without premature markscheme exposure
+            Get hints and check your work before revealing the markscheme
           </p>
         </div>
         <span className="text-[11px] font-mono-code font-medium text-[#cc785c] bg-[#cc785c]/10 border border-[#cc785c]/20 px-2.5 py-0.5 rounded-full">
-          Tier {currentTier} Active
+          Step {currentTier} Active
         </span>
       </div>
 

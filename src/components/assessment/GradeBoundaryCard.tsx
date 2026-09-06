@@ -22,39 +22,39 @@ interface GradeBoundaryCardProps {
 
 const GRADE_DESCRIPTORS: Record<number, { title: string; color: string; desc: string }> = {
   7: {
-    title: 'Grade 7 — Exceptional Mastery',
+    title: 'Grade 7: Exceptional Mastery',
     color: 'from-amber-400 to-amber-600',
-    desc: 'Demonstrates comprehensive understanding of syllabus concepts, impeccable mathematical/economic arguments, and fluent problem-solving under authentic timed constraints.',
+    desc: 'Exceptional performance across all concepts, with clear, fluent working and strong problem-solving under exam conditions.',
   },
   6: {
-    title: 'Grade 6 — Very Good Understanding',
+    title: 'Grade 6: Very Good Understanding',
     color: 'from-emerald-400 to-emerald-600',
-    desc: 'Shows deep comprehension with minor arithmetic or precision slips. Analytical arguments and method structures are thoroughly developed.',
+    desc: 'Strong understanding throughout, with only minor calculation or precision slips. Methods and arguments are clearly developed.',
   },
   5: {
-    title: 'Grade 5 — Good Competence',
+    title: 'Grade 5: Good Competence',
     color: 'from-blue-400 to-blue-600',
-    desc: 'Demonstrates consistent familiarity with standard questions; occasional difficulty applying theory to non-routine or extended multi-step problems.',
+    desc: 'Good grasp of standard questions, with occasional difficulty on unfamiliar or multi-step problems.',
   },
   4: {
-    title: 'Grade 4 — Satisfactory Standard',
+    title: 'Grade 4: Satisfactory Standard',
     color: 'from-cyan-400 to-cyan-600',
-    desc: 'Pass mark standard. Basic knowledge of core syllabus algorithms; needs targeted reinforcement in multi-stage algebraic derivations.',
+    desc: 'Meets the standard pass requirements. Sound grasp of the basics, with room to strengthen multi-step working.',
   },
   3: {
-    title: 'Grade 3 — Developing Knowledge',
+    title: 'Grade 3: Developing Knowledge',
     color: 'from-orange-400 to-orange-600',
-    desc: 'Inconsistent grasp of fundamental syllabus definitions. Focus on routine drills and formula booklet memorization.',
+    desc: 'Developing understanding. Focus on core formulas and regular practice with standard question types.',
   },
   2: {
-    title: 'Grade 2 — Emergent Understanding',
+    title: 'Grade 2: Emergent Understanding',
     color: 'from-rose-400 to-rose-600',
-    desc: 'Limited recall of core methods. Foundational revision of prerequisite algebra and functions strongly recommended.',
+    desc: 'Needs foundational review. Revisiting key formulas and step-by-step methods will help build confidence.',
   },
   1: {
-    title: 'Grade 1 — Minimal Achievement',
+    title: 'Grade 1: Minimal Achievement',
     color: 'from-rose-600 to-rose-800',
-    desc: 'Very limited demonstration of syllabus criteria.',
+    desc: 'Needs substantial review across core syllabus topics.',
   },
 };
 
@@ -91,7 +91,7 @@ export const GradeBoundaryCard: React.FC<GradeBoundaryCardProps> = ({
             <div className="flex items-center gap-2">
               <h2 className="text-xl font-serif font-normal text-[#faf9f5] tracking-tight">{descriptor.title}</h2>
               <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono-code bg-[#252320] text-[#a09d96] border border-white/10">
-                Official 1–7 Scale
+                Official 1-7 Scale
               </span>
             </div>
             <p className="text-xs text-[#a09d96] max-w-xl mt-1 leading-relaxed">
@@ -122,7 +122,7 @@ export const GradeBoundaryCard: React.FC<GradeBoundaryCardProps> = ({
                 <Sparkles className="w-3 h-3" /> ECF
               </span>
               <div className="text-lg font-medium font-mono-code text-[#e8a55a]">
-                {ecfCount} <span className="text-xs text-[#a09d96]">applied</span>
+                {ecfCount} <span className="text-xs text-[#a09d96]">protected</span>
               </div>
             </div>
           )}
@@ -135,8 +135,8 @@ export const GradeBoundaryCard: React.FC<GradeBoundaryCardProps> = ({
           <div className="flex items-center gap-2 text-[#a09d96]">
             <TrendingUp className="w-3.5 h-3.5 text-[#5db8a6]" />
             <span>
-              Targeting <strong className="text-[#faf9f5]">Grade {nextGrade}</strong> ({nextBoundary}%):
-              Need <strong className="text-[#cc785c] font-mono-code">+{marksToNext} mark{marksToNext > 1 ? 's' : ''}</strong>.
+              To reach <strong className="text-[#faf9f5]">Grade {nextGrade}</strong> ({nextBoundary}%):
+              You need <strong className="text-[#cc785c] font-mono-code">{marksToNext} more mark{marksToNext > 1 ? 's' : ''}</strong>.
             </span>
           </div>
 

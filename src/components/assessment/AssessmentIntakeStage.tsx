@@ -38,33 +38,33 @@ interface IntakeStep {
 const INTAKE_STEPS: IntakeStep[] = [
   {
     id: 'ingest',
-    label: 'Candidate Script Ingestion',
-    detail: 'Reading handwritten stroke coordinates, high-res canvas buffers, and text responses',
-    badge: 'READ',
+    label: 'Opening your exam paper',
+    detail: 'Checking your answers, sketches, and written steps',
+    badge: 'READY',
     badgeClass: 'bg-[#5db8a6]/15 border-[#5db8a6]/30 text-[#5db8a6]',
     icon: FileText,
   },
   {
     id: 'markscheme',
-    label: 'Dual-Document Markscheme Alignment',
-    detail: 'Indexing official M (Method), A (Accuracy), and R (Reasoning) mark criteria',
-    badge: 'CODES',
+    label: 'Loading official markscheme',
+    detail: 'Matching question parts and mark allocations',
+    badge: 'CRITERIA',
     badgeClass: 'bg-[#cc785c]/15 border-[#cc785c]/30 text-[#cc785c]',
     icon: BookOpen,
   },
   {
     id: 'ocr',
-    label: 'GLM-OCR Handwriting Transcription',
-    detail: 'Transcribing mathematical notation, intermediate algebra, and calculus expressions',
-    badge: 'INDEX',
+    label: 'Reading your handwriting',
+    detail: 'Transcribing math formulas, working, and diagrams',
+    badge: 'SCAN',
     badgeClass: 'bg-[#e8a55a]/15 border-[#e8a55a]/30 text-[#e8a55a]',
     icon: ScanLine,
   },
   {
     id: 'eval_q1',
-    label: 'Question 1 Method & ECF Marking',
-    detail: 'Senior Examiner evaluating Question 1 with Error Carried Forward protection',
-    badge: 'THINKING',
+    label: 'Marking Question 1',
+    detail: 'Reviewing your method and checking follow-through marks',
+    badge: 'MARKING',
     badgeClass: 'bg-[#cc785c]/15 border-[#cc785c]/30 text-[#cc785c]',
     icon: ShieldCheck,
   },
@@ -119,7 +119,7 @@ export const AssessmentIntakeStage: React.FC<AssessmentIntakeStageProps> = ({
             <div className="flex items-center gap-2">
               <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-mono-code font-semibold tracking-wider uppercase bg-[#cc785c]/10 border border-[#cc785c]/20 text-[#cc785c]">
                 <span className="w-1.5 h-1.5 rounded-full bg-[#cc785c] animate-ping" />
-                {isStreaming ? 'Senior Examiner Live Stream' : 'Senior Examiner Intake'}
+                {isStreaming ? 'Examiner Review in Progress' : 'Preparing Examiner Review'}
               </span>
               <span className="text-white/20 text-xs">•</span>
               <span className="text-[11px] font-mono-code text-[#a09d96]">
@@ -127,7 +127,7 @@ export const AssessmentIntakeStage: React.FC<AssessmentIntakeStageProps> = ({
               </span>
             </div>
             <h2 className="text-xl sm:text-2xl text-[#faf9f5] font-serif font-normal tracking-tight">
-              Initializing Method Evaluation
+              Reviewing Your Exam Paper
             </h2>
             <p className="text-xs text-[#a09d96] font-mono-code">
               {manifest.title} • {manifest.category}
@@ -152,7 +152,7 @@ export const AssessmentIntakeStage: React.FC<AssessmentIntakeStageProps> = ({
               onClick={onRetry}
               className="px-3 py-1.5 bg-[#c64545]/20 hover:bg-[#c64545]/30 border border-[#c64545]/40 text-white rounded-lg font-mono-code transition text-xs"
             >
-              Retry Ingestion
+              Try Again
             </button>
           </div>
         ) : (
@@ -185,7 +185,7 @@ export const AssessmentIntakeStage: React.FC<AssessmentIntakeStageProps> = ({
                       </div>
                     ) : (
                       <div className="w-6 h-6 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-[#a09d96]">
-                        <Icon className="w-3 h-3 text-[#a09d96]" />
+                        <Icon className="w-3.5 h-3.5 text-[#a09d96]" />
                       </div>
                     )}
                   </div>
@@ -218,12 +218,12 @@ export const AssessmentIntakeStage: React.FC<AssessmentIntakeStageProps> = ({
             {firstQuestionReady ? (
               <span className="text-[#5db8a6] flex items-center gap-1.5 font-semibold">
                 <CheckCircle2 className="w-3.5 h-3.5" />
-                Question 1 graded • Transitioning to review workspace...
+                Question 1 is marked. Opening your review...
               </span>
             ) : (
               <span className="flex items-center gap-1.5 text-[#cc785c]">
                 <Sparkles className="w-3.5 h-3.5 animate-pulse" />
-                {streamStatus || 'Senior Examiner parsing candidate solutions...'}
+                {streamStatus || 'Reading your answers...'}
               </span>
             )}
           </div>
@@ -234,7 +234,7 @@ export const AssessmentIntakeStage: React.FC<AssessmentIntakeStageProps> = ({
               onClick={onSkip}
               className="text-[11px] font-mono-code text-[#a09d96] hover:text-[#faf9f5] transition flex items-center gap-1"
             >
-              <span>Skip directly to workspace</span>
+              <span>Skip directly to results</span>
               <ArrowRight className="w-3 h-3" />
             </button>
           )}

@@ -80,7 +80,7 @@ export const SplitScreenEditor: React.FC<SplitScreenEditorProps> = ({
           <div className="flex items-start justify-between gap-4 border-b border-[#e6dfd8] pb-4">
             <div>
               <span className="text-[11px] font-mono-code font-semibold tracking-wider text-[#706e6a] uppercase">
-                Section Question
+                Question
               </span>
               <h2 className="text-2xl font-serif font-normal text-[#141413] mt-1 tracking-tight">
                 {currentQuestion.number}
@@ -107,7 +107,7 @@ export const SplitScreenEditor: React.FC<SplitScreenEditorProps> = ({
           <div className="flex items-center gap-2">
             <span className="text-xs font-mono-code font-semibold text-[#141413] flex items-center gap-1.5">
               <FileText className="w-3.5 h-3.5 text-[#cc785c]" />
-              Candidate Essay Script
+              Your Essay
             </span>
           </div>
 
@@ -129,7 +129,7 @@ export const SplitScreenEditor: React.FC<SplitScreenEditorProps> = ({
                   ? 'Hide Diagram'
                   : submission.diagramImageBase64
                     ? 'Diagram Attached (Edit)'
-                    : '+ Economic Diagram'}
+                    : '+ Add Diagram'}
               </span>
             </button>
 
@@ -151,14 +151,14 @@ export const SplitScreenEditor: React.FC<SplitScreenEditorProps> = ({
           <div className="p-4 bg-[#efe9de]/70 border-b border-[#e6dfd8] animate-in slide-in-from-top-2 duration-200">
             <div className="flex items-center justify-between mb-2">
               <span className="text-xs font-mono-code font-semibold text-[#141413]">
-                Economic Diagram Sketchpad
+                Draw a Diagram
               </span>
               <button
                 type="button"
                 onClick={() => setShowDiagram(false)}
                 className="text-[11px] font-mono-code text-[#706e6a] hover:text-[#141413]"
               >
-                Close Drawer
+                Close
               </button>
             </div>
             <InlineDiagramCanvas

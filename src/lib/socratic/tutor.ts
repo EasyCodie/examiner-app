@@ -156,13 +156,13 @@ export function generateSimulatedSocraticResponse(
 ) {
   if (tier === 1) {
     return {
-      text: `Let's anchor to the command term: **"${question.commandTerm}"**.\n\nIn the IB Diploma Programme, "${question.commandTerm}" requires you to ${
+      text: `Let's start with the command term: **"${question.commandTerm}"**.\n\nIn the IB Diploma Programme, "${question.commandTerm}" requires you to ${
         question.commandTerm.toLowerCase().includes('show')
           ? 'reach the given result without skipping intermediate algebraic steps. Every substitution must be explicitly written out.'
           : question.commandTerm.toLowerCase().includes('evaluate')
           ? 'make an appraisal by weighing up the strengths and limitations of different perspectives before drawing a supported conclusion.'
           : 'obtain a numerical or algebraic answer showing the relevant stages in your working.'
-      }\n\nWhat is your first plan of attack?`,
+      }\n\nHow would you like to begin your first step?`,
       tierActive: 1 as const,
       unlockedMarkscheme: false,
     };
@@ -188,9 +188,9 @@ export function generateSimulatedSocraticResponse(
 
   // Tier 4: Unlock Markscheme
   return {
-    text: `Here is the official Senior Examiner Markscheme breakdown for this question:\n\n**Markscheme Criteria:**\n${question.markschemeExcerpt}\n\n**Allocated Mark Codes:**\n${question.markCodes
+    text: `Here is the official markscheme breakdown for this question:\n\n**Markscheme Criteria:**\n${question.markschemeExcerpt}\n\n**Allocated Mark Codes:**\n${question.markCodes
       .map((m) => `• **${m.code}** (${m.marks} mark): ${m.description}`)
-      .join('\n')}\n\n${question.ecfRules ? `*ECF Rule:* ${question.ecfRules}` : ''}`,
+      .join('\n')}\n\n${question.ecfRules ? `*Follow-Through Rule (ECF):* ${question.ecfRules}` : ''}`,
     tierActive: 4 as const,
     unlockedMarkscheme: true,
   };

@@ -209,7 +209,7 @@ ${question.promptText}
 ${subpartsText}
 
 OFFICIAL MARKSCHEME CRITERIA & CODES:
-${question.markCodes.map((m) => `- [${m.code}] (${m.type}): ${m.marks} mark(s) — ${m.description}`).join('\n')}
+${question.markCodes.map((m) => `- [${m.code}] (${m.type}): ${m.marks} mark(s) - ${m.description}`).join('\n')}
 
 OFFICIAL ECF RULES:
 ${question.ecfRules || 'Standard IB ECF applies. Award follow-through marks for valid method applied to upstream errors.'}

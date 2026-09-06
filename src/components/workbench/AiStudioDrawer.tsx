@@ -166,13 +166,13 @@ export const AiStudioDrawer: React.FC<AiStudioDrawerProps> = ({ isOpen, onClose 
             </div>
             <div>
               <h2 className="text-base font-serif font-normal text-[#faf9f5] flex items-center gap-2">
-                <span>Google AI Studio Telemetry</span>
+                <span>Examiner Settings &amp; AI Controls</span>
                 <span className="text-[11px] font-mono-code font-normal text-[#5db8a6] bg-[#181715] px-2 py-0.5 rounded border border-white/[0.1]">
                   Gemini 3.8 Flash
                 </span>
               </h2>
               <p className="text-xs text-[#a09d96]">
-                Examiner prompt engineering, reasoning budget &amp; schema inspector
+                Configure marking depth, examine prompts, and manage API keys
               </p>
             </div>
           </div>
@@ -180,7 +180,7 @@ export const AiStudioDrawer: React.FC<AiStudioDrawerProps> = ({ isOpen, onClose 
           <button
             type="button"
             onClick={onClose}
-            aria-label="Close telemetry drawer"
+            aria-label="Close settings drawer"
             className="p-1.5 text-[#a09d96] hover:text-[#faf9f5] rounded-lg hover:bg-[#181715] transition focus-ring"
           >
             <X className="w-5 h-5" />
@@ -199,7 +199,7 @@ export const AiStudioDrawer: React.FC<AiStudioDrawerProps> = ({ isOpen, onClose 
             }`}
           >
             <Sliders className="w-3.5 h-3.5" />
-            <span>Reasoning Effort</span>
+            <span>Marking Depth</span>
           </button>
 
           <button
@@ -265,10 +265,10 @@ export const AiStudioDrawer: React.FC<AiStudioDrawerProps> = ({ isOpen, onClose 
             <div className="space-y-6">
               <div className="p-4 bg-[#252320] border border-white/[0.1] rounded-xl text-xs text-[#b0ada5]">
                 <span className="font-semibold text-[#cc785c] block mb-1 font-mono-code">
-                  Dynamic Reasoning Effort in Gemini 3.8 Flash:
+                  AI Thinking Budget &amp; Depth:
                 </span>
                 <p className="leading-relaxed">
-                  The platform dynamically tunes Gemini&apos;s thinking budget depending on task complexity. High reasoning effort is engaged for official grading passes (verifying multi-step algebra and calculating ECF), while a dedicated thinking budget (default 2048 tokens) empowers the Socratic Tutor to independently solve problems first and provide cohesive, empathetic guidance.
+                  The examiner dynamically adjusts how deeply it thinks depending on the task. A higher thinking budget is used when marking complete exam papers (checking multi-step algebra and calculating follow-through marks), while a balanced budget helps the tutor provide step-by-step guidance.
                 </p>
               </div>
 
@@ -277,10 +277,10 @@ export const AiStudioDrawer: React.FC<AiStudioDrawerProps> = ({ isOpen, onClose 
                 <div className="flex items-center justify-between">
                   <div>
                     <h3 className="text-xs font-semibold text-[#faf9f5] uppercase tracking-wider font-mono-code">
-                      Timed Mock Exam Grading Reasoning
+                      Exam Marking Depth
                     </h3>
                     <p className="text-[11px] text-[#a09d96]">
-                      Calculates method marks, double penalty checks, and ECF propagation
+                      Controls how thoroughly working steps and follow-through marks are checked
                     </p>
                   </div>
                   <span className="text-xs font-mono-code font-semibold text-[#cc785c] bg-[#181715] px-2.5 py-1 rounded-lg border border-white/[0.1]">
@@ -300,7 +300,7 @@ export const AiStudioDrawer: React.FC<AiStudioDrawerProps> = ({ isOpen, onClose 
 
                 <div className="flex justify-between text-[10px] font-mono-code text-[#79766e]">
                   <span>Standard (1024)</span>
-                  <span className="text-[#cc785c] font-semibold">Recommended Chief Examiner (8192)</span>
+                  <span className="text-[#cc785c] font-semibold">Recommended (8192)</span>
                   <span>Maximum Depth (16384)</span>
                 </div>
               </div>
@@ -310,10 +310,10 @@ export const AiStudioDrawer: React.FC<AiStudioDrawerProps> = ({ isOpen, onClose 
                 <div className="flex items-center justify-between">
                   <div>
                     <h3 className="text-xs font-semibold text-[#faf9f5] uppercase tracking-wider font-mono-code">
-                      Socratic Learn Mode Thinking Budget
+                      Tutor Thinking Budget
                     </h3>
                     <p className="text-[11px] text-[#a09d96]">
-                      Empowers the tutor to solve problems internally and diagnose working cohesively
+                      Helps the tutor review your steps and offer tailored hints
                     </p>
                   </div>
                   <span className="text-xs font-mono-code font-semibold text-[#5db8a6] bg-[#181715] px-2.5 py-1 rounded-lg border border-white/[0.1]">
@@ -333,7 +333,7 @@ export const AiStudioDrawer: React.FC<AiStudioDrawerProps> = ({ isOpen, onClose 
 
                 <div className="flex justify-between text-[10px] font-mono-code text-[#79766e]">
                   <span>Instant / Zero (0)</span>
-                  <span className="text-[#5db8a6] font-semibold">Recommended Collaborative (2048)</span>
+                  <span className="text-[#5db8a6] font-semibold">Recommended (2048)</span>
                   <span>Deep Proofs (4096)</span>
                 </div>
               </div>
@@ -352,7 +352,7 @@ export const AiStudioDrawer: React.FC<AiStudioDrawerProps> = ({ isOpen, onClose 
                       activePromptTab === 'grading' ? 'bg-[#cc785c] text-white font-semibold' : 'text-[#a09d96] hover:text-[#faf9f5]'
                     }`}
                   >
-                    Examiner Grading
+                    Exam Marking
                   </button>
                   <button
                     type="button"
@@ -370,7 +370,7 @@ export const AiStudioDrawer: React.FC<AiStudioDrawerProps> = ({ isOpen, onClose 
                       activePromptTab === 'ingestion' ? 'bg-[#cc785c] text-white font-semibold' : 'text-[#a09d96] hover:text-[#faf9f5]'
                     }`}
                   >
-                    Dual-PDF Ingest
+                    Past Paper Import
                   </button>
                 </div>
 

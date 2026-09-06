@@ -73,7 +73,7 @@ export const SocraticSidebar: React.FC<SocraticSidebarProps> = ({
         </div>
 
         <span className="text-[10px] font-mono-code px-2 py-0.5 rounded-full bg-[#181715] text-[#cc785c] border border-white/10">
-          Tier {currentTier} Active
+          Step {currentTier} Active
         </span>
       </div>
 
@@ -82,31 +82,31 @@ export const SocraticSidebar: React.FC<SocraticSidebarProps> = ({
         <button
           type="button"
           disabled={isLoading}
-          onClick={() => handleQuickAction(`What does the command term "${question.commandTerm}" demand in this question?`, 1)}
+          onClick={() => handleQuickAction(`What does the command term "${question.commandTerm}" mean for this question?`, 1)}
           className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#181715] hover:bg-[#34322d] text-[#a09d96] hover:text-[#faf9f5] border border-white/10 whitespace-nowrap transition disabled:opacity-40"
         >
           <Target className="w-3 h-3 text-[#5db8a6]" />
-          <span>Command Term</span>
+          <span>Command Term Help</span>
         </button>
 
         <button
           type="button"
           disabled={isLoading}
-          onClick={() => handleQuickAction(`Which formula booklet section or model applies to this step?`, 2)}
+          onClick={() => handleQuickAction(`Which formula or concept applies to this step?`, 2)}
           className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#181715] hover:bg-[#34322d] text-[#a09d96] hover:text-[#faf9f5] border border-white/10 whitespace-nowrap transition disabled:opacity-40"
         >
           <BookOpen className="w-3 h-3 text-[#e8a55a]" />
-          <span>Formula Booklet</span>
+          <span>Formula Clue</span>
         </button>
 
         <button
           type="button"
           disabled={isLoading}
-          onClick={() => handleQuickAction(`Diagnose my current step: is my algebraic working and sign logic on the right track?`, 3)}
+          onClick={() => handleQuickAction(`Can you check my current step and see if my working is on the right track?`, 3)}
           className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#181715] hover:bg-[#34322d] text-[#a09d96] hover:text-[#faf9f5] border border-white/10 whitespace-nowrap transition disabled:opacity-40"
         >
           <Stethoscope className="w-3 h-3 text-[#5db8a6]" />
-          <span>Diagnose Step</span>
+          <span>Check My Working</span>
         </button>
 
         {!isMarkschemeUnlocked && (
@@ -117,7 +117,7 @@ export const SocraticSidebar: React.FC<SocraticSidebarProps> = ({
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#cc785c]/15 hover:bg-[#cc785c]/25 text-[#cc785c] border border-[#cc785c]/30 whitespace-nowrap transition"
           >
             <Unlock className="w-3 h-3 text-[#cc785c]" />
-            <span>Unlock Rubric</span>
+            <span>Reveal Markscheme</span>
           </button>
         )}
       </div>
@@ -149,7 +149,7 @@ export const SocraticSidebar: React.FC<SocraticSidebarProps> = ({
                 {/* Tier Badge if present */}
                 {isTutor && m.tierActive && (
                   <div className="flex items-center gap-2 mb-2 pb-1.5 border-b border-white/10 text-[10px] font-mono-code text-[#cc785c] font-semibold uppercase tracking-wider">
-                    <span>Tier {m.tierActive} Guidance</span>
+                    <span>Step {m.tierActive} Hint</span>
                     {m.unlockedMarkscheme && (
                       <span className="bg-[#e8a55a]/20 text-[#e8a55a] border border-[#e8a55a]/30 px-1.5 py-0.5 rounded">
                         Markscheme Unlocked
@@ -172,7 +172,7 @@ export const SocraticSidebar: React.FC<SocraticSidebarProps> = ({
                 {/* Diagnostic Step Highlight with LaTeX Math Rendering */}
                 {m.diagnosticHighlight && (
                   <div className="mt-3 p-3 rounded-xl bg-[#181715] border border-[#e8a55a]/30 text-[11px] text-[#e8a55a]">
-                    <span className="font-semibold font-mono-code block text-[#e8a55a] mb-1">Diagnostic Finding:</span>
+                    <span className="font-semibold font-mono-code block text-[#e8a55a] mb-1">Working Feedback:</span>
                     <MathRenderer content={m.diagnosticHighlight} className="text-[#e8a55a] text-xs leading-relaxed" />
                   </div>
                 )}

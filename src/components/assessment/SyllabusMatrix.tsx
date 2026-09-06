@@ -88,19 +88,19 @@ export const SyllabusMatrix: React.FC<SyllabusMatrixProps> = ({
       mastered: {
         badge: 'bg-[#5db8a6]/15 text-[#378575] border-[#5db8a6]/30',
         bar: 'bg-[#5db8a6]',
-        label: 'Mastered (Level 7)',
+        label: 'Strong (Grade 7 Standard)',
         icon: CheckCircle2,
       },
       developing: {
         badge: 'bg-[#e8a55a]/15 text-[#b07432] border-[#e8a55a]/30',
         bar: 'bg-[#e8a55a]',
-        label: 'Developing (Level 5-6)',
+        label: 'Making Progress (Grade 5-6)',
         icon: AlertCircle,
       },
       critical: {
         badge: 'bg-[#c64545]/15 text-[#c64545] border-[#c64545]/30',
         bar: 'bg-[#c64545]',
-        label: 'Critical Revision Needed',
+        label: 'Needs Practice',
         icon: AlertCircle,
       },
     }[itemStatus];
@@ -114,14 +114,14 @@ export const SyllabusMatrix: React.FC<SyllabusMatrixProps> = ({
           <h3 className="text-base font-normal text-[#141413] flex items-center gap-2">
             <Target className="w-4 h-4 text-[#cc785c]" />
             <span className="font-serif text-lg">
-              Syllabus Subtopic Weakness Matrix &amp; Actionable Drills
+              Topic Strengths &amp; Recommended Practice
               {viewMode === 'focused' && activeQNum ? ` • Question ${activeQNum}` : ' • All Exam Topics'}
             </span>
           </h3>
           <p className="text-xs text-[#706e6a] mt-0.5 font-mono-code">
             {viewMode === 'focused' && activeQuestion
-              ? `Examiner-grade curriculum diagnosis focused on Question ${activeQNum} (${activeQuestion.totalMarks} marks)`
-              : 'Examiner-grade diagnosis mapping points awarded across all official IB curriculum subtopics'}
+              ? `Topic breakdown and practice tips for Question ${activeQNum} (${activeQuestion.totalMarks} marks)`
+              : 'Summary of marks awarded across each official syllabus topic'}
           </p>
         </div>
 
@@ -209,11 +209,11 @@ export const SyllabusMatrix: React.FC<SyllabusMatrixProps> = ({
                     <div className="flex items-center justify-between gap-2">
                       <span className="font-semibold text-[#cc785c] flex items-center gap-1.5 font-mono-code">
                         <BookOpen className="w-4 h-4 text-[#cc785c]" />
-                        Targeted Practice Drill for Question {activeQNum}:
+                        Practice Tip for Question {activeQNum}:
                       </span>
                       {activeEvaluation?.ecfApplied && (
                         <span className="text-[10px] font-mono-code text-[#b07432] flex items-center gap-1 bg-[#e8a55a]/15 border border-[#e8a55a]/30 px-2 py-0.5 rounded-full">
-                          <Sparkles className="w-3 h-3 text-[#e8a55a]" /> ECF Context Included
+                          <Sparkles className="w-3 h-3 text-[#e8a55a]" /> Includes Follow-Through Notes
                         </span>
                       )}
                     </div>
@@ -225,13 +225,13 @@ export const SyllabusMatrix: React.FC<SyllabusMatrixProps> = ({
                     {socraticLink && status !== 'mastered' && (
                       <div className="pt-2.5 border-t border-[#e6dfd8] flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                         <span className="text-[11px] font-mono-code text-[#706e6a]">
-                          Practice step-by-step guidance on this specific problem archetype
+                          Practice this type of question step by step with our tutor
                         </span>
                         <Link
                           href={socraticLink}
                           className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg claude-btn-primary text-xs font-mono-code font-medium transition shrink-0"
                         >
-                          <span>Launch Targeted Socratic Practice on Q{activeQNum}</span>
+                          <span>Practice Question {activeQNum} with Tutor</span>
                           <ArrowRight className="w-3.5 h-3.5" />
                         </Link>
                       </div>
@@ -256,7 +256,7 @@ export const SyllabusMatrix: React.FC<SyllabusMatrixProps> = ({
                 {focusedSubtopic}
               </h4>
               <p className="text-xs text-[#706e6a] font-mono-code">
-                The Senior Examiner is currently evaluating this question attempt. The diagnostic score and targeted syllabus drill will populate automatically upon completion.
+                Your examiner is currently marking this question. Your score and practice tips will appear once it is ready.
               </p>
             </div>
           )}
@@ -267,7 +267,7 @@ export const SyllabusMatrix: React.FC<SyllabusMatrixProps> = ({
       {viewMode === 'all' && (
         <div className="space-y-4">
           <div className="flex items-center justify-between text-xs font-mono-code text-[#706e6a]">
-            <span>Showing all {syllabusBreakdown.length} syllabus subtopics evaluated across the paper</span>
+            <span>Showing all {syllabusBreakdown.length} topics on this exam paper</span>
             <button
               type="button"
               onClick={() => setViewMode('focused')}
@@ -322,7 +322,7 @@ export const SyllabusMatrix: React.FC<SyllabusMatrixProps> = ({
                     {/* Actionable Drill Recommendation */}
                     <div className="p-3 rounded-lg bg-[#efe9de] border border-[#e6dfd8] text-[11px] text-[#141413] leading-relaxed">
                       <span className="font-semibold text-[#cc785c] block mb-1 flex items-center gap-1 font-mono-code">
-                        <BookOpen className="w-3 h-3" /> Targeted Practice Drill:
+                        <BookOpen className="w-3 h-3" /> Practice Tip:
                       </span>
                       <p className="line-clamp-2 text-[#706e6a]">{item.targetedDrillPrompt}</p>
 
@@ -331,7 +331,7 @@ export const SyllabusMatrix: React.FC<SyllabusMatrixProps> = ({
                           href={`/learn/${paperId}`}
                           className="inline-flex items-center gap-1 text-[11px] font-mono-code text-[#cc785c] hover:text-[#a9583e] mt-2 font-medium transition"
                         >
-                          <span>Launch Targeted Socratic Practice</span>
+                          <span>Practice with Tutor</span>
                           <ArrowRight className="w-3 h-3" />
                         </Link>
                       )}
@@ -341,7 +341,7 @@ export const SyllabusMatrix: React.FC<SyllabusMatrixProps> = ({
               })
             ) : (
               <div className="col-span-2 p-8 text-center bg-[#faf9f5] rounded-xl border border-[#e6dfd8] text-xs font-mono-code text-[#706e6a]">
-                Exam topics are currently being aggregated by the Senior Examiner stream.
+                Exam topics will appear here as each question is marked.
               </div>
             )}
           </div>

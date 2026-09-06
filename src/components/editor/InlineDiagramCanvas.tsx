@@ -536,7 +536,7 @@ export const InlineDiagramCanvas = forwardRef<InlineDiagramCanvasRef, InlineDiag
         <div className="flex items-center justify-between text-[11px] text-[#79766e] font-mono-code pt-0.5">
           <span className="text-[#a09d96]">
             {activeTool === 'text'
-              ? `Placing label "${currentLabelPreview}" — click on canvas to position`
+              ? `Placing label "${currentLabelPreview}" - click on canvas to position`
               : 'Draw curves and lines; use Label tool to mark axes & equilibria'}
           </span>
           <span className="text-[#5db8a6] font-medium">

@@ -27,3 +27,10 @@
 [2026-09-05T18:50:02.843Z] INGEST_ERROR - Gemini API key missing
 [2026-09-05T18:51:11.065Z] INGEST_START - {"paperBytes":0,"markschemeBytes":0}
 [2026-09-05T18:51:11.065Z] INGEST_ERROR - Gemini API key missing
+[2026-09-06T07:31:55.599Z] INGEST_START - {"paperBytes":614754,"markschemeBytes":1594551}
+[2026-09-06T07:31:55.601Z] GLM_OCR_START - Dispatching layout parsing for paper & markscheme...
+[2026-09-06T07:33:10.096Z] GLM_OCR_SUCCESS - {"paperMarkdownChars":10362,"markschemeMarkdownChars":35852,"omittedMarkschemeBinary":true}
+[2026-09-06T07:33:10.098Z] GEMINI_ATTEMPT - {"model":"gemini-3.5-flash-lite","thinkingLevel":"low","partsCount":2}
+[2026-09-06T07:33:53.444Z] GEMINI_SUCCESS - {"model":"gemini-3.5-flash-lite","responseChars":49712}
+[2026-09-06T07:33:53.445Z] MANIFEST_PARSED - {"title":"Mathematics: analysis and approaches Higher level","totalMarks":110,"questionCount":12}
+[2026-09-06T07:33:53.446Z] INGEST_SUCCESS - {"manifestId":"custom-1788680033445","questions":12,"gradeBoundaries":{"grade7":80,"grade6":68,"grade5":56,"grade4":44,"grade3":32,"grade2":18,"grade1":0}}

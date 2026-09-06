@@ -10,76 +10,25 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 <!-- BEGIN:behavioral-guidelines -->
 
-# Behavioral Guidelines
+# Behavioral Guidelines & Boundaries
 
-Behavioral guidelines to reduce common LLM coding mistakes. Merge with project-specific instructions as needed.
+Bias toward caution over speed. Keep diffs surgical, uphold hard boundaries, and loop until verified.
 
-**Tradeoff:** These guidelines bias toward caution over speed. For trivial tasks, use judgment.
+## Hard Boundaries & Restrictions
 
-## 1. Think Before Coding
+- **Scope & Diffs**: Touch only code directly involved in the task. Never add unrequested features, speculative abstractions, or configurability. Never reformat, "clean up", or alter adjacent code, comments, or pre-existing dead code. Clean up only orphaned imports or types introduced by your diff.
+- **Dependencies & Architecture**: Never install npm packages or alter architecture without user consent and ADR review ([`docs/adr/`](docs/adr/)). Never modify or delete generated blocks (`<!-- BEGIN:nextjs-agent-rules -->`).
+- **Domain & Marking Integrity**: Never leak markscheme answers in early Socratic tiers (Tiers 1–3 per [`PRODUCT.md`](PRODUCT.md)). Never penalize downstream steps for prior arithmetic errors (strictly preserve ECF). Never invent terms outside [`CONTEXT.md`](CONTEXT.md).
+- **Third-Party APIs**: Never guess library APIs for Next.js 16, React 19, Tailwind v4, or `@google/genai`. Verify current docs using `context7-mcp` (`resolve-library-id`, `query-docs`) before modifying code.
+- **Ambiguity & Assumptions**: Never make silent assumptions on ambiguous requirements. Halt and clarify tradeoffs before implementing.
+- **Completion Gate**: Never declare completion without passing `tsc`, `lint`, and extensive browser automation verification.
 
-**Don't assume. Don't hide confusion. Surface tradeoffs.**
+## Execution Discipline
 
-Before implementing:
-- State your assumptions explicitly. If uncertain, ask.
-- If multiple interpretations exist, present them - don't pick silently.
-- If a simpler approach exists, say so. Push back when warranted.
-- If something is unclear, stop. Name what's confusing. Ask.
-
-## 2. Simplicity First
-
-**Minimum code that solves the problem. Nothing speculative.**
-
-- No features beyond what was asked.
-- No abstractions for single-use code.
-- No "flexibility" or "configurability" that wasn't requested.
-- No error handling for impossible scenarios.
-- If you write 200 lines and it could be 50, rewrite it.
-
-Ask yourself: "Would a senior engineer say this is overcomplicated?" If yes, simplify.
-
-## 3. Surgical Changes
-
-**Touch only what you must. Clean up only your own mess.**
-
-When editing existing code:
-- Don't "improve" adjacent code, comments, or formatting.
-- Don't refactor things that aren't broken.
-- Match existing style, even if you'd do it differently.
-- If you notice unrelated dead code, mention it - don't delete it.
-
-When your changes create orphans:
-- Remove imports/variables/functions that YOUR changes made unused.
-- Don't remove pre-existing dead code unless asked.
-
-The test: Every changed line should trace directly to the user's request.
-
-## 4. Goal-Driven Execution
-
-**Define success criteria. Loop until verified.**
-
-Transform tasks into verifiable goals:
-- "Add validation" → "Write tests for invalid inputs, then make them pass"
-- "Fix the bug" → "Write a test that reproduces it, then make it pass"
-- "Refactor X" → "Ensure tests pass before and after"
-
-For multi-step tasks, state a brief plan:
-```
-1. [Step] → verify: [check]
-2. [Step] → verify: [check]
-3. [Step] → verify: [check]
-```
-
-Strong success criteria let you loop independently. Weak criteria ("make it work") require constant clarification.
-
-## 5. Library Documentation & API Verification (Context7)
-
-**Always fetch current documentation. Do not guess library APIs.**
-
-- Whenever working with external libraries, frameworks (e.g., Next.js, React, Tailwind, Prisma, Supabase), API references, or code generation involving third-party dependencies, you MUST use the `context7-mcp` skill.
-- Call `resolve-library-id` to find the exact library and `query-docs` to retrieve up-to-date documentation and examples before writing or modifying library code, rather than relying on training data.
-
----
+1. **Think Before Coding**: State assumptions explicitly. Surface tradeoffs and simpler alternatives before writing code.
+2. **Simplicity First**: Write the minimum code that completely solves the problem. If 50 lines suffice, never write 200.
+3. **Goal-Driven Loops**: Define binary observable success criteria upfront. Loop independently until all verification gates pass.
+4. **Extensive Browser Automation**: Mandatory for all UI, routing, or interactive flows. Launch the dev server (`npm run dev`), automate interactions across relevant paths, verify rendered DOM states, and assert zero console errors before concluding.
 
 <!-- END:behavioral-guidelines -->
 
@@ -87,31 +36,31 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 
 **IB Examiner** is an authoritative exam simulation, dual-document markscheme ingestion, method-level marking, and Error Carried Forward (ECF) grading platform for IB Diploma students.
 
-**Tech Stack**: Next.js 16 (App Router), React 19, TypeScript, Tailwind CSS v4, `@google/genai` (Gemini 2.5 Flash / Pro with thinkingBudget control), IndexedDB client-side persistence (`idb-keyval`), KaTeX math typesetting.
+**Tech Stack**: Next.js 16 (App Router), React 19, TypeScript, Tailwind CSS v4, `@google/genai` (Gemini 2.5 Flash / Pro with thinkingBudget control), IndexedDB (`idb-keyval`), KaTeX.
 
 ### Sources of Truth (Context Pointers)
 
-- **Domain Glossary**: Read [`CONTEXT.md`](CONTEXT.md) before naming types, functions, tests, or issues. Strictly use defined terms (`Exam Manifest`, `Exam Session`, `Question Submission`, `Question Evaluation`, `Error Carried Forward (ECF)`, `Mark Code`, `Grade Boundary`, `Syllabus Weakness Matrix`).
-- **Product Rules**: Read [`PRODUCT.md`](PRODUCT.md) when touching evaluation logic, Socratic tutoring tiers, or session workflows. Maintain markscheme ground truth and ECF protection without premature solution leaks.
-- **Design System & Aesthetics**: Read [`DESIGN.md`](DESIGN.md) when editing or creating UI components. Follow the "Cursor-Dark-Examiner" / "Obsidian Scholar" system: obsidian canvas (`#0c0d0e`), 1px hairline borders (`rgba(255, 255, 255, 0.08)`), Cursor Orange (`#f54e00`) for primary highlights, JetBrains Mono for math, rubrics, and metadata, and 5-stage pastel timeline pills.
-- **Architecture Decisions**: Read [`docs/adr/`](docs/adr/) before proposing architectural changes or adding major dependencies.
-- **Local Issue Tracker**: Read [`docs/agents/issue-tracker.md`](docs/agents/issue-tracker.md) for specs and tickets under `.scratch/<feature-slug>/`.
-- **Triage Labels**: Read [`docs/agents/triage-labels.md`](docs/agents/triage-labels.md) for canonical issue states.
-- **Domain Docs Guide**: Read [`docs/agents/domain.md`](docs/agents/domain.md) for how skills explore and extend domain docs.
+- **Domain Glossary**: Read [`CONTEXT.md`](CONTEXT.md) for canonical terminology before naming types, functions, or tests.
+- **Product Rules**: Read [`PRODUCT.md`](PRODUCT.md) when touching evaluation logic, Socratic tutoring tiers, or session workflows.
+- **Design System**: Read [`DESIGN.md`](DESIGN.md) when editing or creating UI components ("Obsidian Scholar" theme).
+- **Architecture (ADRs)**: Read [`docs/adr/`](docs/adr/) before proposing architectural changes or adding major dependencies.
+- **Local Issue Tracker**: Read [`docs/agents/issue-tracker.md`](docs/agents/issue-tracker.md) and [`docs/agents/triage-labels.md`](docs/agents/triage-labels.md) for specs and tickets under `.scratch/<feature-slug>/`.
+- **Domain Docs Guide**: Read [`docs/agents/domain.md`](docs/agents/domain.md) when exploring or extending domain docs.
 
 ### Verification Loop
 
-Execute these commands to verify changes:
-- `npx tsc --noEmit`: Typecheck after TypeScript or interface modifications.
+Execute verification gates until all pass:
+- `npx tsc --noEmit`: Typecheck TypeScript and interfaces.
 - `npm run lint`: Lint check before completing edits.
-- `npm run build`: Production build validation for routing or Next.js App Router changes.
-- Standalone API / logic tests: Execute via node scripts in `scratch/`.
+- `npm run build`: Production build validation for routing or App Router changes.
+- **Browser Automation**: Extensively test applied changes in the browser. Launch the local dev server (`npm run dev`), automate interactions across modified flows, verify DOM states and UI behavior, and assert zero console errors.
+- **Logic Tests**: Execute targeted Node test scripts in `scratch/`.
 
 ### Agent Skills Routing
 
 The skill suite in `.agents/skills/` orchestrates engineering workflows:
-- **Router**: `/ask-matt` maps any situation to the appropriate skill or flow.
-- **Spec & Planning**: `/grill-with-docs` (interview leaving ADR/glossary trail), `/to-spec` (synthesize discussion into spec), `/to-tickets` (break spec into tracer-bullet tickets), `/wayfinder` (chart multi-session initiatives).
-- **Implementation & Seams**: `/implement` (build tickets with TDD and review), `/tdd` (red-green-refactor loop at public seams), `/codebase-design` (deep module design vocabulary).
+- **Router**: `/ask-matt` (route any engineering situation to the right skill).
+- **Spec & Planning**: `/grill-with-docs` (interview & ADR trail), `/to-spec` (discussion to spec), `/to-tickets` (spec to tracer-bullet tickets), `/wayfinder` (multi-session roadmap).
+- **Implementation & Seams**: `/implement` (ticket execution with TDD), `/tdd` (red-green-refactor loop), `/codebase-design` (deep module interface design).
 - **UI & Aesthetics**: `/impeccable` (audit and polish UI to Obsidian Scholar standards).
-- **Review & Quality**: `/code-review` (two-axis Standards and Spec diff review), `/diagnosing-bugs` (build tight red feedback loop for regressions), `/triage` (state machine for incoming tickets).
+- **Review & Quality**: `/code-review` (standards and spec diff review), `/diagnosing-bugs` (tight red feedback loop for regressions), `/triage` (ticket state machine).

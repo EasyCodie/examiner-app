@@ -58,7 +58,7 @@ export default function ResultsPage() {
     abortControllerRef.current = controller;
 
     setIsStreaming(true);
-    setStreamStatus('Connecting to Senior Examiner assessment stream...');
+    setStreamStatus('Your examiner is reviewing your exam...');
     setStreamError(null);
 
     try {
@@ -82,7 +82,7 @@ export default function ResultsPage() {
 
       if (!res.ok || !res.body) {
         const errorText = await res.text();
-        throw new Error(errorText || 'Failed to initiate assessment stream.');
+        throw new Error(errorText || 'Could not start grading stream.');
       }
 
       const reader = res.body.getReader();
@@ -115,14 +115,14 @@ export default function ResultsPage() {
               });
 
               setStreamStatus(
-                `Question ${event.questionNumber} graded (${event.questionIndex + 1}/${event.totalQuestions}) • Review feedback below while remaining questions mark...`
+                `Question ${event.questionNumber} is marked (${event.questionIndex + 1}/${event.totalQuestions}). Read your feedback below while the remaining questions are reviewed.`
               );
             } else if (event.type === 'session_complete') {
               const completedSession: ExamSession = event.session;
               setSession(completedSession);
               await saveExamSession(completedSession);
               setIsStreaming(false);
-              setStreamStatus('Assessment complete!');
+              setStreamStatus('Grading complete!');
 
               try {
                 confetti({
@@ -134,7 +134,7 @@ export default function ResultsPage() {
                 // ignore
               }
             } else if (event.type === 'error') {
-              throw new Error(event.message || 'Stream reported evaluation failure.');
+              throw new Error(event.message || 'There was an issue grading this question.');
             }
           } catch (jsonErr) {
             console.warn('Failed parsing stream chunk:', line, jsonErr);
@@ -146,7 +146,7 @@ export default function ResultsPage() {
         return;
       }
       console.error('Streaming assessment error:', err);
-      const msg = err instanceof Error ? err.message : 'Error streaming exam evaluation.';
+      const msg = err instanceof Error ? err.message : 'There was an issue marking your exam.';
       setStreamError(msg);
       setIsStreaming(false);
     }
@@ -221,7 +221,7 @@ export default function ResultsPage() {
       <div className="flex-1 flex items-center justify-center p-8 bg-[#faf9f5]">
         <div className="text-center space-y-3">
           <Sparkles className="w-8 h-8 text-[#cc785c] animate-spin mx-auto" />
-          <p className="text-sm font-mono-code text-[#6b6963]">Loading examination session...</p>
+          <p className="text-sm font-mono-code text-[#6b6963]">Loading your exam results...</p>
         </div>
       </div>
     );
@@ -231,9 +231,9 @@ export default function ResultsPage() {
     return (
       <div className="flex-1 flex flex-col items-center justify-center p-8 text-center space-y-4 bg-[#faf9f5]">
         <AlertCircle className="w-12 h-12 text-[#c64545] mx-auto" />
-        <h2 className="text-xl font-serif text-[#141413]">Assessment Session Not Found</h2>
+        <h2 className="text-xl font-serif text-[#141413]">Exam Session Not Found</h2>
         <p className="text-xs text-[#6b6963] max-w-md">
-          The requested exam evaluation could not be loaded from local storage.
+          We couldn&apos;t find this completed exam in your browser storage.
         </p>
         <Link
           href="/"
@@ -305,11 +305,11 @@ export default function ResultsPage() {
             <span className="text-[#e6dfd8]">•</span>
             {isFinished ? (
               <span className="text-[10px] font-mono-code font-semibold uppercase tracking-wider text-[#378575] bg-[#5db8a6]/15 border border-[#5db8a6]/30 px-2.5 py-0.5 rounded-full flex items-center gap-1">
-                <ShieldCheck className="w-3 h-3 text-[#5db8a6]" /> Senior Examiner Grading Complete
+                <ShieldCheck className="w-3 h-3 text-[#5db8a6]" /> Grading Complete
               </span>
             ) : (
               <span className="text-[10px] font-mono-code font-semibold uppercase tracking-wider text-[#cc785c] bg-[#cc785c]/10 border border-[#cc785c]/20 px-2.5 py-0.5 rounded-full flex items-center gap-1 animate-pulse">
-                <Loader2 className="w-3 h-3 animate-spin" /> Live Grading In Progress
+                <Loader2 className="w-3 h-3 animate-spin" /> Marking in Progress
               </span>
             )}
           </div>
@@ -349,10 +349,10 @@ export default function ResultsPage() {
               <Loader2 className="w-5 h-5 text-[#cc785c] animate-spin shrink-0" />
               <div>
                 <h3 className="text-sm font-medium text-white tracking-tight flex items-center gap-2">
-                  <span>Senior Examiner Live Evaluation</span>
+                  <span>Examiner Marking in Progress</span>
                   {effectiveEvaluations.length >= 1 && (
                     <span className="text-[10px] font-mono-code font-normal text-[#5db8a6] bg-[#5db8a6]/15 border border-[#5db8a6]/30 px-2 py-0.5 rounded-full">
-                      Question 1 Unlocked
+                      Question 1 Ready
                     </span>
                   )}
                 </h3>
@@ -364,7 +364,7 @@ export default function ResultsPage() {
 
             <div className="text-right">
               <span className="text-xs font-mono-code text-[#cc785c] font-bold">
-                {effectiveEvaluations.length} of {totalQuestions} Questions Evaluated
+                {effectiveEvaluations.length} of {totalQuestions} Questions Marked
               </span>
             </div>
           </div>
@@ -378,7 +378,7 @@ export default function ResultsPage() {
               />
             </div>
             <div className="flex justify-between text-[10px] font-mono-code text-[#a09d96]">
-              <span>Review Question 1 below while remaining questions stream in background</span>
+              <span>Read your Question 1 feedback below while the remaining questions are reviewed</span>
               <span>{progressPct}%</span>
             </div>
           </div>
@@ -390,14 +390,14 @@ export default function ResultsPage() {
         <div className="bg-[#c64545]/15 border border-[#c64545]/30 rounded-xl p-4 flex items-center gap-3 text-xs text-[#c64545]">
           <AlertCircle className="w-4 h-4 text-[#c64545] shrink-0" />
           <div className="flex-1">
-            <span className="font-semibold">Evaluation Stream Notice:</span> {streamError}
+            <span className="font-semibold">Marking Notice:</span> {streamError}
           </div>
           <button
             type="button"
             onClick={() => startEvaluationStream(manifest, session)}
             className="px-3 py-1 bg-[#c64545]/20 hover:bg-[#c64545]/30 border border-[#c64545]/40 rounded-lg text-white font-mono-code text-[11px]"
           >
-            Retry Stream
+            Try Again
           </button>
         </div>
       )}
@@ -418,10 +418,10 @@ export default function ResultsPage() {
         <section className="bg-[#efe9de] border border-[#e6dfd8] rounded-2xl p-6 text-center space-y-2 text-[#141413] shadow-xs">
           <div className="flex items-center justify-center gap-2 text-[#706e6a] font-mono-code text-xs">
             <Clock className="w-4 h-4 text-[#cc785c]" />
-            <span>Predicted IB 1–7 Grade Boundaries and Syllabus Mastery Matrix calculate once all questions finalize</span>
+            <span>Your predicted 1-7 grade and topic strengths will calculate once all questions are marked</span>
           </div>
           <p className="text-[11px] text-[#706e6a] font-mono-code">
-            Question-level examiner marking and Error Carried Forward notes are live below for immediate inspection.
+            Examiner feedback and method marks are ready below for you to review.
           </p>
         </section>
       )}
@@ -431,10 +431,10 @@ export default function ResultsPage() {
         <div className="mb-3">
           <h2 className="text-xl font-serif font-normal text-[#141413] flex items-center gap-2">
             <FileCheck className="w-4 h-4 text-[#cc785c]" />
-            Examiner Question Review &amp; Mark Breakdown
+            Question Review &amp; Examiner Marks
           </h2>
           <p className="text-xs text-[#706e6a] font-mono-code">
-            Inspect each question attempt with red margin annotations and individual method/accuracy mark codes
+            See where marks were awarded, with examiner margin notes and method marks
           </p>
         </div>
 

@@ -37,7 +37,7 @@ export const DualUploadDropzone: React.FC<DualUploadDropzoneProps> = ({ onManife
 
     setIsIngesting(true);
     setError(null);
-    setIngestStatus('Connecting to GLM-OCR & Gemini ingestion engine...');
+    setIngestStatus('Opening your exam documents...');
 
     try {
       const cfg = await getAiConfig();
@@ -45,7 +45,7 @@ export const DualUploadDropzone: React.FC<DualUploadDropzoneProps> = ({ onManife
       formData.append('paperFile', paperFile);
       formData.append('markschemeFile', markschemeFile);
 
-      setIngestStatus('Parsing dual PDF documents with GLM-OCR & structuring manifest schema...');
+      setIngestStatus('Scanning questions, formulas, and markscheme...');
 
       const response = await fetch('/api/ingest', {
         method: 'POST',
@@ -59,10 +59,10 @@ export const DualUploadDropzone: React.FC<DualUploadDropzoneProps> = ({ onManife
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to ingest documents.');
+        throw new Error(data.error || 'Failed to process documents.');
       }
 
-      setIngestStatus('Indexing command terms, exact mark codes (M/A/R/N), and ECF rules...');
+      setIngestStatus('Matching marks and follow-through rules...');
 
       const manifest: ExamManifest = data.manifest;
 
@@ -71,11 +71,11 @@ export const DualUploadDropzone: React.FC<DualUploadDropzoneProps> = ({ onManife
       await savePdfBlob(manifest.id, 'paper', paperFile);
       await savePdfBlob(manifest.id, 'markscheme', markschemeFile);
 
-      setIngestStatus('Manifest compiled successfully! Launching mock session...');
+      setIngestStatus('Exam ready! Starting your session...');
       onManifestLoaded?.(manifest);
       router.push(`/mock/${manifest.id}`);
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Error ingesting documents.';
+      const msg = err instanceof Error ? err.message : 'Error processing exam documents.';
       setError(msg);
       setIsIngesting(false);
     }
@@ -87,15 +87,15 @@ export const DualUploadDropzone: React.FC<DualUploadDropzoneProps> = ({ onManife
         <div className="flex items-center gap-2 mb-2">
           <span className="text-[11px] font-mono-code font-semibold uppercase tracking-wider text-[#cc785c] bg-[#cc785c]/10 border border-[#cc785c]/20 px-2.5 py-0.5 rounded-full flex items-center gap-1.5">
             <SpikeMark className="w-3 h-3 text-[#cc785c]" />
-            Dual-Document Ingestion
+            Add Exam Paper
           </span>
-          <span className="text-xs text-[#6c6a64] font-mono-code">• Ground Truth Parser</span>
+          <span className="text-xs text-[#6c6a64] font-mono-code">• With Markscheme</span>
         </div>
         <h3 className="font-serif-display text-2xl font-normal text-[#141413] tracking-tight">
-          Upload Examination Paper &amp; Markscheme
+          Add Past Exam Paper &amp; Markscheme
         </h3>
         <p className="text-xs text-[#3d3d3a] mt-1 max-w-2xl leading-relaxed">
-          Upload an official IB Question Paper PDF alongside its matching Markscheme. The parser extracts question boundaries, mark allocations, and rubric criteria into an immutable manifest.
+          Upload an official IB Question Paper alongside its matching Markscheme PDF. We will turn both files into an interactive exam with step-by-step marking.
         </p>
       </div>
 
@@ -186,7 +186,7 @@ export const DualUploadDropzone: React.FC<DualUploadDropzoneProps> = ({ onManife
         <div className="mb-4 p-4 rounded-xl bg-[#faf9f5] border border-[#cc785c]/30 text-xs flex items-center gap-3">
           <Loader2 className="w-5 h-5 text-[#cc785c] animate-spin shrink-0" />
           <div>
-            <span className="font-semibold block text-[#141413] mb-0.5 font-mono-code">Compiling Ground-Truth Manifest</span>
+            <span className="font-semibold block text-[#141413] mb-0.5 font-mono-code">Preparing Your Exam Paper</span>
             <span className="text-[#6c6a64] font-mono-code">{ingestStatus}</span>
           </div>
         </div>
@@ -201,12 +201,12 @@ export const DualUploadDropzone: React.FC<DualUploadDropzoneProps> = ({ onManife
         {isIngesting ? (
           <>
             <Loader2 className="w-4 h-4 animate-spin" />
-            <span>Compiling Manifest...</span>
+            <span>Preparing Exam...</span>
           </>
         ) : (
           <>
             <Layers className="w-4 h-4" />
-            <span>Compile Ground-Truth Manifest</span>
+            <span>Create Practice Exam</span>
           </>
         )}
       </button>

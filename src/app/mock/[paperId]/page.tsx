@@ -143,10 +143,10 @@ export default function MockExamPage() {
       let activeBoxImages: Record<string, string> = {};
 
       if (isHumanities) {
-        setGradingProgress('Compiling essay responses and economic diagram attachments...');
+        setGradingProgress('Preparing your essay responses and diagrams...');
         setGradingPercentage(30);
       } else {
-        setGradingProgress('Compiling submission and capturing canvas working...');
+        setGradingProgress('Saving your handwritten working and steps...');
         setGradingPercentage(5);
 
         if (canvasRef.current) {
@@ -162,7 +162,7 @@ export default function MockExamPage() {
       }
 
       setGradingPercentage(60);
-      setGradingProgress('Rasterizing handwritten pages into high-res examiner scans...');
+      setGradingProgress('Scanning your pages for examiner review...');
 
       const { session } = compileMockSession({
         manifest,
@@ -178,7 +178,7 @@ export default function MockExamPage() {
       });
 
       setGradingPercentage(100);
-      setGradingProgress('Handing over to Senior Examiner evaluation stream...');
+      setGradingProgress('Handing over to your examiner for marking...');
 
       await saveExamSession(session);
 
@@ -197,7 +197,7 @@ export default function MockExamPage() {
       <div className="flex-1 flex items-center justify-center p-8 bg-[#faf9f5]">
         <div className="text-center space-y-3">
           <Sparkles className="w-8 h-8 text-[#cc785c] animate-spin mx-auto" />
-          <p className="text-sm font-mono-code text-[#6b6963]">Loading authentic IB examination paper...</p>
+          <p className="text-sm font-mono-code text-[#6b6963]">Opening your exam paper...</p>
         </div>
       </div>
     );
@@ -221,7 +221,7 @@ export default function MockExamPage() {
           {/* Left: Paper Badge */}
           <div className="flex items-center gap-2">
             <span className="text-[11px] font-mono-code uppercase bg-[#252320] border border-white/10 px-2.5 py-1 rounded-full text-[#a09d96]">
-              {isHumanities ? 'Humanities • Extended Response' : 'Authentic Exam Paper'}
+              {isHumanities ? 'Humanities • Extended Response' : 'Practice Exam'}
             </span>
           </div>
 
@@ -320,7 +320,7 @@ export default function MockExamPage() {
               >
                 <div className="flex items-center gap-2 text-xs font-mono-code text-[#faf9f5]">
                   <Info className="w-3.5 h-3.5 text-[#cc785c]" />
-                  <span className="font-semibold">Official Examination Instructions</span>
+                  <span className="font-semibold">Exam Instructions</span>
                   <span className="text-[10px] text-[#a09d96]">({manifest.instructions.length} rules)</span>
                 </div>
                 <span className="text-xs text-[#a09d96] font-mono-code">
@@ -397,10 +397,10 @@ export default function MockExamPage() {
           <div className="bg-[#181715] border border-white/10 rounded-2xl max-w-sm w-full p-6 space-y-4 shadow-2xl">
             <div className="space-y-1 text-center">
               <h3 className="text-lg font-serif font-normal text-[#faf9f5] tracking-tight">
-                Submit examination?
+                Submit your exam?
               </h3>
               <p className="text-xs text-[#a09d96] leading-relaxed">
-                Your answers will be evaluated against official mark scheme criteria with Error Carried Forward (ECF) rules applied.
+                Your paper will be marked against the official markscheme, with full credit for your method and follow-through working.
               </p>
             </div>
 
@@ -422,7 +422,7 @@ export default function MockExamPage() {
                 onClick={handleConfirmSubmit}
                 className="flex-1 py-2.5 rounded-lg claude-btn-primary text-xs"
               >
-                Submit &amp; Grade
+                Submit for Marking
               </button>
             </div>
           </div>
@@ -435,7 +435,7 @@ export default function MockExamPage() {
           <div className="bg-[#181715] border border-white/10 rounded-2xl max-w-md w-full p-6 space-y-4 text-center shadow-2xl">
             <div className="space-y-1">
               <h2 className="text-lg font-serif font-normal text-[#faf9f5] tracking-tight">
-                Grading in progress
+                Marking in progress
               </h2>
               <p className="text-xs text-[#a09d96] font-mono-code">{gradingProgress}</p>
             </div>
@@ -448,7 +448,7 @@ export default function MockExamPage() {
                 />
               </div>
               <div className="flex justify-between text-[10px] font-mono-code text-[#a09d96]">
-                <span>Evaluating method &amp; accuracy marks</span>
+                <span>Checking your steps and calculating marks</span>
                 <span>{gradingPercentage}%</span>
               </div>
             </div>

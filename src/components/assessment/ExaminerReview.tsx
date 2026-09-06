@@ -157,7 +157,7 @@ export const ExaminerReview: React.FC<ExaminerReviewProps> = ({
                   : 'text-[#706e6a] hover:text-[#141413]'
                 }`}
             >
-              Needs Review
+              Review Needed
             </button>
             <button
               type="button"
@@ -167,7 +167,7 @@ export const ExaminerReview: React.FC<ExaminerReviewProps> = ({
                   : 'text-[#706e6a] hover:text-[#141413]'
                 }`}
             >
-              Mastered
+              Full Marks
             </button>
           </div>
 
@@ -205,7 +205,7 @@ export const ExaminerReview: React.FC<ExaminerReviewProps> = ({
           <div className="flex items-center justify-between pb-3 border-b border-[#e6dfd8] mb-4">
             <div className="flex items-center gap-2">
               <span className="text-xs font-semibold uppercase tracking-wider text-[#141413] font-mono-code">
-                Student Work Submitted
+                Your Answer
               </span>
               <span className="text-[10px] font-mono-code text-[#706e6a]">
                 ({submission?.timeSpentSeconds ? `${Math.round(submission.timeSpentSeconds / 60)} mins` : 'Timed session'})
@@ -213,7 +213,7 @@ export const ExaminerReview: React.FC<ExaminerReviewProps> = ({
             </div>
             {evaluation?.ecfApplied && (
               <span className="text-[11px] font-mono-code text-[#e8a55a] bg-[#e8a55a]/15 border border-[#e8a55a]/30 px-2.5 py-0.5 rounded-full flex items-center gap-1">
-                <Sparkles className="w-3 h-3" /> ECF Protected
+                <Sparkles className="w-3 h-3" /> Method Protected (ECF)
               </span>
             )}
           </div>
@@ -259,7 +259,7 @@ export const ExaminerReview: React.FC<ExaminerReviewProps> = ({
                     <div key={sp.id} className="bg-[#faf9f5] p-3 rounded-lg border border-[#e6dfd8] space-y-1.5">
                       <div className="flex items-center justify-between gap-2 font-mono-code text-[11px]">
                         <div className="flex items-center gap-1.5 font-semibold text-[#141413]">
-                          <span>Subquestion {sp.partLetter}</span>
+                          <span>Part {sp.partLetter}</span>
                           <span className="text-[#706e6a]">[{sp.totalMarks} marks]</span>
                         </div>
                         {spScore ? (
@@ -317,7 +317,7 @@ export const ExaminerReview: React.FC<ExaminerReviewProps> = ({
             {submission?.subpartImages && Object.keys(submission.subpartImages).length > 0 ? (
               <div className="space-y-4">
                 <div className="text-[10px] font-mono-code uppercase text-slate-500 font-semibold border-b border-slate-200 pb-1 flex items-center justify-between">
-                  <span>Handwritten Subquestion Scans • e-Marking Script</span>
+                  <span>Your Handwritten Working</span>
                   <span className="text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">Captured</span>
                 </div>
                 {Object.entries(submission.subpartImages).map(([partId, imgData]) => (
@@ -337,7 +337,7 @@ export const ExaminerReview: React.FC<ExaminerReviewProps> = ({
             ) : submission?.canvasImageBase64 ? (
               <div className="space-y-3">
                 <div className="text-[10px] font-mono-code uppercase text-slate-500 font-semibold border-b border-slate-200 pb-1 flex items-center justify-between">
-                  <span>Handwritten Canvas Scan • e-Marking Script</span>
+                  <span>Your Handwritten Working</span>
                   <span className="text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">Captured</span>
                 </div>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -350,7 +350,7 @@ export const ExaminerReview: React.FC<ExaminerReviewProps> = ({
             ) : submission?.textResponse ? (
               <div className="space-y-4">
                 <div className="text-[10px] font-mono-code uppercase text-slate-500 font-semibold border-b border-slate-200 pb-1">
-                  Written Response • Word count: {submission.textResponse.trim().split(/\s+/).length} words
+                  Your Written Response • Word count: {submission.textResponse.trim().split(/\s+/).length} words
                 </div>
                 <div className="whitespace-pre-wrap text-sm leading-relaxed font-serif text-slate-800">
                   {submission.textResponse}
@@ -358,7 +358,7 @@ export const ExaminerReview: React.FC<ExaminerReviewProps> = ({
                 {submission.diagramImageBase64 && (
                   <div className="mt-4 pt-4 border-t border-slate-200">
                     <span className="text-xs font-bold text-slate-600 block mb-2 font-mono-code">
-                      Student Economic Diagram:
+                      Your Diagram:
                     </span>
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
@@ -380,7 +380,7 @@ export const ExaminerReview: React.FC<ExaminerReviewProps> = ({
           {evaluation?.marginAnnotations && evaluation.marginAnnotations.length > 0 && (
             <div className="mt-4 p-3.5 bg-[#c64545]/10 border border-[#c64545]/25 rounded-xl space-y-2">
               <span className="text-[10px] font-mono-code uppercase tracking-wider text-[#c64545] font-semibold block">
-                Examiner Margin Annotations (Red Pen):
+                Examiner Margin Notes:
               </span>
               <div className="flex flex-wrap gap-2">
                 {evaluation.marginAnnotations.map((ann, aIdx) => (
@@ -420,7 +420,7 @@ export const ExaminerReview: React.FC<ExaminerReviewProps> = ({
                 </span>
               </div>
               <h3 className="text-lg font-serif font-normal text-[#faf9f5] mt-0.5">
-                Evaluation &amp; Mark Allocation
+                Marks &amp; Examiner Feedback
               </h3>
             </div>
 
@@ -440,7 +440,7 @@ export const ExaminerReview: React.FC<ExaminerReviewProps> = ({
             <div className="p-4 bg-[#252320] rounded-xl border border-white/10 text-xs text-[#faf9f5] leading-relaxed">
               <div className="font-semibold text-[#faf9f5] mb-1 flex items-center gap-1.5 font-mono-code">
                 <FileCheck className="w-3.5 h-3.5 text-[#cc785c]" />
-                Senior Examiner Review Note:
+                Examiner Feedback:
               </div>
               <MathRenderer content={evaluation.examinerNotes} />
             </div>
@@ -451,7 +451,7 @@ export const ExaminerReview: React.FC<ExaminerReviewProps> = ({
             <div className="p-4 bg-[#e8a55a]/15 border border-[#e8a55a]/30 rounded-xl text-xs text-[#e8a55a]">
               <div className="font-semibold text-[#e8a55a] flex items-center gap-1.5 mb-1 font-mono-code">
                 <Sparkles className="w-4 h-4 text-[#e8a55a]" />
-                IB Error Carried Forward (ECF) Protocol Triggered:
+                Follow-Through Marks Applied (ECF):
               </div>
               <MathRenderer content={evaluation.ecfExplanation} className="opacity-95" />
             </div>
@@ -460,7 +460,7 @@ export const ExaminerReview: React.FC<ExaminerReviewProps> = ({
           {/* Granular Mark Codes Breakdown Table */}
           <div>
             <span className="text-xs font-semibold uppercase tracking-wider text-[#a09d96] block mb-2.5 font-mono-code">
-              Official Markscheme Criteria:
+              Mark Breakdown:
             </span>
             <div className="space-y-2">
               {evaluation?.markBreakdown && evaluation.markBreakdown.length > 0 ? (
@@ -487,7 +487,7 @@ export const ExaminerReview: React.FC<ExaminerReviewProps> = ({
                       </div>
                       {mb.awarded ? (
                         <span className="text-[10px] font-mono-code text-[#5db8a6] font-semibold flex items-center gap-0.5">
-                          <CheckCircle2 className="w-3 h-3" /> CREDITED
+                          <CheckCircle2 className="w-3 h-3" /> AWARDED
                         </span>
                       ) : (
                         <span className="text-[10px] font-mono-code text-[#c64545] font-semibold flex items-center gap-0.5">
@@ -504,10 +504,10 @@ export const ExaminerReview: React.FC<ExaminerReviewProps> = ({
                 <div className="p-5 bg-[#252320] border border-white/10 rounded-xl text-center space-y-2">
                   <div className="flex items-center justify-center gap-2 text-xs font-mono-code text-[#faf9f5]">
                     <span className="w-1.5 h-1.5 rounded-full bg-[#cc785c] animate-pulse" />
-                    <span>Evaluation Queued in Background</span>
+                    <span>Marking in Progress</span>
                   </div>
                   <p className="text-[11px] font-mono-code text-[#a09d96] max-w-sm mx-auto">
-                    The Senior Examiner stream is currently grading earlier questions. This breakdown will populate automatically.
+                    Your examiner is currently marking earlier questions. This feedback will appear as soon as it is ready.
                   </p>
                 </div>
               )}
@@ -519,7 +519,7 @@ export const ExaminerReview: React.FC<ExaminerReviewProps> = ({
             <div className="p-4 bg-[#252320] border border-white/10 rounded-xl text-xs text-[#faf9f5]">
               <div className="font-semibold text-[#cc785c] flex items-center gap-1.5 mb-1 font-mono-code">
                 <Lightbulb className="w-3.5 h-3.5 text-[#cc785c]" />
-                Targeted Syllabus Drill: {evaluation.syllabusSubtopic}
+                Recommended Practice: {evaluation.syllabusSubtopic}
               </div>
               <MathRenderer content={evaluation.revisionRecommendation} className="text-[#a09d96] mt-1" />
             </div>

@@ -68,6 +68,30 @@ export const Header: React.FC<HeaderProps> = ({
         )}
       </div>
 
+      {/* Middle Desktop Nav Links (when on home page or non-paper page) */}
+      {!paperId && (
+        <nav aria-label="Page navigation" className="hidden lg:flex items-center gap-6 text-xs text-[#6c6a64] font-medium">
+          <Link
+            href="/#specimens-section"
+            className="hover:text-[#141413] transition"
+          >
+            Past Papers
+          </Link>
+          <Link
+            href="/ingest"
+            className="hover:text-[#141413] transition"
+          >
+            Add Past Papers
+          </Link>
+          <Link
+            href="/#history-section"
+            className="hover:text-[#141413] transition"
+          >
+            Past Attempts
+          </Link>
+        </nav>
+      )}
+
       {/* Middle & Right: Timer, Mode Controls & Telemetry Trigger */}
       <div className="flex items-center gap-3">
         {mode === 'TIMED_MOCK' && timeRemainingSeconds !== undefined && (
@@ -87,26 +111,26 @@ export const Header: React.FC<HeaderProps> = ({
           <div className="flex items-center bg-[#efe9de] p-1 rounded-lg border border-[#e6dfd8] text-xs font-medium">
             <Link
               href={`/mock/${paperId}`}
-              className={`flex items-center gap-1.5 px-3 py-1 rounded-md transition focus-ring ${
+              className={`flex items-center gap-1.5 px-3 py-1 rounded-md transition focus-ring active:scale-[0.98] ${
                 mode === 'TIMED_MOCK'
                   ? 'bg-[#cc785c] text-white shadow-sm font-semibold'
                   : 'text-[#6c6a64] hover:text-[#141413]'
               }`}
             >
               <Clock className="w-3.5 h-3.5" />
-              <span>Timed Mock</span>
+              <span>Timed Exam</span>
             </Link>
 
             <Link
               href={`/learn/${paperId}`}
-              className={`flex items-center gap-1.5 px-3 py-1 rounded-md transition focus-ring ${
+              className={`flex items-center gap-1.5 px-3 py-1 rounded-md transition focus-ring active:scale-[0.98] ${
                 mode === 'SOCRATIC_LEARN'
                   ? 'bg-[#181715] text-[#faf9f5] shadow-sm font-semibold'
                   : 'text-[#6c6a64] hover:text-[#141413]'
               }`}
             >
               <Compass className="w-3.5 h-3.5" />
-              <span>Socratic Learn</span>
+              <span>Guided Practice</span>
             </Link>
           </div>
         )}
@@ -115,20 +139,20 @@ export const Header: React.FC<HeaderProps> = ({
         <button
           type="button"
           onClick={openAiStudio}
-          title="Open Google AI Studio Telemetry & Reasoner Workbench"
-          className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[#e6dfd8] bg-[#faf9f5] hover:bg-[#f5f0e8] text-[#3d3d3a] hover:text-[#141413] text-xs font-medium transition"
+          title="Examiner Settings & AI Controls"
+          className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[#e6dfd8] bg-[#faf9f5] hover:bg-[#f5f0e8] text-[#3d3d3a] hover:text-[#141413] text-xs font-medium transition active:scale-[0.98]"
         >
           <Sliders className="w-3.5 h-3.5 text-[#cc785c]" />
-          <span>Telemetry</span>
+          <span>Settings & AI</span>
         </button>
 
         {/* Primary Action Button */}
         {!paperId && (
           <Link
-            href="/mock/math-aa-hl-specimen-2025"
+            href="/mock/math-aa-hl-may-2021"
             className="claude-btn-primary text-xs"
           >
-            <span>Try Specimen Exam</span>
+            <span>Start Practice Exam</span>
           </Link>
         )}
       </div>
