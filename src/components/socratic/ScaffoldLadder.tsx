@@ -45,22 +45,22 @@ export const ScaffoldLadder: React.FC<ScaffoldLadderProps> = ({
   onUnlockMarkscheme,
 }) => {
   return (
-    <div className="bg-[#141517] border border-white/[0.08] rounded-xl p-3.5 space-y-3">
-      <div className="flex items-center justify-between border-b border-white/[0.08] pb-2.5">
+    <div className="bg-[#efe9de] border border-[#e6dfd8] rounded-2xl p-4 space-y-3 shadow-sm">
+      <div className="flex items-center justify-between border-b border-[#e6dfd8] pb-2.5">
         <div>
-          <h3 className="text-xs font-semibold uppercase tracking-wider text-[#f3f3f2] font-mono-code">
+          <h3 className="text-xs font-semibold uppercase tracking-wider text-[#141413] font-mono-code">
             4-Tier Pedagogical Scaffold
           </h3>
-          <p className="text-[11px] text-[#686763]">
+          <p className="text-[11px] text-[#706e6a]">
             Progressive guidance without premature markscheme exposure
           </p>
         </div>
-        <span className="text-[11px] font-mono-code font-medium text-[#f54e00] bg-[#f54e00]/10 border border-[#f54e00]/20 px-2.5 py-0.5 rounded-full">
+        <span className="text-[11px] font-mono-code font-medium text-[#cc785c] bg-[#cc785c]/10 border border-[#cc785c]/20 px-2.5 py-0.5 rounded-full">
           Tier {currentTier} Active
         </span>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
         {TIERS.map(({ tier, title, subtitle, icon: Icon }) => {
           const isActive = currentTier === tier;
           const isTier4 = tier === 4;
@@ -76,28 +76,28 @@ export const ScaffoldLadder: React.FC<ScaffoldLadderProps> = ({
                   onSelectTier(tier);
                 }
               }}
-              className={`p-2.5 rounded-lg text-left border transition-all flex flex-col justify-between ${isActive
-                  ? 'bg-[#1a1b1e] border-[#f54e00]/60 text-[#f3f3f2]'
-                  : 'bg-[#0c0d0e] border-white/[0.06] text-[#9b9a95] hover:text-[#f3f3f2] hover:border-white/[0.12]'
+              className={`p-3 rounded-xl text-left border transition-all flex flex-col justify-between ${isActive
+                  ? 'bg-[#faf9f5] border-[#cc785c] ring-1 ring-[#cc785c] text-[#141413] shadow-xs'
+                  : 'bg-[#faf9f5] border-[#e6dfd8] text-[#706e6a] hover:text-[#141413] hover:border-[#cc785c]/40'
                 }`}
             >
-              <div className="flex items-center justify-between mb-1">
+              <div className="flex items-center justify-between mb-1.5">
                 <div className="flex items-center gap-1.5">
                   <Icon
-                    className={`w-3.5 h-3.5 ${isActive ? 'text-[#f54e00]' : isTier4 ? 'text-[#dfa88f]' : 'text-[#686763]'
+                    className={`w-3.5 h-3.5 ${isActive ? 'text-[#cc785c]' : isTier4 ? 'text-[#e8a55a]' : 'text-[#706e6a]'
                       }`}
                   />
-                  <span className={`text-xs font-medium ${isActive ? 'text-[#f3f3f2]' : 'text-[#9b9a95]'}`}>
+                  <span className={`text-xs font-medium ${isActive ? 'text-[#141413]' : 'text-[#706e6a]'}`}>
                     {title}
                   </span>
                 </div>
                 {isTier4 && !isMarkschemeUnlocked && (
-                  <span className="text-[10px] text-[#dfa88f] flex items-center gap-0.5 font-mono-code">
+                  <span className="text-[10px] text-[#e8a55a] flex items-center gap-0.5 font-mono-code">
                     <Lock className="w-3 h-3" /> Locked
                   </span>
                 )}
               </div>
-              <p className="text-[11px] text-[#686763] line-clamp-1">{subtitle}</p>
+              <p className="text-[11px] text-[#706e6a] line-clamp-1">{subtitle}</p>
             </button>
           );
         })}

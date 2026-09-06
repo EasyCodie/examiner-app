@@ -303,7 +303,9 @@ export const MathRenderer: React.FC<MathRendererProps> = React.memo(({
 
     // PHASE 4: Protect inline code blocks
     text = text.replace(/`([^`\n]+?)`/g, (_, code) => {
-      const codeHtml = `<code class="font-mono-code text-[11px] bg-[#0c0d0e] text-[#f54e00] px-1.5 py-0.5 rounded border border-white/[0.08]">${escapeHtml(code)}</code>`;
+      const codeHtml = lightMode
+        ? `<code class="font-mono-code text-[11px] bg-[#efe9de] text-[#cc785c] px-1.5 py-0.5 rounded border border-[#e6dfd8]">${escapeHtml(code)}</code>`
+        : `<code class="font-mono-code text-[11px] bg-[#181715] text-[#cc785c] px-1.5 py-0.5 rounded border border-white/[0.1]">${escapeHtml(code)}</code>`;
       return saveToken(codeHtml);
     });
 

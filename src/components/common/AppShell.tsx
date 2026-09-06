@@ -3,6 +3,7 @@
 import React, { useState, createContext, useContext } from 'react';
 import { usePathname } from 'next/navigation';
 import { Header } from './Header';
+import { AiStudioDrawer } from '@/components/workbench/AiStudioDrawer';
 
 interface AppShellContextType {
   setHeaderInfo: (info: {
@@ -12,6 +13,8 @@ interface AppShellContextType {
     paperId?: string;
     timeRemainingSeconds?: number;
   }) => void;
+  openAiStudio: () => void;
+  closeAiStudio: () => void;
 }
 
 const AppShellContext = createContext<AppShellContextType | null>(null);
@@ -27,6 +30,7 @@ export const useAppShell = () => {
 export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const pathname = usePathname();
   const isHomePage = pathname === '/';
+  const [isAiStudioOpen, setIsAiStudioOpen] = useState(false);
 
   const [headerInfo, setHeaderInfo] = useState<{
     paperTitle?: string;
@@ -37,8 +41,14 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) 
   }>({});
 
   return (
-    <AppShellContext.Provider value={{ setHeaderInfo }}>
-      <div className="min-h-screen flex flex-col bg-[#0c0d0e] text-[#f3f3f2]">
+    <AppShellContext.Provider
+      value={{
+        setHeaderInfo,
+        openAiStudio: () => setIsAiStudioOpen(true),
+        closeAiStudio: () => setIsAiStudioOpen(false),
+      }}
+    >
+      <div className="min-h-screen flex flex-col bg-[#faf9f5] text-[#141413]">
         {!isHomePage && (
           <Header
             paperTitle={headerInfo.paperTitle}
@@ -49,6 +59,9 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) 
           />
         )}
         <main className="flex-1 flex flex-col">{children}</main>
+
+        {/* Global Workbench / Telemetry Drawer */}
+        <AiStudioDrawer isOpen={isAiStudioOpen} onClose={() => setIsAiStudioOpen(false)} />
       </div>
     </AppShellContext.Provider>
   );

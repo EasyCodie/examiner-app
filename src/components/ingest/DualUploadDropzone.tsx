@@ -7,10 +7,11 @@ import { saveManifest, savePdfBlob, getAiConfig } from '@/lib/storage';
 import {
   FileUp,
   FileCheck,
-  Sparkles,
   AlertCircle,
-  Layers
+  Layers,
+  Loader2,
 } from 'lucide-react';
+import { SpikeMark } from '@/components/common/SpikeMark';
 
 interface DualUploadDropzoneProps {
   onManifestLoaded?: (manifest: ExamManifest) => void;
@@ -81,19 +82,20 @@ export const DualUploadDropzone: React.FC<DualUploadDropzoneProps> = ({ onManife
   };
 
   return (
-    <div className="bg-[#141517] border border-white/[0.08] rounded-xl p-6 sm:p-8 shadow-2xl relative overflow-hidden">
+    <div className="bg-[#efe9de] border border-[#e6dfd8] rounded-xl p-6 sm:p-8 relative overflow-hidden text-[#141413]">
       <div className="mb-6">
-        <div className="flex items-center gap-2">
-          <span className="text-[10px] font-mono-code font-semibold uppercase tracking-wider text-[#f54e00] bg-[#f54e00]/10 border border-[#f54e00]/20 px-2 py-0.5 rounded">
-            Ground-Truth Ingestion Engine
+        <div className="flex items-center gap-2 mb-2">
+          <span className="text-[11px] font-mono-code font-semibold uppercase tracking-wider text-[#cc785c] bg-[#cc785c]/10 border border-[#cc785c]/20 px-2.5 py-0.5 rounded-full flex items-center gap-1.5">
+            <SpikeMark className="w-3 h-3 text-[#cc785c]" />
+            Dual-Document Ingestion
           </span>
-          <span className="text-xs text-[#9b9a95] font-mono-code">Dual-Document Alignment</span>
+          <span className="text-xs text-[#6c6a64] font-mono-code">• Ground Truth Parser</span>
         </div>
-        <h3 className="text-lg font-medium text-[#f3f3f2] mt-2 tracking-tight">
-          Examination Paper Ingestion
+        <h3 className="font-serif-display text-2xl font-normal text-[#141413] tracking-tight">
+          Upload Examination Paper &amp; Markscheme
         </h3>
-        <p className="text-xs text-[#9b9a95] mt-1 max-w-2xl leading-relaxed">
-          Upload an official IB Question Paper PDF alongside its matching Markscheme. The parser extracts question boundaries, mark allocations, and rubric criteria into a structured manifest.
+        <p className="text-xs text-[#3d3d3a] mt-1 max-w-2xl leading-relaxed">
+          Upload an official IB Question Paper PDF alongside its matching Markscheme. The parser extracts question boundaries, mark allocations, and rubric criteria into an immutable manifest.
         </p>
       </div>
 
@@ -101,10 +103,11 @@ export const DualUploadDropzone: React.FC<DualUploadDropzoneProps> = ({ onManife
         {/* Question Paper Dropzone */}
         <div
           onClick={() => paperInputRef.current?.click()}
-          className={`border rounded-xl p-6 text-center cursor-pointer transition flex flex-col items-center justify-center min-h-[170px] ${paperFile
-              ? 'border-[#f54e00]/60 bg-[#18191d] text-[#f3f3f2]'
-              : 'border-white/[0.08] hover:border-white/[0.18] bg-[#0c0d0e] text-[#9b9a95] hover:text-[#f3f3f2]'
-            }`}
+          className={`border rounded-xl p-6 text-center cursor-pointer transition flex flex-col items-center justify-center min-h-[170px] ${
+            paperFile
+              ? 'border-[#cc785c] bg-[#faf9f5] text-[#141413]'
+              : 'border-[#e6dfd8] hover:border-[#cc785c]/50 bg-[#faf9f5] text-[#6c6a64] hover:text-[#141413]'
+          }`}
         >
           <input
             ref={paperInputRef}
@@ -117,19 +120,19 @@ export const DualUploadDropzone: React.FC<DualUploadDropzoneProps> = ({ onManife
           />
           {paperFile ? (
             <>
-              <FileCheck className="w-8 h-8 text-[#f54e00] mb-2" />
-              <span className="text-xs font-semibold font-mono-code text-[#f3f3f2] truncate max-w-xs">{paperFile.name}</span>
-              <span className="text-[10px] text-[#686763] font-mono-code mt-1">
+              <FileCheck className="w-8 h-8 text-[#cc785c] mb-2" />
+              <span className="text-xs font-semibold font-mono-code text-[#141413] truncate max-w-xs">{paperFile.name}</span>
+              <span className="text-[10px] text-[#8e8b82] font-mono-code mt-1">
                 {(paperFile.size / 1024 / 1024).toFixed(2)} MB • Question Paper PDF
               </span>
             </>
           ) : (
             <>
-              <div className="w-10 h-10 rounded-lg bg-[#1a1b1e] border border-white/[0.08] flex items-center justify-center text-[#9b9a95] mb-2.5">
+              <div className="w-10 h-10 rounded-lg bg-[#efe9de] border border-[#e6dfd8] flex items-center justify-center text-[#cc785c] mb-2.5">
                 <FileUp className="w-5 h-5" />
               </div>
-              <span className="text-xs font-medium text-[#f3f3f2] font-mono-code">1. Question Paper PDF</span>
-              <span className="text-[10px] text-[#686763] font-mono-code mt-0.5">Click or drop official exam PDF</span>
+              <span className="text-xs font-medium text-[#141413]">1. Question Paper PDF</span>
+              <span className="text-[10px] text-[#8e8b82] font-mono-code mt-0.5">Click or drop official exam PDF</span>
             </>
           )}
         </div>
@@ -137,10 +140,11 @@ export const DualUploadDropzone: React.FC<DualUploadDropzoneProps> = ({ onManife
         {/* Markscheme Dropzone */}
         <div
           onClick={() => markschemeInputRef.current?.click()}
-          className={`border rounded-xl p-6 text-center cursor-pointer transition flex flex-col items-center justify-center min-h-[170px] ${markschemeFile
-              ? 'border-[#f54e00]/60 bg-[#18191d] text-[#f3f3f2]'
-              : 'border-white/[0.08] hover:border-white/[0.18] bg-[#0c0d0e] text-[#9b9a95] hover:text-[#f3f3f2]'
-            }`}
+          className={`border rounded-xl p-6 text-center cursor-pointer transition flex flex-col items-center justify-center min-h-[170px] ${
+            markschemeFile
+              ? 'border-[#cc785c] bg-[#faf9f5] text-[#141413]'
+              : 'border-[#e6dfd8] hover:border-[#cc785c]/50 bg-[#faf9f5] text-[#6c6a64] hover:text-[#141413]'
+          }`}
         >
           <input
             ref={markschemeInputRef}
@@ -153,37 +157,37 @@ export const DualUploadDropzone: React.FC<DualUploadDropzoneProps> = ({ onManife
           />
           {markschemeFile ? (
             <>
-              <FileCheck className="w-8 h-8 text-[#dfa88f] mb-2" />
-              <span className="text-xs font-semibold font-mono-code text-[#f3f3f2] truncate max-w-xs">{markschemeFile.name}</span>
-              <span className="text-[10px] text-[#686763] font-mono-code mt-1">
+              <FileCheck className="w-8 h-8 text-[#cc785c] mb-2" />
+              <span className="text-xs font-semibold font-mono-code text-[#141413] truncate max-w-xs">{markschemeFile.name}</span>
+              <span className="text-[10px] text-[#8e8b82] font-mono-code mt-1">
                 {(markschemeFile.size / 1024 / 1024).toFixed(2)} MB • Markscheme PDF
               </span>
             </>
           ) : (
             <>
-              <div className="w-10 h-10 rounded-lg bg-[#1a1b1e] border border-white/[0.08] flex items-center justify-center text-[#9b9a95] mb-2.5">
+              <div className="w-10 h-10 rounded-lg bg-[#efe9de] border border-[#e6dfd8] flex items-center justify-center text-[#cc785c] mb-2.5">
                 <FileUp className="w-5 h-5" />
               </div>
-              <span className="text-xs font-medium text-[#f3f3f2] font-mono-code">2. Official Markscheme PDF</span>
-              <span className="text-[10px] text-[#686763] font-mono-code mt-0.5">Click or drop matching rubric PDF</span>
+              <span className="text-xs font-medium text-[#141413]">2. Official Markscheme PDF</span>
+              <span className="text-[10px] text-[#8e8b82] font-mono-code mt-0.5">Click or drop matching rubric PDF</span>
             </>
           )}
         </div>
       </div>
 
       {error && (
-        <div className="mb-4 p-3.5 rounded-xl bg-[#cf2d56]/10 border border-[#cf2d56]/30 text-[#cf2d56] text-xs flex items-center gap-2 font-mono-code">
-          <AlertCircle className="w-4 h-4 text-[#cf2d56] shrink-0" />
+        <div className="mb-4 p-3.5 rounded-lg bg-[#c64545]/10 border border-[#c64545]/30 text-[#c64545] text-xs flex items-center gap-2 font-mono-code">
+          <AlertCircle className="w-4 h-4 text-[#c64545] shrink-0" />
           <span>{error}</span>
         </div>
       )}
 
       {isIngesting && (
-        <div className="mb-4 p-4 rounded-xl bg-[#0c0d0e] border border-[#f54e00]/30 text-xs flex items-center gap-3">
-          <Sparkles className="w-5 h-5 text-[#f54e00] animate-spin shrink-0" />
+        <div className="mb-4 p-4 rounded-xl bg-[#faf9f5] border border-[#cc785c]/30 text-xs flex items-center gap-3">
+          <Loader2 className="w-5 h-5 text-[#cc785c] animate-spin shrink-0" />
           <div>
-            <span className="font-semibold block text-[#f3f3f2] mb-0.5 font-mono-code">Compiling Ground-Truth Manifest</span>
-            <span className="text-[#9b9a95] font-mono-code">{ingestStatus}</span>
+            <span className="font-semibold block text-[#141413] mb-0.5 font-mono-code">Compiling Ground-Truth Manifest</span>
+            <span className="text-[#6c6a64] font-mono-code">{ingestStatus}</span>
           </div>
         </div>
       )}
@@ -192,11 +196,11 @@ export const DualUploadDropzone: React.FC<DualUploadDropzoneProps> = ({ onManife
         type="button"
         onClick={handleStartIngest}
         disabled={!paperFile || !markschemeFile || isIngesting}
-        className="w-full py-3 rounded-xl cursor-btn-primary disabled:opacity-40 font-medium font-mono-code text-xs uppercase tracking-wider transition flex items-center justify-center gap-2 focus-ring"
+        className="w-full claude-btn-primary py-3 rounded-lg disabled:opacity-40 font-medium text-xs tracking-wider transition flex items-center justify-center gap-2 focus-ring"
       >
         {isIngesting ? (
           <>
-            <Sparkles className="w-4 h-4 animate-spin" />
+            <Loader2 className="w-4 h-4 animate-spin" />
             <span>Compiling Manifest...</span>
           </>
         ) : (

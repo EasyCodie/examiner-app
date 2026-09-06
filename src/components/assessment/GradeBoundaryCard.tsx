@@ -74,12 +74,12 @@ export const GradeBoundaryCard: React.FC<GradeBoundaryCardProps> = ({
   const marksToNext = nextBoundary ? Math.max(0, Math.ceil((nextBoundary / 100) * totalPossible) - totalAwarded) : 0;
 
   return (
-    <div className="bg-[#141517] border border-white/[0.08] rounded-xl p-5 relative overflow-hidden">
+    <div className="bg-[#181715] border border-white/10 rounded-2xl p-6 relative overflow-hidden shadow-2xl">
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-5 relative z-10">
         {/* Grade Badge */}
         <div className="flex items-center gap-4">
-          <div className="w-16 h-16 rounded-xl bg-[#f54e00] flex flex-col items-center justify-center shrink-0 text-white shadow-sm">
-            <span className="text-[10px] font-mono-code uppercase tracking-wider font-semibold opacity-85">
+          <div className="w-16 h-16 rounded-2xl bg-[#cc785c] flex flex-col items-center justify-center shrink-0 text-white shadow-md">
+            <span className="text-[10px] font-mono-code uppercase tracking-wider font-semibold opacity-90">
               IB GRADE
             </span>
             <span className="text-3xl font-semibold font-mono-code">
@@ -89,40 +89,40 @@ export const GradeBoundaryCard: React.FC<GradeBoundaryCardProps> = ({
 
           <div>
             <div className="flex items-center gap-2">
-              <h2 className="text-lg font-normal text-[#f3f3f2] tracking-tight">{descriptor.title}</h2>
-              <span className="px-2 py-0.5 rounded text-[10px] font-mono-code bg-[#1a1b1e] text-[#9b9a95] border border-white/[0.08]">
+              <h2 className="text-xl font-serif font-normal text-[#faf9f5] tracking-tight">{descriptor.title}</h2>
+              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono-code bg-[#252320] text-[#a09d96] border border-white/10">
                 Official 1–7 Scale
               </span>
             </div>
-            <p className="text-xs text-[#9b9a95] max-w-xl mt-1 leading-relaxed">
+            <p className="text-xs text-[#a09d96] max-w-xl mt-1 leading-relaxed">
               {descriptor.desc}
             </p>
           </div>
         </div>
 
         {/* Score Stats */}
-        <div className="flex items-center gap-4 bg-[#0c0d0e] border border-white/[0.08] px-4 py-3 rounded-lg">
-          <div className="text-center pr-4 border-r border-white/[0.08]">
-            <span className="text-[10px] font-mono-code text-[#686763] block uppercase">Score</span>
-            <div className="text-xl font-medium font-mono-code text-[#f3f3f2]">
-              {totalAwarded} <span className="text-xs text-[#686763]">/ {totalPossible}</span>
+        <div className="flex items-center gap-4 bg-[#252320] border border-white/10 px-5 py-3 rounded-xl shadow-xs">
+          <div className="text-center pr-4 border-r border-white/10">
+            <span className="text-[10px] font-mono-code text-[#a09d96] block uppercase">Score</span>
+            <div className="text-xl font-medium font-mono-code text-[#faf9f5]">
+              {totalAwarded} <span className="text-xs text-[#a09d96]">/ {totalPossible}</span>
             </div>
           </div>
 
-          <div className="text-center pr-4 border-r border-white/[0.08]">
-            <span className="text-[10px] font-mono-code text-[#686763] block uppercase">Percentage</span>
-            <div className="text-xl font-medium font-mono-code text-[#f54e00]">
+          <div className="text-center pr-4 border-r border-white/10">
+            <span className="text-[10px] font-mono-code text-[#a09d96] block uppercase">Percentage</span>
+            <div className="text-xl font-medium font-mono-code text-[#cc785c]">
               {percentage}%
             </div>
           </div>
 
           {ecfCount > 0 && (
             <div className="text-center">
-              <span className="text-[10px] font-mono-code text-[#dfa88f] block uppercase flex items-center justify-center gap-1">
+              <span className="text-[10px] font-mono-code text-[#e8a55a] block uppercase flex items-center justify-center gap-1">
                 <Sparkles className="w-3 h-3" /> ECF
               </span>
-              <div className="text-lg font-medium font-mono-code text-[#dfa88f]">
-                {ecfCount} <span className="text-xs text-[#686763]">applied</span>
+              <div className="text-lg font-medium font-mono-code text-[#e8a55a]">
+                {ecfCount} <span className="text-xs text-[#a09d96]">applied</span>
               </div>
             </div>
           )}
@@ -131,24 +131,24 @@ export const GradeBoundaryCard: React.FC<GradeBoundaryCardProps> = ({
 
       {/* Progress to next boundary */}
       {nextBoundary && marksToNext > 0 && (
-        <div className="mt-5 pt-3.5 border-t border-white/[0.06] flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
-          <div className="flex items-center gap-2 text-[#9b9a95]">
-            <TrendingUp className="w-3.5 h-3.5 text-[#9fc9a2]" />
+        <div className="mt-5 pt-4 border-t border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+          <div className="flex items-center gap-2 text-[#a09d96]">
+            <TrendingUp className="w-3.5 h-3.5 text-[#5db8a6]" />
             <span>
-              Targeting <strong className="text-[#f3f3f2]">Grade {nextGrade}</strong> ({nextBoundary}%):
-              Need <strong className="text-[#f54e00] font-mono-code">+{marksToNext} mark{marksToNext > 1 ? 's' : ''}</strong>.
+              Targeting <strong className="text-[#faf9f5]">Grade {nextGrade}</strong> ({nextBoundary}%):
+              Need <strong className="text-[#cc785c] font-mono-code">+{marksToNext} mark{marksToNext > 1 ? 's' : ''}</strong>.
             </span>
           </div>
 
           {/* Mini boundary scale */}
-          <div className="flex items-center gap-1 font-mono-code text-[10px] text-[#686763]">
+          <div className="flex items-center gap-1.5 font-mono-code text-[10px] text-[#a09d96]">
             <span>G4: {boundaries.grade4}%</span>
             <span>•</span>
             <span>G5: {boundaries.grade5}%</span>
             <span>•</span>
             <span>G6: {boundaries.grade6}%</span>
             <span>•</span>
-            <span className="text-[#f54e00] font-semibold">G7: {boundaries.grade7}%</span>
+            <span className="text-[#cc785c] font-semibold">G7: {boundaries.grade7}%</span>
           </div>
         </div>
       )}

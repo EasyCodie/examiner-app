@@ -14,6 +14,7 @@ import {
 } from '@/lib/storage';
 import { BUNDLED_MATH_AA_HL, BUNDLED_ECONOMICS_HL, MAY_2021_MATH_AA_HL_P1 } from '@/lib/samplePapers';
 import { useAppShell } from '@/components/common/AppShell';
+import { SpikeMark } from '@/components/common/SpikeMark';
 import {
   FileUp,
   FileCheck,
@@ -22,9 +23,12 @@ import {
   AlertCircle,
   History,
   ChevronRight,
-  Sparkles,
   Check,
   Trash2,
+  Sparkles,
+  ShieldCheck,
+  FileCode,
+  Compass,
 } from 'lucide-react';
 
 interface CompilationStep {
@@ -38,20 +42,20 @@ interface CompilationStep {
 const COMPILATION_PIPELINE: CompilationStep[] = [
   {
     stage: 'THINKING',
-    pillLabel: 'Loading',
-    pastelBg: '#dfa88f',
-    pastelText: '#0c0d0e',
+    pillLabel: 'Binary Ingestion',
+    pastelBg: '#e6dfd8',
+    pastelText: '#141413',
     substeps: [
-      'Reading PDF binary streams...',
-      'Verifying document structure & integrity...',
+      'Reading PDF binary streams & byte buffers...',
+      'Verifying document structure & page geometry...',
       'Initializing multimodal Gemini context...',
     ],
   },
   {
     stage: 'READING',
-    pillLabel: 'Reading',
-    pastelBg: '#9fbbe0',
-    pastelText: '#0c0d0e',
+    pillLabel: 'OCR Extraction',
+    pastelBg: '#5db8a6',
+    pastelText: '#141413',
     substeps: [
       'Scanning Question Paper & Markscheme...',
       'Extracting mathematical formulas & diagrams...',
@@ -60,9 +64,9 @@ const COMPILATION_PIPELINE: CompilationStep[] = [
   },
   {
     stage: 'INDEXING',
-    pillLabel: 'Indexing',
-    pastelBg: '#9fc9a2',
-    pastelText: '#0c0d0e',
+    pillLabel: 'Question Alignment',
+    pastelBg: '#e8a55a',
+    pastelText: '#141413',
     substeps: [
       'Indexing question hierarchy (1, 2(a), 2(b)...)...',
       'Mapping command terms and mark allocations...',
@@ -71,9 +75,9 @@ const COMPILATION_PIPELINE: CompilationStep[] = [
   },
   {
     stage: 'CODES',
-    pillLabel: 'Rubrics',
-    pastelBg: '#c0a8dd',
-    pastelText: '#0c0d0e',
+    pillLabel: 'ECF Rubrics',
+    pastelBg: '#7c6fcd',
+    pastelText: '#faf9f5',
     substeps: [
       'Parsing official markscheme breakdown (M, A, R, N)...',
       'Compiling Error Carried Forward (ECF) rules...',
@@ -83,8 +87,8 @@ const COMPILATION_PIPELINE: CompilationStep[] = [
   {
     stage: 'DONE',
     pillLabel: 'Ready',
-    pastelBg: '#c08532',
-    pastelText: '#0c0d0e',
+    pastelBg: '#cc785c',
+    pastelText: '#ffffff',
     substeps: [
       'Assembling authentic exam booklet...',
       'Caching documents in local storage...',
@@ -100,70 +104,36 @@ export default function HomePage() {
   const { setHeaderInfo } = useAppShell();
 
   const [step, setStep] = useState<FlowStep>('UPLOAD');
-  const [direction, setDirection] = useState<'forward' | 'back'>('forward');
+
+  // Dual Dropzone State
   const [paperFile, setPaperFile] = useState<File | null>(null);
   const [markschemeFile, setMarkschemeFile] = useState<File | null>(null);
-  const [activeManifest, setActiveManifest] = useState<ExamManifest | null>(null);
-
-  // Timeline stages
-  const [timelineStage, setTimelineStage] = useState<
-    'THINKING' | 'READING' | 'INDEXING' | 'CODES' | 'DONE'
-  >('THINKING');
-  const [compilingLog, setCompilingLog] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
-  const [pastSessions, setPastSessions] = useState<ExamSession[]>([]);
 
   const paperInputRef = useRef<HTMLInputElement>(null);
   const markschemeInputRef = useRef<HTMLInputElement>(null);
 
+  // Compilation Pipeline State
+  const [timelineStage, setTimelineStage] = useState<CompilationStep['stage']>('THINKING');
+  const [compilingLog, setCompilingLog] = useState<string>(COMPILATION_PIPELINE[0].substeps[0]);
+
+  // Ready State
+  const [activeManifest, setActiveManifest] = useState<ExamManifest | null>(null);
+
+  // Session History
+  const [pastSessions, setPastSessions] = useState<ExamSession[]>([]);
+
   useEffect(() => {
-    setHeaderInfo({ paperTitle: undefined, mode: undefined });
-    const hasPurged = typeof window !== 'undefined' && localStorage.getItem('examiner_purged_past_sessions_v1');
-    if (!hasPurged) {
-      clearAllExamSessions().then(() => {
-        if (typeof window !== 'undefined') {
-          localStorage.setItem('examiner_purged_past_sessions_v1', 'true');
-        }
-        setPastSessions([]);
-      });
-    } else {
-      getAllExamSessions().then(setPastSessions);
-    }
+    setHeaderInfo({});
+    getAllExamSessions().then(setPastSessions);
   }, [setHeaderInfo]);
 
-  // Handle Specimen Selection
-  const handleSelectSpecimen = async (specimen: ExamManifest) => {
-    setError(null);
-    setDirection('forward');
-    setStep('COMPILING');
-    setActiveManifest(specimen);
-
-    await saveManifest(specimen);
-
-    setTimelineStage('THINKING');
-    setCompilingLog('Loading examination paper...');
-    await new Promise((r) => setTimeout(r, 450));
-
-    setTimelineStage('READING');
-    setCompilingLog(`Reading ${specimen.title}...`);
-    await new Promise((r) => setTimeout(r, 550));
-
-    setTimelineStage('INDEXING');
-    setCompilingLog(`Indexing ${specimen.questions.length} questions...`);
-    await new Promise((r) => setTimeout(r, 500));
-
-    setTimelineStage('CODES');
-    setCompilingLog('Indexing mark schemes and rubrics...');
-    await new Promise((r) => setTimeout(r, 500));
-
-    setTimelineStage('DONE');
-    setCompilingLog('Paper ready.');
-    await new Promise((r) => setTimeout(r, 400));
-
+  const handleSelectSpecimen = async (specimenManifest: ExamManifest) => {
+    await saveManifest(specimenManifest);
+    setActiveManifest(specimenManifest);
     setStep('READY');
   };
 
-  // Handle Custom Dual-PDF Ingestion with Continuous Multi-Phase Progression
   const handleStartIngest = async () => {
     if (!paperFile || !markschemeFile) {
       setError('Please provide both the Question Paper PDF and the matching Markscheme PDF.');
@@ -171,35 +141,29 @@ export default function HomePage() {
     }
 
     setError(null);
-    setDirection('forward');
     setStep('COMPILING');
     setTimelineStage('THINKING');
-    setCompilingLog('Reading PDF binary streams...');
+    setCompilingLog(COMPILATION_PIPELINE[0].substeps[0]);
 
-    // Continuous progress step simulator while waiting on Gemini API
-    let phaseIdx = 0;
+    let stageIdx = 0;
     let substepIdx = 0;
     let isFinished = false;
 
     const progressTimer = setInterval(() => {
       if (isFinished) return;
-
       substepIdx++;
-      const currentPhase = COMPILATION_PIPELINE[phaseIdx];
-      if (!currentPhase) return;
+      const currentPhase = COMPILATION_PIPELINE[stageIdx];
 
-      if (substepIdx < currentPhase.substeps.length) {
+      if (currentPhase && substepIdx < currentPhase.substeps.length) {
         setCompilingLog(currentPhase.substeps[substepIdx]);
       } else {
-        // Advance to next phase (cap at CODES before server returns)
-        if (phaseIdx < 3) {
-          phaseIdx++;
-          substepIdx = 0;
-          const nextPhase = COMPILATION_PIPELINE[phaseIdx];
+        substepIdx = 0;
+        stageIdx++;
+        if (stageIdx < COMPILATION_PIPELINE.length - 1) {
+          const nextPhase = COMPILATION_PIPELINE[stageIdx];
           setTimelineStage(nextPhase.stage);
           setCompilingLog(nextPhase.substeps[0]);
         } else {
-          // Keep cycling with active telemetry so it never feels stalled
           const waitingTelemetry = [
             'Synthesizing structured exam manifest...',
             'Linking ECF dependency rules across parts...',
@@ -237,7 +201,6 @@ export default function HomePage() {
 
       const manifest: ExamManifest = data.manifest;
 
-      // Final step transition
       setTimelineStage('DONE');
       setCompilingLog('Assembling authentic exam booklet...');
       await new Promise((r) => setTimeout(r, 450));
@@ -265,212 +228,258 @@ export default function HomePage() {
   };
 
   return (
-    <div className="flex-1 flex flex-col items-center justify-center px-4 sm:px-6 py-16 max-w-3xl mx-auto w-full min-h-[90vh]">
-      {/* Brand Anchor (Quiet standalone emblem on home screen) */}
-      <div className="flex items-center gap-2 mb-10 select-none">
-        <div className="w-7 h-7 rounded-lg bg-[#141517] border border-white/[0.08] flex items-center justify-center text-[#f54e00]">
-          <Sparkles className="w-3.5 h-3.5" />
-        </div>
-        <span className="text-sm font-medium tracking-tight text-[#f3f3f2]">
-          IB Examiner
-        </span>
-      </div>
+    <div className="flex-1 w-full bg-[#faf9f5] text-[#141413]">
+      {/* ============================================================ */}
+      {/* 1. EDITORIAL HERO SECTION (Claude 6/6 Split)                  */}
+      {/* ============================================================ */}
+      <section className="py-16 sm:py-24 px-4 sm:px-8 max-w-7xl mx-auto">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-center">
+          {/* Left Column (Editorial Voice) */}
+          <div className="lg:col-span-7 space-y-6">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#efe9de] border border-[#e6dfd8] text-xs font-mono-code text-[#141413]">
+              <SpikeMark className="w-3.5 h-3.5 text-[#cc785c]" />
+              <span className="font-semibold text-[#cc785c]">Senior Examiner Intelligence</span>
+              <span className="text-[#8e8b82]">• Official IB Ground Truth</span>
+            </div>
 
-      {/* ============================================================ */}
-      {/* STEP 1: UPLOAD (Initial Onboarding Step)                      */}
-      {/* ============================================================ */}
-      {step === 'UPLOAD' && (
-        <div
-          key="upload-step"
-          className={`w-full space-y-8 ${direction === 'forward' ? 'animate-step-forward' : 'animate-step-back'}`}
-        >
-          <div className="space-y-2 text-center">
-            <h1 className="text-3xl sm:text-4xl text-[#f3f3f2] tracking-tight">
-              Upload your exam paper.
+            <h1 className="display-xl font-serif-display font-normal text-[#141413] tracking-[-1.5px] leading-[1.05]">
+              Meet your Senior Examiner.
             </h1>
-            <p className="text-sm text-[#9b9a95] max-w-md mx-auto leading-relaxed">
-              Upload an official Question Paper and its matching Markscheme to begin.
+
+            <p className="body-md text-[#3d3d3a] max-w-xl text-base sm:text-lg leading-relaxed">
+              Authentic International Baccalaureate examination simulation with dual-document markscheme ingestion, method-level scoring, and Error Carried Forward (ECF) protection.
             </p>
-          </div>
 
-          {/* Dual Dropzone */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-            {/* Question Paper Dropzone */}
-            <div
-              onClick={() => paperInputRef.current?.click()}
-              className={`p-6 rounded-xl border text-center cursor-pointer transition-all duration-200 hover:-translate-y-0.5 hover:border-white/[0.18] active:scale-[0.99] flex flex-col items-center justify-center min-h-[150px] ${paperFile
-                  ? 'bg-[#18191d] border-[#f54e00]/60 text-[#f3f3f2]'
-                  : 'bg-[#141517] border-white/[0.08] text-[#9b9a95] hover:text-[#f3f3f2]'
-                }`}
-            >
-              <input
-                ref={paperInputRef}
-                type="file"
-                accept=".pdf,application/pdf"
-                className="hidden"
-                onChange={(e) => {
-                  if (e.target.files?.[0]) setPaperFile(e.target.files[0]);
+            <div className="flex flex-wrap items-center gap-3.5 pt-2">
+              <button
+                type="button"
+                onClick={() => handleSelectSpecimen(MAY_2021_MATH_AA_HL_P1)}
+                className="claude-btn-primary"
+              >
+                <span>Take Official Specimen Exam</span>
+                <ArrowRight className="w-4 h-4" />
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  const element = document.getElementById('upload-section');
+                  element?.scrollIntoView({ behavior: 'smooth' });
                 }}
-              />
-              {paperFile ? (
-                <div className="animate-step-enter flex flex-col items-center">
-                  <FileCheck className="w-5 h-5 text-[#f54e00] mb-2" />
-                  <span className="text-xs font-mono-code font-medium text-[#f3f3f2] truncate max-w-[220px]">
-                    {paperFile.name}
-                  </span>
-                  <span className="text-[10px] text-[#686763] font-mono-code mt-0.5">
-                    Question Paper • {(paperFile.size / 1024 / 1024).toFixed(2)} MB
-                  </span>
-                </div>
-              ) : (
-                <>
-                  <div className="w-9 h-9 rounded-lg bg-[#1a1b1e] border border-white/[0.08] flex items-center justify-center text-[#9b9a95] mb-2.5 transition-transform group-hover:scale-105">
-                    <FileUp className="w-4 h-4" />
-                  </div>
-                  <span className="text-xs font-medium text-[#f3f3f2]">1. Question Paper PDF</span>
-                  <span className="text-[11px] text-[#686763] mt-0.5">Click or drag PDF</span>
-                </>
-              )}
+                className="claude-btn-secondary"
+              >
+                <span>Upload Dual-PDF</span>
+              </button>
             </div>
 
-            {/* Markscheme Dropzone */}
-            <div
-              onClick={() => markschemeInputRef.current?.click()}
-              className={`p-6 rounded-xl border text-center cursor-pointer transition-all duration-200 hover:-translate-y-0.5 hover:border-white/[0.18] active:scale-[0.99] flex flex-col items-center justify-center min-h-[150px] ${markschemeFile
-                  ? 'bg-[#18191d] border-[#f54e00]/60 text-[#f3f3f2]'
-                  : 'bg-[#141517] border-white/[0.08] text-[#9b9a95] hover:text-[#f3f3f2]'
-                }`}
-            >
-              <input
-                ref={markschemeInputRef}
-                type="file"
-                accept=".pdf,application/pdf"
-                className="hidden"
-                onChange={(e) => {
-                  if (e.target.files?.[0]) setMarkschemeFile(e.target.files[0]);
-                }}
-              />
-              {markschemeFile ? (
-                <div className="animate-step-enter flex flex-col items-center">
-                  <FileCheck className="w-5 h-5 text-[#f54e00] mb-2" />
-                  <span className="text-xs font-mono-code font-medium text-[#f3f3f2] truncate max-w-[220px]">
-                    {markschemeFile.name}
-                  </span>
-                  <span className="text-[10px] text-[#686763] font-mono-code mt-0.5">
-                    Markscheme • {(markschemeFile.size / 1024 / 1024).toFixed(2)} MB
-                  </span>
-                </div>
-              ) : (
-                <>
-                  <div className="w-9 h-9 rounded-lg bg-[#1a1b1e] border border-white/[0.08] flex items-center justify-center text-[#9b9a95] mb-2.5 transition-transform group-hover:scale-105">
-                    <FileUp className="w-4 h-4" />
-                  </div>
-                  <span className="text-xs font-medium text-[#f3f3f2]">2. Markscheme PDF</span>
-                  <span className="text-[11px] text-[#686763] mt-0.5">Click or drag PDF</span>
-                </>
-              )}
-            </div>
-          </div>
-
-          {error && (
-            <div className="p-3 rounded-lg bg-[#cf2d56]/15 border border-[#cf2d56]/30 text-[#f3f3f2] text-xs flex items-center gap-2 font-mono-code">
-              <AlertCircle className="w-4 h-4 text-[#cf2d56] shrink-0" />
-              <span>{error}</span>
-            </div>
-          )}
-
-          {/* Primary Action */}
-          {paperFile && markschemeFile && (
-            <button
-              type="button"
-              onClick={handleStartIngest}
-              className="w-full py-2.5 px-4 cursor-btn-primary text-xs font-medium flex items-center justify-center gap-2 active:scale-[0.98] transition-transform animate-step-enter"
-            >
-              <span>Continue</span>
-              <ArrowRight className="w-3.5 h-3.5" />
-            </button>
-          )}
-
-          {/* Specimen Papers */}
-          <div className="pt-4 border-t border-white/[0.08] space-y-3">
-            <span className="text-xs text-[#686763] block font-normal">Or choose a preloaded authentic paper:</span>
-
-            {/* Featured Full 12-Question Exam Paper */}
-            <div
-              onClick={() => handleSelectSpecimen(MAY_2021_MATH_AA_HL_P1)}
-              className="p-4 rounded-xl bg-[#18191d] border border-[#f54e00]/40 hover:border-[#f54e00] hover:-translate-y-0.5 active:scale-[0.99] cursor-pointer transition-all duration-200 group relative overflow-hidden"
-            >
-              <div className="flex items-center justify-between text-[11px] font-mono-code mb-1.5">
-                <span className="text-[#f54e00] font-semibold flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#f54e00] animate-pulse" />
-                  AUTHENTIC IB EXAM • 12 QUESTIONS (SEC A &amp; B)
-                </span>
-                <span className="text-[#9b9a95]">120m • 110 marks</span>
+            {/* Micro-assurances */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-6 border-t border-[#e6dfd8] text-xs text-[#6c6a64]">
+              <div className="flex items-center gap-2">
+                <ShieldCheck className="w-4 h-4 text-[#5db872]" />
+                <span>Zero Hallucinations</span>
               </div>
-              <h3 className="text-sm font-medium text-[#f3f3f2] group-hover:text-white transition">
-                Mathematics: Analysis &amp; Approaches HL (May 2021 TZ1)
+              <div className="flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-[#cc785c]" />
+                <span>ECF Method Protection</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Clock className="w-4 h-4 text-[#e8a55a]" />
+                <span>Timed Exam Simulation</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Right Column (Claude Code-Window Product Card Mockup) */}
+          <div className="lg:col-span-5">
+            <div className="claude-card-dark p-6 shadow-2xl space-y-4 relative overflow-hidden">
+              {/* Card Window Bar */}
+              <div className="flex items-center justify-between border-b border-white/10 pb-3">
+                <div className="flex items-center gap-2">
+                  <div className="w-2.5 h-2.5 rounded-full bg-[#c64545]" />
+                  <div className="w-2.5 h-2.5 rounded-full bg-[#d4a017]" />
+                  <div className="w-2.5 h-2.5 rounded-full bg-[#5db872]" />
+                  <span className="text-xs font-mono-code text-[#a09d96] ml-2 flex items-center gap-1.5">
+                    <FileCode className="w-3.5 h-3.5 text-[#cc785c]" />
+                    math_aa_hl_markscheme.json
+                  </span>
+                </div>
+                <span className="text-[10px] font-mono-code uppercase px-2 py-0.5 rounded bg-[#252320] text-[#5db8a6] border border-white/10">
+                  Verified Ingest
+                </span>
+              </div>
+
+              {/* Code Snippet in JetBrains Mono */}
+              <div className="font-mono-code text-xs space-y-1 text-[#a09d96] leading-relaxed overflow-x-auto bg-[#1f1e1b] p-3.5 rounded-lg border border-white/5">
+                <p className="text-[#a09d96]">{'// Senior Examiner Question Evaluation Schema'}</p>
+                <p>
+                  <span className="text-[#cc785c]">const</span> <span className="text-[#faf9f5]">evaluation</span> = &#123;
+                </p>
+                <p className="pl-4">
+                  <span className="text-[#faf9f5]">question</span>: <span className="text-[#5db8a6]">&quot;Question 12(b)&quot;</span>,
+                </p>
+                <p className="pl-4">
+                  <span className="text-[#faf9f5]">markBreakdown</span>: [
+                </p>
+                <p className="pl-8 text-[#faf9f5]">
+                  &#123; <span className="text-[#e8a55a]">code</span>: <span className="text-[#5db8a6]">&quot;M1&quot;</span>, <span className="text-[#e8a55a]">desc</span>: <span className="text-[#a09d96]">&quot;Substitution into Maclaurin series&quot;</span> &#125;,
+                </p>
+                <p className="pl-8 text-[#faf9f5]">
+                  &#123; <span className="text-[#e8a55a]">code</span>: <span className="text-[#5db8a6]">&quot;A1&quot;</span>, <span className="text-[#e8a55a]">desc</span>: <span className="text-[#a09d96]">&quot;Correct algebraic simplification&quot;</span> &#125;,
+                </p>
+                <p className="pl-4">],</p>
+                <p className="pl-4">
+                  <span className="text-[#faf9f5]">ecfProtection</span>: <span className="text-[#5db872]">true</span>, <span className="text-[#a09d96]">{'// No double penalty'}</span>
+                </p>
+                <p className="pl-4">
+                  <span className="text-[#faf9f5]">predictedGrade</span>: <span className="text-[#cc785c]">7</span> <span className="text-[#a09d96]">{'// Boundary: 82%'}</span>
+                </p>
+                <p>&#125;;</p>
+              </div>
+
+              {/* Status Footer inside card */}
+              <div className="flex items-center justify-between text-[11px] font-mono-code text-[#a09d96] pt-1">
+                <span>Multimodal Vision OCR</span>
+                <span className="text-[#5db8a6] font-semibold flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#5db8a6] animate-pulse" />
+                  Gemini 2.5 Flash Engine
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ============================================================ */}
+      {/* 2. DUAL-DOCUMENT UPLOAD BAND (Surface Mode: Light Cream Card) */}
+      {/* ============================================================ */}
+      <section id="upload-section" className="py-16 px-4 sm:px-8 max-w-5xl mx-auto">
+        <div className="mb-8 text-center space-y-2">
+          <h2 className="display-md font-serif-display font-normal text-[#141413]">
+            Ground truth from two documents.
+          </h2>
+          <p className="body-md text-[#6c6a64] max-w-lg mx-auto text-sm leading-relaxed">
+            Upload an official Question Paper PDF and matching Markscheme PDF. The multimodal engine extracts rubric criteria and ECF rules into an immutable exam booklet.
+          </p>
+        </div>
+
+        {step === 'UPLOAD' && (
+          <div className="claude-card-cream p-6 sm:p-10 space-y-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {/* Question Paper Dropzone */}
+              <div
+                onClick={() => paperInputRef.current?.click()}
+                className={`p-6 rounded-xl border text-center cursor-pointer transition-all duration-150 flex flex-col items-center justify-center min-h-[160px] ${
+                  paperFile
+                    ? 'bg-[#faf9f5] border-[#cc785c] text-[#141413]'
+                    : 'bg-[#faf9f5] border-[#e6dfd8] hover:border-[#cc785c]/60 text-[#6c6a64] hover:text-[#141413]'
+                }`}
+              >
+                <input
+                  ref={paperInputRef}
+                  type="file"
+                  accept=".pdf,application/pdf"
+                  className="hidden"
+                  onChange={(e) => {
+                    if (e.target.files?.[0]) setPaperFile(e.target.files[0]);
+                  }}
+                />
+                {paperFile ? (
+                  <div className="flex flex-col items-center space-y-1">
+                    <FileCheck className="w-6 h-6 text-[#cc785c] mb-1" />
+                    <span className="text-xs font-mono-code font-semibold text-[#141413] truncate max-w-[220px]">
+                      {paperFile.name}
+                    </span>
+                    <span className="text-[10px] text-[#8e8b82] font-mono-code">
+                      Question Paper • {(paperFile.size / 1024 / 1024).toFixed(2)} MB
+                    </span>
+                  </div>
+                ) : (
+                  <>
+                    <div className="w-10 h-10 rounded-lg bg-[#efe9de] border border-[#e6dfd8] flex items-center justify-center text-[#cc785c] mb-2.5">
+                      <FileUp className="w-5 h-5" />
+                    </div>
+                    <span className="text-xs font-medium text-[#141413]">1. Question Paper PDF</span>
+                    <span className="text-[11px] text-[#8e8b82] mt-0.5">Click or drag exam booklet</span>
+                  </>
+                )}
+              </div>
+
+              {/* Markscheme Dropzone */}
+              <div
+                onClick={() => markschemeInputRef.current?.click()}
+                className={`p-6 rounded-xl border text-center cursor-pointer transition-all duration-150 flex flex-col items-center justify-center min-h-[160px] ${
+                  markschemeFile
+                    ? 'bg-[#faf9f5] border-[#cc785c] text-[#141413]'
+                    : 'bg-[#faf9f5] border-[#e6dfd8] hover:border-[#cc785c]/60 text-[#6c6a64] hover:text-[#141413]'
+                }`}
+              >
+                <input
+                  ref={markschemeInputRef}
+                  type="file"
+                  accept=".pdf,application/pdf"
+                  className="hidden"
+                  onChange={(e) => {
+                    if (e.target.files?.[0]) setMarkschemeFile(e.target.files[0]);
+                  }}
+                />
+                {markschemeFile ? (
+                  <div className="flex flex-col items-center space-y-1">
+                    <FileCheck className="w-6 h-6 text-[#cc785c] mb-1" />
+                    <span className="text-xs font-mono-code font-semibold text-[#141413] truncate max-w-[220px]">
+                      {markschemeFile.name}
+                    </span>
+                    <span className="text-[10px] text-[#8e8b82] font-mono-code">
+                      Markscheme • {(markschemeFile.size / 1024 / 1024).toFixed(2)} MB
+                    </span>
+                  </div>
+                ) : (
+                  <>
+                    <div className="w-10 h-10 rounded-lg bg-[#efe9de] border border-[#e6dfd8] flex items-center justify-center text-[#cc785c] mb-2.5">
+                      <FileUp className="w-5 h-5" />
+                    </div>
+                    <span className="text-xs font-medium text-[#141413]">2. Official Markscheme PDF</span>
+                    <span className="text-[11px] text-[#8e8b82] mt-0.5">Click or drag matching rubric</span>
+                  </>
+                )}
+              </div>
+            </div>
+
+            {error && (
+              <div className="p-3.5 rounded-lg bg-[#c64545]/10 border border-[#c64545]/30 text-[#c64545] text-xs flex items-center gap-2 font-mono-code">
+                <AlertCircle className="w-4 h-4 text-[#c64545] shrink-0" />
+                <span>{error}</span>
+              </div>
+            )}
+
+            {paperFile && markschemeFile && (
+              <button
+                type="button"
+                onClick={handleStartIngest}
+                className="w-full claude-btn-primary py-3 rounded-lg text-xs font-medium flex items-center justify-center gap-2"
+              >
+                <span>Compile Official Exam Booklet</span>
+                <ArrowRight className="w-4 h-4" />
+              </button>
+            )}
+          </div>
+        )}
+
+        {/* ============================================================ */}
+        {/* COMPILATION TIMELINE (Surface Mode: Dark Product Card)       */}
+        {/* ============================================================ */}
+        {step === 'COMPILING' && (
+          <div className="claude-card-dark p-6 sm:p-8 space-y-6 shadow-2xl">
+            <div className="space-y-1 text-center sm:text-left">
+              <h3 className="font-serif-display text-2xl font-normal text-[#faf9f5]">
+                Compiling Ground-Truth Manifest
               </h3>
-              <p className="text-xs text-[#9b9a95] mt-0.5">
-                Full 12-question official paper with function graphs, calculus, vectors, Maclaurin series &amp; induction.
+              <p className="text-xs text-[#a09d96]">
+                Parsing question boundaries, command terms, and ECF dependency chains.
               </p>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {/* Specimen 1: Math AA HL */}
-              <div
-                onClick={() => handleSelectSpecimen(BUNDLED_MATH_AA_HL)}
-                className="p-4 rounded-xl bg-[#141517] border border-white/[0.08] hover:border-white/[0.18] hover:-translate-y-0.5 active:scale-[0.99] cursor-pointer transition-all duration-200 group"
-              >
-                <div className="flex items-center justify-between text-[11px] font-mono-code text-[#686763] mb-1.5">
-                  <span className="text-[#9fbbe0]">STEM</span>
-                  <span>120m • 50 marks</span>
-                </div>
-                <h3 className="text-xs font-medium text-[#f3f3f2] group-hover:text-white transition">
-                  Mathematics: Analysis &amp; Approaches HL
-                </h3>
-                <p className="text-xs text-[#686763] mt-0.5 line-clamp-1">
-                  Paper 1 • Calculus, Vectors, Induction
-                </p>
-              </div>
-
-              {/* Specimen 2: Economics HL */}
-              <div
-                onClick={() => handleSelectSpecimen(BUNDLED_ECONOMICS_HL)}
-                className="p-4 rounded-xl bg-[#141517] border border-white/[0.08] hover:border-white/[0.18] hover:-translate-y-0.5 active:scale-[0.99] cursor-pointer transition-all duration-200 group"
-              >
-                <div className="flex items-center justify-between text-[11px] font-mono-code text-[#686763] mb-1.5">
-                  <span className="text-[#c0a8dd]">Humanities</span>
-                  <span>75m • 50 marks</span>
-                </div>
-                <h3 className="text-xs font-medium text-[#f3f3f2] group-hover:text-white transition">
-                  Economics Higher Level
-                </h3>
-                <p className="text-xs text-[#686763] mt-0.5 line-clamp-1">
-                  Paper 1 • Micro &amp; Macro Extended Response
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ============================================================ */}
-      {/* STEP 2: COMPILING TIMELINE                                   */}
-      {/* ============================================================ */}
-      {step === 'COMPILING' && (
-        <div key="compiling-step" className="w-full max-w-lg space-y-6 py-6 animate-step-forward">
-          <div className="text-center space-y-1.5">
-            <h2 className="text-2xl sm:text-3xl text-[#f3f3f2] tracking-tight font-normal">
-              Loading Paper
-            </h2>
-            <p className="text-xs text-[#9b9a95]">
-              Parsing questions and mark schemes.
-            </p>
-          </div>
-
-          <div className="p-6 rounded-2xl bg-[#141517] border border-white/[0.08] space-y-5 shadow-2xl relative overflow-hidden">
-            {/* Top 5 Phase Pills */}
-            <div className="flex flex-wrap items-center justify-between gap-1.5 pb-4 border-b border-white/[0.08]">
+            {/* 5 Phase Pills */}
+            <div className="flex flex-wrap items-center gap-2 pb-4 border-b border-white/10">
               {COMPILATION_PIPELINE.map((p, idx) => {
                 const currentIdx = COMPILATION_PIPELINE.findIndex((s) => s.stage === timelineStage);
                 const isCompleted = idx < currentIdx;
@@ -479,183 +488,228 @@ export default function HomePage() {
                 return (
                   <div
                     key={p.stage}
-                    className={`timeline-pill transition-all duration-300 flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-mono-code ${isActive
-                        ? 'scale-105 shadow-md ring-1 ring-white/20'
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-mono-code transition-all ${
+                      isActive
+                        ? 'bg-[#cc785c] text-white font-bold shadow-md'
                         : isCompleted
-                          ? 'opacity-90'
-                          : 'opacity-40'
-                      }`}
-                    style={{
-                      backgroundColor: isActive ? p.pastelBg : isCompleted ? '#1e2024' : '#141517',
-                      color: isActive ? p.pastelText : isCompleted ? '#9b9a95' : '#686763',
-                      border: isCompleted ? '1px solid rgba(255, 255, 255, 0.08)' : '1px solid transparent',
-                    }}
+                        ? 'bg-[#252320] text-[#5db872] border border-white/10'
+                        : 'bg-[#1f1e1b] text-[#6c6a64]'
+                    }`}
                   >
-                    {isCompleted && <Check className="w-3 h-3 text-[#1f8a65]" />}
-                    {isActive && <span className="w-1.5 h-1.5 rounded-full bg-[#0c0d0e] animate-ping" />}
+                    {isCompleted && <Check className="w-3 h-3 text-[#5db872]" />}
+                    {isActive && <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping" />}
                     <span>{p.pillLabel}</span>
                   </div>
                 );
               })}
             </div>
 
-            {/* Dynamic Status Log with Smooth Animation */}
-            <div className="flex items-center justify-between text-xs font-mono-code pt-1">
-              <div className="flex items-center gap-2.5 text-[#f3f3f2] min-h-[24px]">
-                <span className="w-2 h-2 rounded-full bg-[#f54e00] animate-pulse shrink-0" />
-                <span key={compilingLog} className="animate-in fade-in slide-in-from-bottom-1 duration-200">
-                  {compilingLog}
-                </span>
+            {/* Telemetry Status Line */}
+            <div className="flex items-center justify-between text-xs font-mono-code">
+              <div className="flex items-center gap-2.5 text-[#faf9f5]">
+                <span className="w-2 h-2 rounded-full bg-[#cc785c] animate-pulse shrink-0" />
+                <span>{compilingLog}</span>
               </div>
-              <span className="text-[11px] text-[#686763] shrink-0 font-medium">
+              <span className="text-[11px] text-[#a09d96]">
                 Phase {Math.min(5, COMPILATION_PIPELINE.findIndex((s) => s.stage === timelineStage) + 1)}/5
               </span>
             </div>
 
-            {/* Continuous Glowing Progress Track */}
-            <div className="w-full h-1 bg-[#0c0d0e] rounded-full overflow-hidden relative">
+            {/* Glowing Progress Track */}
+            <div className="w-full h-1.5 bg-[#1f1e1b] rounded-full overflow-hidden">
               <div
-                className="h-full bg-gradient-to-r from-[#f54e00]/40 via-[#f54e00] to-[#dfa88f] transition-all duration-500 rounded-full"
+                className="h-full bg-[#cc785c] transition-all duration-500 rounded-full"
                 style={{
                   width: `${Math.min(100, ((COMPILATION_PIPELINE.findIndex((s) => s.stage === timelineStage) + 1) / 5) * 100)}%`,
                 }}
               />
             </div>
           </div>
-        </div>
-      )}
+        )}
+
+        {/* ============================================================ */}
+        {/* READY STATE: MODE SELECTION                                   */}
+        {/* ============================================================ */}
+        {step === 'READY' && activeManifest && (
+          <div className="space-y-6">
+            <div className="claude-card-cream p-5 flex items-center justify-between gap-4">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2 text-[11px] font-mono-code text-[#6c6a64]">
+                  <span className="text-[#cc785c] font-semibold">{activeManifest.category}</span>
+                  <span>•</span>
+                  <span>{activeManifest.durationMinutes} mins</span>
+                  <span>•</span>
+                  <span>{activeManifest.totalMarks} marks</span>
+                  <span>•</span>
+                  <span>{activeManifest.questions.length} questions</span>
+                </div>
+                <h3 className="font-serif-display text-xl font-normal text-[#141413]">
+                  {activeManifest.title}
+                </h3>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setStep('UPLOAD');
+                  setPaperFile(null);
+                  setMarkschemeFile(null);
+                }}
+                className="claude-btn-secondary text-xs"
+              >
+                Change Paper
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {/* Option 1: Timed Mock */}
+              <div className="claude-card-cream p-6 flex flex-col justify-between space-y-4 hover:border-[#cc785c] transition">
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="caption-uppercase text-[#cc785c] font-bold">Exam Simulation</span>
+                    <span className="text-[#6c6a64] font-mono-code flex items-center gap-1">
+                      <Clock className="w-3 h-3" /> {activeManifest.durationMinutes}m
+                    </span>
+                  </div>
+                  <h4 className="font-serif-display text-2xl font-normal text-[#141413]">
+                    Timed Mock Exam
+                  </h4>
+                  <p className="body-md text-[#3d3d3a] text-xs leading-relaxed">
+                    Practice under authentic countdown conditions with drawing canvas support. Method marking and ECF protocol applied.
+                  </p>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => router.push(`/mock/${activeManifest.id}`)}
+                  className="claude-btn-primary w-full"
+                >
+                  <span>Begin Mock Exam</span>
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+              </div>
+
+              {/* Option 2: Socratic Learn */}
+              <div className="claude-card-cream p-6 flex flex-col justify-between space-y-4 hover:border-[#cc785c] transition">
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="caption-uppercase text-[#5db8a6] font-bold">Collaborative Tutor</span>
+                    <span className="text-[#6c6a64] font-mono-code">4-Tier Scaffold</span>
+                  </div>
+                  <h4 className="font-serif-display text-2xl font-normal text-[#141413]">
+                    Socratic Learn Mode
+                  </h4>
+                  <p className="body-md text-[#3d3d3a] text-xs leading-relaxed">
+                    Solve problems step-by-step with command term anchors and formula hints without premature solution leaks.
+                  </p>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => router.push(`/learn/${activeManifest.id}`)}
+                  className="claude-btn-secondary w-full"
+                >
+                  <span>Begin Socratic Tutoring</span>
+                  <Compass className="w-4 h-4 text-[#cc785c]" />
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </section>
 
       {/* ============================================================ */}
-      {/* STEP 3: READY / MODE SELECT                                  */}
+      {/* 3. AUTHENTIC SPECIMEN PAPERS (Surface Mode: Dark + Cream)     */}
       {/* ============================================================ */}
-      {step === 'READY' && activeManifest && (
-        <div key="ready-step" className="w-full space-y-6 animate-step-forward">
-          <div className="space-y-1.5 text-center">
-            <h2 className="text-2xl sm:text-3xl text-[#f3f3f2] tracking-tight">
-              Select your mode.
-            </h2>
-            <p className="text-xs text-[#9b9a95]">
-              Choose between a timed mock exam or Socratic study.
+      <section className="py-16 px-4 sm:px-8 max-w-5xl mx-auto space-y-6">
+        <div className="space-y-1">
+          <div className="caption-uppercase text-[#cc785c] font-semibold">Pre-Loaded Bundles</div>
+          <h2 className="display-md font-serif-display font-normal text-[#141413]">
+            Authentic Examination Papers
+          </h2>
+          <p className="body-md text-[#6c6a64] text-sm">
+            Zero-token instant mock exams with verified official markschemes and diagrams.
+          </p>
+        </div>
+
+        {/* Featured May 2021 Math AA HL P1 in Dark Product Card */}
+        <div
+          onClick={() => handleSelectSpecimen(MAY_2021_MATH_AA_HL_P1)}
+          className="claude-card-dark p-6 sm:p-8 cursor-pointer hover:border-[#cc785c] transition group shadow-xl"
+        >
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-3">
+            <span className="text-[11px] font-mono-code uppercase font-semibold text-[#cc785c] bg-[#cc785c]/15 px-3 py-0.5 rounded-full border border-[#cc785c]/30 flex items-center gap-1.5">
+              <SpikeMark className="w-3 h-3 text-[#cc785c]" />
+              Official Specimen Paper • 12 Questions (Section A &amp; B)
+            </span>
+            <span className="text-xs font-mono-code text-[#a09d96]">
+              120 mins • 110 marks • Higher Level
+            </span>
+          </div>
+
+          <h3 className="font-serif-display text-2xl sm:text-3xl font-normal text-[#faf9f5] group-hover:text-[#cc785c] transition">
+            Mathematics: Analysis &amp; Approaches HL (May 2021 TZ1)
+          </h3>
+          <p className="text-xs text-[#a09d96] mt-2 max-w-2xl leading-relaxed">
+            Authentic 12-question examination covering rational curves, piecewise functions, integration, Maclaurin expansions, complex numbers, and proof by mathematical induction.
+          </p>
+
+          <div className="flex items-center gap-4 mt-5 pt-4 border-t border-white/10 text-xs font-mono-code text-[#a09d96]">
+            <span>M1/A1/R1 Mark Codes</span>
+            <span>•</span>
+            <span>Cartesian Graph Integration</span>
+            <span>•</span>
+            <span className="text-[#5db872]">ECF Guaranteed</span>
+          </div>
+        </div>
+
+        {/* 2-up Grid of Secondary Bundles */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div
+            onClick={() => handleSelectSpecimen(BUNDLED_MATH_AA_HL)}
+            className="claude-card-cream p-5 cursor-pointer hover:border-[#cc785c] transition group"
+          >
+            <div className="flex items-center justify-between text-xs font-mono-code text-[#8e8b82] mb-1.5">
+              <span className="text-[#5db8a6] font-semibold">STEM Track</span>
+              <span>120m • 50 marks</span>
+            </div>
+            <h4 className="font-serif-display text-lg text-[#141413] group-hover:text-[#cc785c] transition font-normal">
+              Mathematics: Analysis &amp; Approaches HL
+            </h4>
+            <p className="text-xs text-[#6c6a64] mt-1">
+              Paper 1 Specimen • Calculus, Vectors, Complex Roots &amp; Mathematical Induction.
             </p>
           </div>
 
-          {/* Paper Summary Pill */}
-          <div className="p-4 rounded-xl bg-[#141517] border border-white/[0.08] flex items-center justify-between gap-3">
-            <div className="space-y-1">
-              <div className="flex items-center gap-2 text-[10px] font-mono-code text-[#686763]">
-                <span className="text-[#f54e00] font-medium">{activeManifest.category}</span>
-                <span>•</span>
-                <span>{activeManifest.durationMinutes}m</span>
-                <span>•</span>
-                <span>{activeManifest.totalMarks} marks</span>
-                <span>•</span>
-                <span>{activeManifest.questions.length} questions</span>
-              </div>
-              <h3 className="text-xs font-medium text-[#f3f3f2]">{activeManifest.title}</h3>
+          <div
+            onClick={() => handleSelectSpecimen(BUNDLED_ECONOMICS_HL)}
+            className="claude-card-cream p-5 cursor-pointer hover:border-[#cc785c] transition group"
+          >
+            <div className="flex items-center justify-between text-xs font-mono-code text-[#8e8b82] mb-1.5">
+              <span className="text-[#e8a55a] font-semibold">Humanities Track</span>
+              <span>75m • 50 marks</span>
             </div>
-
-            <button
-              type="button"
-              onClick={() => {
-                setDirection('back');
-                setStep('UPLOAD');
-                setPaperFile(null);
-                setMarkschemeFile(null);
-              }}
-              className="px-2.5 py-1.5 rounded-md bg-[#1a1b1e] hover:bg-[#222428] border border-white/[0.08] text-xs font-mono-code text-[#9b9a95] hover:text-[#f3f3f2] active:scale-[0.98] transition shrink-0"
-            >
-              Change
-            </button>
-          </div>
-
-          {/* Two Mode Cards with Staggered Entrance */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-            {/* Mode 1: Timed Mock */}
-            <div className="animate-card-1 p-5 rounded-xl bg-[#141517] border border-white/[0.08] hover:border-white/[0.18] hover:-translate-y-0.5 flex flex-col justify-between space-y-4 transition-all duration-200">
-              <div className="space-y-2">
-                <div className="flex items-center justify-between text-xs">
-                  <span className="text-[10px] font-mono-code text-[#f54e00] uppercase font-semibold">
-                    Exam Practice
-                  </span>
-                  <span className="text-[#686763] font-mono-code flex items-center gap-1">
-                    <Clock className="w-3 h-3" /> {activeManifest.durationMinutes}m
-                  </span>
-                </div>
-
-                <div>
-                  <h3 className="text-base text-[#f3f3f2] font-normal">
-                    Timed Mock Exam
-                  </h3>
-                  <p className="text-xs text-[#9b9a95] mt-1.5 leading-relaxed">
-                    Practice under authentic countdown conditions.
-                    {activeManifest.category === 'STEM'
-                      ? ' Write calculations directly on the canvas.'
-                      : ' Write structured essays in the split editor.'}
-                  </p>
-                </div>
-
-                <div className="text-[10px] font-mono-code text-[#686763] pt-0.5">
-                  Error Carried Forward (ECF) grading applied
-                </div>
-              </div>
-
-              <button
-                type="button"
-                onClick={() => router.push(`/mock/${activeManifest.id}`)}
-                className="w-full py-2.5 px-3.5 cursor-btn-primary text-xs font-medium flex items-center justify-center gap-1.5 active:scale-[0.98] transition-transform"
-              >
-                <span>Start Mock Exam</span>
-                <ArrowRight className="w-3.5 h-3.5" />
-              </button>
-            </div>
-
-            {/* Mode 2: Socratic Learn */}
-            <div className="animate-card-2 p-5 rounded-xl bg-[#141517] border border-white/[0.08] hover:border-white/[0.18] hover:-translate-y-0.5 flex flex-col justify-between space-y-4 transition-all duration-200">
-              <div className="space-y-2">
-                <div className="flex items-center justify-between text-xs">
-                  <span className="text-[10px] font-mono-code text-[#9fbbe0] uppercase font-semibold">
-                    Interactive Tutor
-                  </span>
-                </div>
-
-                <div>
-                  <h3 className="text-base text-[#f3f3f2] font-normal">
-                    Socratic Learn Mode
-                  </h3>
-                  <p className="text-xs text-[#9b9a95] mt-1.5 leading-relaxed">
-                    Work through each question step-by-step. Get hints and formula guidance without spoiling the solution.
-                  </p>
-                </div>
-
-                <div className="text-[10px] font-mono-code text-[#686763] pt-0.5">
-                  4-Tier hints &amp; formula assistance
-                </div>
-              </div>
-
-              <button
-                type="button"
-                onClick={() => router.push(`/learn/${activeManifest.id}`)}
-                className="w-full py-2.5 px-3.5 cursor-btn-secondary text-xs font-medium flex items-center justify-center gap-1.5 active:scale-[0.98] transition-transform"
-              >
-                <span>Start Socratic Learn</span>
-                <ArrowRight className="w-3.5 h-3.5" />
-              </button>
-            </div>
+            <h4 className="font-serif-display text-lg text-[#141413] group-hover:text-[#cc785c] transition font-normal">
+              Economics Higher Level (HL)
+            </h4>
+            <p className="text-xs text-[#6c6a64] mt-1">
+              Paper 1 Specimen • Extended response essay with inline economic supply/demand sketchpad.
+            </p>
           </div>
         </div>
-      )}
+      </section>
 
       {/* ============================================================ */}
-      {/* PAST SESSIONS                                                */}
+      {/* 4. PAST SESSIONS TABLE                                        */}
       {/* ============================================================ */}
       {pastSessions.length > 0 && (
-        <div className="w-full mt-12 pt-6 border-t border-white/[0.08] space-y-3">
-          <div className="flex items-center justify-between">
+        <section className="py-12 px-4 sm:px-8 max-w-5xl mx-auto">
+          <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
-              <History className="w-3.5 h-3.5 text-[#686763]" />
-              <span className="text-xs font-mono-code text-[#9b9a95] uppercase tracking-wider">
-                Past Sessions ({pastSessions.length})
-              </span>
+              <History className="w-4 h-4 text-[#6c6a64]" />
+              <h3 className="font-serif-display text-xl font-normal text-[#141413]">
+                Past Examination Sessions ({pastSessions.length})
+              </h3>
             </div>
 
             <button
@@ -664,28 +718,26 @@ export default function HomePage() {
                 await clearAllExamSessions();
                 setPastSessions([]);
               }}
-              aria-label="Delete all past exam sessions"
-              className="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-mono-code text-[#686763] hover:text-[#cf2d56] hover:bg-[#cf2d56]/10 border border-transparent hover:border-[#cf2d56]/20 transition active:scale-95 focus-ring"
-              title="Delete all past exam sessions"
+              className="flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-mono-code text-[#6c6a64] hover:text-[#c64545] hover:bg-[#c64545]/10 transition"
             >
-              <Trash2 className="w-3 h-3" />
+              <Trash2 className="w-3.5 h-3.5" />
               <span>Clear History</span>
             </button>
           </div>
 
-          <div className="divide-y divide-white/[0.06] rounded-xl bg-[#141517] border border-white/[0.08] overflow-hidden">
+          <div className="divide-y divide-[#e6dfd8] rounded-xl bg-[#efe9de] border border-[#e6dfd8] overflow-hidden">
             {pastSessions.map((sess) => {
               const res = sess.gradingResults;
               return (
                 <div
                   key={sess.id}
-                  className="p-3.5 flex items-center justify-between gap-3 hover:bg-[#1a1b1e] transition group"
+                  className="p-4 flex items-center justify-between gap-4 hover:bg-[#e8e0d2] transition group"
                 >
                   <div className="space-y-0.5 min-w-0 flex-1">
-                    <span className="text-[10px] font-mono-code text-[#686763]">
+                    <span className="text-[10px] font-mono-code text-[#8e8b82]">
                       {new Date(sess.startedAt).toLocaleDateString()}
                     </span>
-                    <h4 className="text-xs text-[#f3f3f2] font-medium line-clamp-1">
+                    <h4 className="text-xs font-medium text-[#141413] line-clamp-1">
                       {sess.paperTitle}
                     </h4>
                   </div>
@@ -693,15 +745,15 @@ export default function HomePage() {
                   <div className="flex items-center gap-3 shrink-0">
                     {res ? (
                       <div className="text-right">
-                        <span className="text-xs font-mono-code font-semibold text-[#f54e00] block">
+                        <span className="text-xs font-mono-code font-bold text-[#cc785c] block">
                           Grade {res.predictedGrade}
                         </span>
-                        <span className="text-[10px] font-mono-code text-[#686763]">
+                        <span className="text-[10px] font-mono-code text-[#6c6a64]">
                           {res.totalMarksAwarded}/{res.totalPossibleMarks} ({res.percentage}%)
                         </span>
                       </div>
                     ) : (
-                      <span className="text-[10px] font-mono-code text-[#dfa88f]">
+                      <span className="text-[10px] font-mono-code text-[#e8a55a]">
                         In Progress
                       </span>
                     )}
@@ -715,20 +767,18 @@ export default function HomePage() {
                           await deleteExamSession(sess.id);
                           setPastSessions((prev) => prev.filter((s) => s.id !== sess.id));
                         }}
-                        aria-label={`Delete exam session for ${sess.paperTitle}`}
+                        className="p-1.5 rounded text-[#8e8b82] hover:text-[#c64545] transition"
                         title="Delete session"
-                        className="p-1.5 rounded text-[#686763] hover:text-[#cf2d56] hover:bg-[#cf2d56]/10 transition focus-ring"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
 
                       <Link
                         href={res ? `/results/${sess.id}` : `/mock/${sess.paperId}`}
-                        aria-label={`View exam session results for ${sess.paperTitle}`}
-                        className="p-1 rounded text-[#9b9a95] hover:text-[#f3f3f2] transition focus-ring"
+                        className="p-1 rounded text-[#141413] hover:text-[#cc785c] transition"
                         title="View session results"
                       >
-                        <ChevronRight className="w-3.5 h-3.5" />
+                        <ChevronRight className="w-4 h-4" />
                       </Link>
                     </div>
                   </div>
@@ -736,8 +786,54 @@ export default function HomePage() {
               );
             })}
           </div>
-        </div>
+        </section>
       )}
+
+      {/* ============================================================ */}
+      {/* 5. PRE-FOOTER FULL-BLEED CORAL CALLOUT CARD (Claude Signature)*/}
+      {/* ============================================================ */}
+      <section className="py-16 px-4 sm:px-8 max-w-5xl mx-auto">
+        <div className="claude-card-coral p-8 sm:p-12 flex flex-col sm:flex-row items-center justify-between gap-6 shadow-xl">
+          <div className="space-y-2 text-center sm:text-left">
+            <h2 className="display-md font-serif-display font-normal text-white">
+              Master your IB exams with examiner precision.
+            </h2>
+            <p className="text-sm text-white/90 max-w-lg leading-relaxed">
+              Experience the rigor of official senior examiners with ECF protection and Socratic guidance before exam day.
+            </p>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => handleSelectSpecimen(MAY_2021_MATH_AA_HL_P1)}
+            className="claude-btn-secondary px-6 py-3 shrink-0 text-sm font-semibold"
+          >
+            <span>Start Practice Exam</span>
+            <ArrowRight className="w-4 h-4" />
+          </button>
+        </div>
+      </section>
+
+      {/* ============================================================ */}
+      {/* 6. DARK NAVY FOOTER (Claude Footer Standard)                 */}
+      {/* ============================================================ */}
+      <footer className="bg-[#181715] text-[#a09d96] border-t border-white/10 py-12 px-4 sm:px-8">
+        <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-6">
+          <div className="flex items-center gap-2.5">
+            <SpikeMark className="w-4 h-4 text-[#cc785c]" />
+            <span className="font-serif-display text-base text-[#faf9f5] font-normal">
+              IB Examiner
+            </span>
+            <span className="text-xs text-[#a09d96]">
+              • Ground-Truth Markscheme Evaluation Engine
+            </span>
+          </div>
+
+          <p className="text-xs text-[#a09d96] font-mono-code text-center sm:text-right">
+            Designed to authentic International Baccalaureate Diploma standards.
+          </p>
+        </div>
+      </footer>
     </div>
   );
 }

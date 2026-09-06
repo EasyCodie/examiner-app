@@ -209,7 +209,7 @@ export default function SocraticLearnPage() {
   if (!manifest || !currentQuestion) {
     return (
       <div className="flex-1 flex items-center justify-center p-8">
-        <Sparkles className="w-8 h-8 text-[#f54e00] animate-spin" />
+        <Sparkles className="w-8 h-8 text-[#cc785c] animate-spin" />
       </div>
     );
   }
@@ -218,10 +218,10 @@ export default function SocraticLearnPage() {
 
   return (
     <div className="flex-1 flex flex-col p-4 sm:p-6 max-w-7xl mx-auto w-full gap-5 select-text pb-16">
-      {/* Sticky Question Tabs Bar (DESIGN.md Cursor Dark Mode) */}
-      <div className="sticky top-12 z-20 flex items-center justify-between bg-[#141517]/95 backdrop-blur-md border border-white/[0.08] rounded-xl p-2.5 shadow-lg">
+      {/* Sticky Question Tabs Bar (Claude Product Chrome) */}
+      <div className="sticky top-12 z-20 flex items-center justify-between bg-[#181715]/95 backdrop-blur-md border border-white/10 rounded-2xl p-3 shadow-xl">
         <div className="flex items-center gap-1.5 overflow-x-auto">
-          <span className="text-[10px] font-mono-code uppercase text-[#686763] font-semibold px-1">Q:</span>
+          <span className="text-[10px] font-mono-code uppercase text-[#a09d96] font-semibold px-1">Q:</span>
           {manifest.questions.map((q, idx) => {
             const isSelected = idx === selectedQuestionIndex;
             return (
@@ -229,9 +229,9 @@ export default function SocraticLearnPage() {
                 key={q.id}
                 type="button"
                 onClick={() => handleSelectQuestion(idx)}
-                className={`px-3 py-1.5 rounded-md text-xs font-mono-code whitespace-nowrap transition flex items-center justify-center ${isSelected
-                    ? 'bg-[#f54e00] text-white font-semibold shadow-sm'
-                    : 'bg-[#0c0d0e] text-[#9b9a95] hover:text-white border border-white/[0.06]'
+                className={`px-3 py-1.5 rounded-lg text-xs font-mono-code whitespace-nowrap transition flex items-center justify-center ${isSelected
+                    ? 'bg-[#cc785c] text-white font-medium shadow-sm'
+                    : 'bg-[#252320] text-[#a09d96] hover:text-[#faf9f5] border border-white/5'
                   }`}
               >
                 <span>{q.number.replace(/^Question\s*/i, '')}</span>
@@ -240,12 +240,12 @@ export default function SocraticLearnPage() {
           })}
         </div>
 
-        <div className="flex items-center gap-1 text-xs text-[#9b9a95] font-mono-code shrink-0 pl-2">
+        <div className="flex items-center gap-1 text-xs text-[#a09d96] font-mono-code shrink-0 pl-2">
           <button
             type="button"
             disabled={selectedQuestionIndex <= 0}
             onClick={() => handleSelectQuestion(selectedQuestionIndex - 1)}
-            className="p-1 hover:text-white disabled:opacity-30 transition"
+            className="p-1 hover:text-[#faf9f5] disabled:opacity-30 transition"
             title="Previous Question"
           >
             <ChevronLeft className="w-4 h-4" />
@@ -257,7 +257,7 @@ export default function SocraticLearnPage() {
             type="button"
             disabled={selectedQuestionIndex >= manifest.questions.length - 1}
             onClick={() => handleSelectQuestion(selectedQuestionIndex + 1)}
-            className="p-1 hover:text-white disabled:opacity-30 transition"
+            className="p-1 hover:text-[#faf9f5] disabled:opacity-30 transition"
             title="Next Question"
           >
             <ChevronRight className="w-4 h-4" />
@@ -318,38 +318,38 @@ export default function SocraticLearnPage() {
               />
             </>
           ) : (
-            <div className="flex-1 bg-[#141517] border border-white/[0.08] rounded-xl p-6 flex flex-col space-y-4">
-              <div className="border-b border-white/[0.08] pb-3">
+            <div className="flex-1 bg-[#efe9de] border border-[#e6dfd8] rounded-2xl p-6 flex flex-col space-y-4 shadow-md">
+              <div className="border-b border-[#e6dfd8] pb-3">
                 <div className="flex items-center gap-2">
-                  <span className="text-xs font-mono-code font-bold uppercase text-[#f54e00] bg-[#f54e00]/10 px-2 py-0.5 rounded border border-[#f54e00]/20">
+                  <span className="text-xs font-mono-code font-bold uppercase text-[#cc785c] bg-[#cc785c]/10 px-2.5 py-0.5 rounded-full border border-[#cc785c]/20">
                     {currentQuestion.commandTerm}
                   </span>
-                  <span className="text-xs text-[#9b9a95] font-mono-code">
+                  <span className="text-xs text-[#706e6a] font-mono-code">
                     {currentQuestion.syllabusSubtopic}
                   </span>
                 </div>
-                <h3 className="text-lg font-medium text-[#f3f3f2] mt-2 tracking-tight">
+                <h3 className="text-xl font-serif font-normal text-[#141413] mt-2 tracking-tight">
                   {currentQuestion.number.replace(/^Question\s*/i, '')} ({currentQuestion.totalMarks} Marks)
                 </h3>
               </div>
 
-              <div className="bg-[#0c0d0e] p-4 rounded-xl border border-white/[0.08] text-[#f3f3f2] text-sm">
+              <div className="bg-[#faf9f5] p-5 rounded-xl border border-[#e6dfd8] text-[#141413] text-sm shadow-2xs">
                 <MathRenderer content={currentQuestion.promptText} />
               </div>
 
               <div className="flex-1 flex flex-col space-y-3">
                 <div className="flex items-center justify-between">
-                  <label className="text-xs font-mono-code font-semibold text-[#9b9a95] uppercase tracking-wider">
+                  <label className="text-xs font-mono-code font-semibold text-[#706e6a] uppercase tracking-wider">
                     Your Draft Response:
                   </label>
                   <button
                     type="button"
                     onClick={() => setShowHumanitiesDiagram(!showHumanitiesDiagram)}
-                    className={`flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-mono-code transition ${showHumanitiesDiagram
-                        ? 'bg-[#f54e00] text-white font-medium shadow-sm'
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono-code transition ${showHumanitiesDiagram
+                        ? 'bg-[#cc785c] text-white font-medium shadow-sm'
                         : humanitiesDiagrams[currentQuestion.id]
-                          ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
-                          : 'bg-[#0c0d0e] text-[#9b9a95] hover:text-[#f3f3f2] border border-white/[0.08]'
+                          ? 'bg-[#5db8a6]/15 text-[#378575] border border-[#5db8a6]/30'
+                          : 'bg-[#faf9f5] text-[#706e6a] hover:text-[#141413] border border-[#e6dfd8]'
                       }`}
                   >
                     <PieChart className="w-3.5 h-3.5" />
@@ -376,7 +376,7 @@ export default function SocraticLearnPage() {
 
                 {/* Pedagogical Essay Scaffolding Toolbar */}
                 <div className="flex flex-wrap items-center gap-1.5 pt-1">
-                  <span className="text-[10px] font-mono-code uppercase font-semibold text-[#686763] mr-1">
+                  <span className="text-[10px] font-mono-code uppercase font-semibold text-[#706e6a] mr-1">
                     Scaffolding:
                   </span>
                   <button
@@ -389,7 +389,7 @@ export default function SocraticLearnPage() {
                         [currentQuestion.id]: existing ? `${existing}\n\n${snippet}` : snippet,
                       }));
                     }}
-                    className="text-[10px] font-mono-code font-medium text-[#9b9a95] hover:text-[#f3f3f2] bg-[#0c0d0e] hover:bg-[#1a1b1e] border border-white/[0.08] px-2 py-0.5 rounded transition"
+                    className="text-[10px] font-mono-code font-medium text-[#706e6a] hover:text-[#141413] bg-[#faf9f5] hover:bg-[#e5ded2] border border-[#e6dfd8] px-2.5 py-1 rounded-lg transition"
                   >
                     + Definition
                   </button>
@@ -403,7 +403,7 @@ export default function SocraticLearnPage() {
                         [currentQuestion.id]: existing ? `${existing}\n\n${snippet}` : snippet,
                       }));
                     }}
-                    className="text-[10px] font-mono-code font-medium text-[#9b9a95] hover:text-[#f3f3f2] bg-[#0c0d0e] hover:bg-[#1a1b1e] border border-white/[0.08] px-2 py-0.5 rounded transition"
+                    className="text-[10px] font-mono-code font-medium text-[#706e6a] hover:text-[#141413] bg-[#faf9f5] hover:bg-[#e5ded2] border border-[#e6dfd8] px-2.5 py-1 rounded-lg transition"
                   >
                     + Diagram Analysis
                   </button>
@@ -417,7 +417,7 @@ export default function SocraticLearnPage() {
                         [currentQuestion.id]: existing ? `${existing}\n\n${snippet}` : snippet,
                       }));
                     }}
-                    className="text-[10px] font-mono-code font-medium text-[#9b9a95] hover:text-[#f3f3f2] bg-[#0c0d0e] hover:bg-[#1a1b1e] border border-white/[0.08] px-2 py-0.5 rounded transition"
+                    className="text-[10px] font-mono-code font-medium text-[#706e6a] hover:text-[#141413] bg-[#faf9f5] hover:bg-[#e5ded2] border border-[#e6dfd8] px-2.5 py-1 rounded-lg transition"
                   >
                     + Example
                   </button>
@@ -431,7 +431,7 @@ export default function SocraticLearnPage() {
                         [currentQuestion.id]: existing ? `${existing}\n\n${snippet}` : snippet,
                       }));
                     }}
-                    className="text-[10px] font-mono-code font-medium text-[#dfa88f] bg-[#dfa88f]/10 hover:bg-[#dfa88f]/20 border border-[#dfa88f]/30 px-2 py-0.5 rounded transition"
+                    className="text-[10px] font-mono-code font-medium text-[#cc785c] bg-[#cc785c]/10 hover:bg-[#cc785c]/20 border border-[#cc785c]/30 px-2.5 py-1 rounded-lg transition"
                   >
                     + Evaluation
                   </button>
@@ -444,7 +444,7 @@ export default function SocraticLearnPage() {
                     setHumanitiesText((prev) => ({ ...prev, [currentQuestion.id]: text }));
                   }}
                   placeholder="Draft your thoughts or write your working here..."
-                  className="flex-1 min-h-[300px] bg-[#0c0d0e] border border-white/[0.08] rounded-xl p-4 text-xs font-mono-code text-[#f3f3f2] placeholder:text-[#686763] outline-none focus:border-[#f54e00]"
+                  className="flex-1 min-h-[300px] bg-[#faf9f5] border border-[#e6dfd8] rounded-xl p-4 text-xs font-mono-code text-[#141413] placeholder:text-[#9b9a95] outline-none focus:border-[#cc785c]"
                 />
               </div>
             </div>

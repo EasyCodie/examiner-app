@@ -2,7 +2,9 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { Clock, Compass, ChevronRight } from 'lucide-react';
+import { Clock, Compass, ChevronRight, Sliders } from 'lucide-react';
+import { SpikeMark } from './SpikeMark';
+import { useAppShell } from './AppShell';
 
 interface HeaderProps {
   paperTitle?: string;
@@ -19,6 +21,8 @@ export const Header: React.FC<HeaderProps> = ({
   paperId,
   timeRemainingSeconds,
 }) => {
+  const { openAiStudio } = useAppShell();
+
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
@@ -30,28 +34,33 @@ export const Header: React.FC<HeaderProps> = ({
   return (
     <header
       aria-label="Global Examination Navigation"
-      className="sticky top-0 z-40 w-full bg-[#0c0d0e] border-b border-white/[0.08] px-4 sm:px-6 h-12 flex items-center justify-between"
+      className="sticky top-0 z-40 w-full bg-[#faf9f5] border-b border-[#e6dfd8] px-4 sm:px-8 h-16 flex items-center justify-between transition-colors"
     >
       {/* Brand & Breadcrumbs */}
-      <div className="flex items-center gap-3">
-        <Link href="/" className="flex items-center gap-2 group focus-ring rounded-md p-0.5">
-          <div className="w-5 h-5 rounded bg-[#f54e00] flex items-center justify-center text-white font-mono-code text-[10px] font-bold tracking-tight">
-            IB
+      <div className="flex items-center gap-3.5">
+        <Link href="/" className="flex items-center gap-2.5 group focus-ring rounded-lg p-1">
+          <div className="w-7 h-7 rounded-lg bg-[#efe9de] border border-[#e6dfd8] flex items-center justify-center text-[#cc785c] group-hover:bg-[#e8e0d2] transition">
+            <SpikeMark className="w-4 h-4 text-[#cc785c]" />
           </div>
-          <span className="text-sm font-normal text-[#f3f3f2] tracking-tight group-hover:text-white transition">
-            examiner
-          </span>
+          <div className="flex items-baseline gap-1.5">
+            <span className="font-serif-display text-lg font-medium text-[#141413] tracking-tight group-hover:text-[#cc785c] transition">
+              IB Examiner
+            </span>
+            <span className="hidden sm:inline-block text-[11px] font-mono-code text-[#8e8b82] tracking-wider uppercase">
+              • Official Syllabus
+            </span>
+          </div>
         </Link>
 
         {/* Paper Breadcrumb if inside an active paper */}
         {paperTitle && (
-          <div className="hidden md:flex items-center gap-2 pl-3 border-l border-white/[0.08] text-xs">
-            <ChevronRight className="w-3.5 h-3.5 text-[#686763]" />
-            <span className="text-[#9b9a95] truncate max-w-xs" title={paperTitle}>
+          <div className="hidden md:flex items-center gap-2 pl-3.5 border-l border-[#e6dfd8] text-xs">
+            <ChevronRight className="w-3.5 h-3.5 text-[#8e8b82]" />
+            <span className="text-[#3d3d3a] font-medium truncate max-w-xs" title={paperTitle}>
               {paperTitle}
             </span>
             {category && (
-              <span className="text-[10px] font-mono-code uppercase px-1.5 py-0.5 rounded bg-[#1a1b1e] border border-white/[0.08] text-[#9b9a95]">
+              <span className="text-[10px] font-mono-code uppercase px-2 py-0.5 rounded-full bg-[#efe9de] border border-[#e6dfd8] text-[#6c6a64] font-medium">
                 {category}
               </span>
             )}
@@ -59,44 +68,68 @@ export const Header: React.FC<HeaderProps> = ({
         )}
       </div>
 
-      {/* Middle & Right: Timer & Mode Controls */}
-      <div className="flex items-center gap-2.5">
+      {/* Middle & Right: Timer, Mode Controls & Telemetry Trigger */}
+      <div className="flex items-center gap-3">
         {mode === 'TIMED_MOCK' && timeRemainingSeconds !== undefined && (
           <div
-            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md border font-mono-code text-xs transition ${isLowTime
-                ? 'bg-[#cf2d56]/15 border-[#cf2d56]/30 text-[#cf2d56] animate-pulse'
-                : 'bg-[#141517] border-white/[0.08] text-[#f54e00]'
-              }`}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border font-mono-code text-xs transition ${
+              isLowTime
+                ? 'bg-[#c64545]/10 border-[#c64545]/30 text-[#c64545] animate-pulse font-bold'
+                : 'bg-[#181715] border-black/20 text-[#faf9f5]'
+            }`}
           >
-            <Clock className={`w-3 h-3 ${isLowTime ? 'text-[#cf2d56]' : 'text-[#f54e00]'}`} />
+            <Clock className={`w-3.5 h-3.5 ${isLowTime ? 'text-[#c64545]' : 'text-[#cc785c]'}`} />
             <span className="font-semibold">{formatTime(timeRemainingSeconds)}</span>
           </div>
         )}
 
         {paperId && (
-          <div className="flex items-center bg-[#141517] p-0.5 rounded-lg border border-white/[0.08] text-xs">
+          <div className="flex items-center bg-[#efe9de] p-1 rounded-lg border border-[#e6dfd8] text-xs font-medium">
             <Link
               href={`/mock/${paperId}`}
-              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md transition focus-ring ${mode === 'TIMED_MOCK'
-                  ? 'bg-[#f54e00] text-white font-medium shadow-sm'
-                  : 'text-[#9b9a95] hover:text-[#f3f3f2]'
-                }`}
+              className={`flex items-center gap-1.5 px-3 py-1 rounded-md transition focus-ring ${
+                mode === 'TIMED_MOCK'
+                  ? 'bg-[#cc785c] text-white shadow-sm font-semibold'
+                  : 'text-[#6c6a64] hover:text-[#141413]'
+              }`}
             >
-              <Clock className="w-3 h-3" />
+              <Clock className="w-3.5 h-3.5" />
               <span>Timed Mock</span>
             </Link>
 
             <Link
               href={`/learn/${paperId}`}
-              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md transition focus-ring ${mode === 'SOCRATIC_LEARN'
-                  ? 'bg-[#222428] text-white font-medium shadow-sm'
-                  : 'text-[#9b9a95] hover:text-[#f3f3f2]'
-                }`}
+              className={`flex items-center gap-1.5 px-3 py-1 rounded-md transition focus-ring ${
+                mode === 'SOCRATIC_LEARN'
+                  ? 'bg-[#181715] text-[#faf9f5] shadow-sm font-semibold'
+                  : 'text-[#6c6a64] hover:text-[#141413]'
+              }`}
             >
-              <Compass className="w-3 h-3" />
+              <Compass className="w-3.5 h-3.5" />
               <span>Socratic Learn</span>
             </Link>
           </div>
+        )}
+
+        {/* Telemetry Workbench Trigger */}
+        <button
+          type="button"
+          onClick={openAiStudio}
+          title="Open Google AI Studio Telemetry & Reasoner Workbench"
+          className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[#e6dfd8] bg-[#faf9f5] hover:bg-[#f5f0e8] text-[#3d3d3a] hover:text-[#141413] text-xs font-medium transition"
+        >
+          <Sliders className="w-3.5 h-3.5 text-[#cc785c]" />
+          <span>Telemetry</span>
+        </button>
+
+        {/* Primary Action Button */}
+        {!paperId && (
+          <Link
+            href="/mock/math-aa-hl-specimen-2025"
+            className="claude-btn-primary text-xs"
+          >
+            <span>Try Specimen Exam</span>
+          </Link>
         )}
       </div>
     </header>

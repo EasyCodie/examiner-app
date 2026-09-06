@@ -680,7 +680,7 @@ export const DrawingCanvas = forwardRef<DrawingCanvasRef, DrawingCanvasProps>(({
                       type="button"
                       onClick={() => handleClearBox(q.id)}
                       title={`Clear working for Question ${cleanNumber}`}
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-white hover:bg-[#cf2d56]/10 text-slate-700 hover:text-[#cf2d56] border border-slate-300 shadow-sm text-xs font-mono-code transition active:scale-95"
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-white hover:bg-[#c64545]/10 text-slate-700 hover:text-[#c64545] border border-slate-300 shadow-sm text-xs font-mono-code transition active:scale-95"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                       <span>Clear</span>

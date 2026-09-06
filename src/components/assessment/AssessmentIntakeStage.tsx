@@ -41,7 +41,7 @@ const INTAKE_STEPS: IntakeStep[] = [
     label: 'Candidate Script Ingestion',
     detail: 'Reading handwritten stroke coordinates, high-res canvas buffers, and text responses',
     badge: 'READ',
-    badgeClass: 'bg-[#9fbbe0]/10 border-[#9fbbe0]/20 text-[#9fbbe0]',
+    badgeClass: 'bg-[#5db8a6]/15 border-[#5db8a6]/30 text-[#5db8a6]',
     icon: FileText,
   },
   {
@@ -49,7 +49,7 @@ const INTAKE_STEPS: IntakeStep[] = [
     label: 'Dual-Document Markscheme Alignment',
     detail: 'Indexing official M (Method), A (Accuracy), and R (Reasoning) mark criteria',
     badge: 'CODES',
-    badgeClass: 'bg-[#c0a8dd]/10 border-[#c0a8dd]/20 text-[#c0a8dd]',
+    badgeClass: 'bg-[#cc785c]/15 border-[#cc785c]/30 text-[#cc785c]',
     icon: BookOpen,
   },
   {
@@ -57,7 +57,7 @@ const INTAKE_STEPS: IntakeStep[] = [
     label: 'GLM-OCR Handwriting Transcription',
     detail: 'Transcribing mathematical notation, intermediate algebra, and calculus expressions',
     badge: 'INDEX',
-    badgeClass: 'bg-[#9fc9a2]/10 border-[#9fc9a2]/20 text-[#9fc9a2]',
+    badgeClass: 'bg-[#e8a55a]/15 border-[#e8a55a]/30 text-[#e8a55a]',
     icon: ScanLine,
   },
   {
@@ -65,7 +65,7 @@ const INTAKE_STEPS: IntakeStep[] = [
     label: 'Question 1 Method & ECF Marking',
     detail: 'Senior Examiner evaluating Question 1 with Error Carried Forward protection',
     badge: 'THINKING',
-    badgeClass: 'bg-[#dfa88f]/10 border-[#dfa88f]/20 text-[#dfa88f]',
+    badgeClass: 'bg-[#cc785c]/15 border-[#cc785c]/30 text-[#cc785c]',
     icon: ShieldCheck,
   },
 ];
@@ -109,48 +109,48 @@ export const AssessmentIntakeStage: React.FC<AssessmentIntakeStageProps> = ({
 
   return (
     <div className="w-full max-w-2xl mx-auto py-8 sm:py-16 px-4 animate-in fade-in zoom-in-95 duration-500">
-      <div className="relative bg-[#141517] border border-white/[0.08] rounded-2xl p-6 sm:p-8 space-y-6 shadow-2xl overflow-hidden">
+      <div className="relative bg-[#181715] border border-white/10 rounded-2xl p-6 sm:p-8 space-y-6 shadow-2xl overflow-hidden">
         {/* Subtle radial ambient glow */}
-        <div className="absolute -top-24 left-1/2 -translate-x-1/2 w-96 h-96 bg-[#f54e00]/[0.05] rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute -top-24 left-1/2 -translate-x-1/2 w-96 h-96 bg-[#cc785c]/[0.05] rounded-full blur-3xl pointer-events-none" />
 
         {/* Top Header & Credentials */}
-        <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-white/[0.06] pb-5">
+        <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-white/10 pb-5">
           <div className="space-y-1">
             <div className="flex items-center gap-2">
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-mono-code font-semibold tracking-wider uppercase bg-[#dfa88f]/10 border border-[#dfa88f]/20 text-[#dfa88f]">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#f54e00] animate-ping" />
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-mono-code font-semibold tracking-wider uppercase bg-[#cc785c]/10 border border-[#cc785c]/20 text-[#cc785c]">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#cc785c] animate-ping" />
                 {isStreaming ? 'Senior Examiner Live Stream' : 'Senior Examiner Intake'}
               </span>
               <span className="text-white/20 text-xs">•</span>
-              <span className="text-[11px] font-mono-code text-[#9b9a95]">
+              <span className="text-[11px] font-mono-code text-[#a09d96]">
                 {session.id.slice(0, 16)}...
               </span>
             </div>
-            <h2 className="text-xl sm:text-2xl text-[#f3f3f2] font-normal tracking-tight">
+            <h2 className="text-xl sm:text-2xl text-[#faf9f5] font-serif font-normal tracking-tight">
               Initializing Method Evaluation
             </h2>
-            <p className="text-xs text-[#9b9a95] font-mono-code">
+            <p className="text-xs text-[#a09d96] font-mono-code">
               {manifest.title} • {manifest.category}
             </p>
           </div>
 
-          <div className="flex items-center gap-2 bg-[#0c0d0e] border border-white/[0.08] px-3 py-1.5 rounded-lg text-xs font-mono-code text-[#9b9a95] shrink-0">
-            <Clock className="w-3.5 h-3.5 text-[#f54e00]" />
+          <div className="flex items-center gap-2 bg-[#252320] border border-white/10 px-3 py-1.5 rounded-lg text-xs font-mono-code text-[#a09d96] shrink-0">
+            <Clock className="w-3.5 h-3.5 text-[#cc785c]" />
             <span>{formatTimer(elapsedSeconds)}</span>
           </div>
         </div>
 
         {/* Stream Error Notice if failed */}
         {streamError ? (
-          <div className="bg-rose-950/40 border border-rose-800/50 rounded-xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs text-rose-300">
+          <div className="bg-[#c64545]/15 border border-[#c64545]/30 rounded-xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs text-[#c64545]">
             <div className="flex items-center gap-2.5">
-              <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
+              <AlertCircle className="w-4 h-4 text-[#c64545] shrink-0" />
               <span>{streamError}</span>
             </div>
             <button
               type="button"
               onClick={onRetry}
-              className="px-3 py-1.5 bg-rose-900/60 hover:bg-rose-800 border border-rose-700/60 text-rose-100 rounded-lg font-mono-code transition text-xs"
+              className="px-3 py-1.5 bg-[#c64545]/20 hover:bg-[#c64545]/30 border border-[#c64545]/40 text-white rounded-lg font-mono-code transition text-xs"
             >
               Retry Ingestion
             </button>
@@ -167,25 +167,25 @@ export const AssessmentIntakeStage: React.FC<AssessmentIntakeStageProps> = ({
                 <div
                   key={step.id}
                   className={`flex items-start gap-3.5 p-3.5 rounded-xl border transition-all duration-300 ${isCompleted
-                      ? 'bg-[#1a1b1e]/60 border-emerald-500/20 text-[#f3f3f2]'
+                      ? 'bg-[#252320]/60 border-[#5db8a6]/25 text-[#faf9f5]'
                       : isActive
-                        ? 'bg-[#1a1b1e] border-[#f54e00]/40 shadow-sm shadow-[#f54e00]/5 text-white'
-                        : 'bg-[#0c0d0e]/40 border-white/[0.04] text-[#686763] opacity-60'
+                        ? 'bg-[#252320] border-[#cc785c]/50 shadow-sm text-white'
+                        : 'bg-[#181715]/40 border-white/5 text-[#a09d96] opacity-50'
                     }`}
                 >
                   {/* Step Status Indicator */}
                   <div className="mt-0.5 shrink-0">
                     {isCompleted ? (
-                      <div className="w-6 h-6 rounded-full bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
+                      <div className="w-6 h-6 rounded-full bg-[#5db8a6]/15 border border-[#5db8a6]/30 flex items-center justify-center text-[#5db8a6]">
                         <CheckCircle2 className="w-3.5 h-3.5" />
                       </div>
                     ) : isActive ? (
-                      <div className="w-6 h-6 rounded-full bg-[#f54e00]/15 border border-[#f54e00]/30 flex items-center justify-center text-[#f54e00]">
+                      <div className="w-6 h-6 rounded-full bg-[#cc785c]/15 border border-[#cc785c]/30 flex items-center justify-center text-[#cc785c]">
                         <Loader2 className="w-3.5 h-3.5 animate-spin" />
                       </div>
                     ) : (
-                      <div className="w-6 h-6 rounded-full bg-white/[0.04] border border-white/[0.08] flex items-center justify-center text-[#686763]">
-                        <Icon className="w-3 h-3 text-[#686763]" />
+                      <div className="w-6 h-6 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-[#a09d96]">
+                        <Icon className="w-3 h-3 text-[#a09d96]" />
                       </div>
                     )}
                   </div>
@@ -202,7 +202,7 @@ export const AssessmentIntakeStage: React.FC<AssessmentIntakeStageProps> = ({
                         {step.badge}
                       </span>
                     </div>
-                    <p className="text-[11px] font-mono-code text-[#9b9a95] leading-relaxed">
+                    <p className="text-[11px] font-mono-code text-[#a09d96] leading-relaxed">
                       {step.detail}
                     </p>
                   </div>
@@ -213,15 +213,15 @@ export const AssessmentIntakeStage: React.FC<AssessmentIntakeStageProps> = ({
         )}
 
         {/* Live Status Bar & Completion Highlight */}
-        <div className="relative z-10 pt-2 border-t border-white/[0.06] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs">
-          <div className="flex items-center gap-2 font-mono-code text-[11px] text-[#9b9a95]">
+        <div className="relative z-10 pt-2 border-t border-white/10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs">
+          <div className="flex items-center gap-2 font-mono-code text-[11px] text-[#a09d96]">
             {firstQuestionReady ? (
-              <span className="text-emerald-400 flex items-center gap-1.5 font-semibold">
+              <span className="text-[#5db8a6] flex items-center gap-1.5 font-semibold">
                 <CheckCircle2 className="w-3.5 h-3.5" />
                 Question 1 graded • Transitioning to review workspace...
               </span>
             ) : (
-              <span className="flex items-center gap-1.5 text-[#f54e00]">
+              <span className="flex items-center gap-1.5 text-[#cc785c]">
                 <Sparkles className="w-3.5 h-3.5 animate-pulse" />
                 {streamStatus || 'Senior Examiner parsing candidate solutions...'}
               </span>
@@ -232,7 +232,7 @@ export const AssessmentIntakeStage: React.FC<AssessmentIntakeStageProps> = ({
             <button
               type="button"
               onClick={onSkip}
-              className="text-[11px] font-mono-code text-[#686763] hover:text-[#9b9a95] transition flex items-center gap-1"
+              className="text-[11px] font-mono-code text-[#a09d96] hover:text-[#faf9f5] transition flex items-center gap-1"
             >
               <span>Skip directly to workspace</span>
               <ArrowRight className="w-3 h-3" />

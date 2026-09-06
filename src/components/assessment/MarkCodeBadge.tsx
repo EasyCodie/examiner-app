@@ -27,13 +27,13 @@ export const MarkCodeBadge: React.FC<MarkCodeBadgeProps> = ({
   if (isEcfApplied) {
     return (
       <span
-        className={`inline-flex items-center gap-1 font-mono-code font-semibold rounded-md border ${sizeClasses} bg-amber-500/15 border-amber-500/40 text-amber-300`}
+        className={`inline-flex items-center gap-1 font-mono-code font-semibold rounded-lg border ${sizeClasses} bg-[#e8a55a]/15 border-[#e8a55a]/40 text-[#e8a55a]`}
         title="Error Carried Forward (ECF): Method mark preserved to avoid double penalty"
       >
-        <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
+        <span className="w-1.5 h-1.5 rounded-full bg-[#e8a55a] animate-pulse" />
         <span>{code}</span>
-        <span className="text-[10px] font-sans uppercase tracking-wider bg-amber-500/30 px-1 rounded">ECF</span>
-        {marks !== undefined && <span className="text-amber-200/80 font-bold">+{marks}</span>}
+        <span className="text-[10px] font-sans uppercase tracking-wider bg-[#e8a55a]/25 px-1 rounded">ECF</span>
+        {marks !== undefined && <span className="font-bold">+{marks}</span>}
       </span>
     );
   }
@@ -41,12 +41,12 @@ export const MarkCodeBadge: React.FC<MarkCodeBadgeProps> = ({
   if (!awarded) {
     return (
       <span
-        className={`inline-flex items-center gap-1 font-mono-code font-semibold rounded-md border ${sizeClasses} bg-rose-950/40 border-rose-800/50 text-rose-300`}
+        className={`inline-flex items-center gap-1 font-mono-code font-semibold rounded-lg border ${sizeClasses} bg-[#c64545]/15 border-[#c64545]/35 text-[#c64545]`}
         title="Mark forfeited or not demonstrated in student working"
       >
-        <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
+        <span className="w-1.5 h-1.5 rounded-full bg-[#c64545]" />
         <span>{code}</span>
-        <span className="text-[10px] font-sans uppercase tracking-wider bg-rose-900/50 px-1 rounded">0</span>
+        <span className="text-[10px] font-sans uppercase tracking-wider bg-[#c64545]/20 px-1 rounded">0</span>
       </span>
     );
   }
@@ -54,45 +54,45 @@ export const MarkCodeBadge: React.FC<MarkCodeBadgeProps> = ({
   // Type based color coding for awarded marks
   const typeStyles: Record<MarkType, { bg: string; border: string; text: string; dot: string; label: string }> = {
     M: {
-      bg: 'bg-emerald-950/40',
-      border: 'border-emerald-700/50',
-      text: 'text-emerald-300',
-      dot: 'bg-emerald-400',
+      bg: 'bg-[#5db8a6]/15',
+      border: 'border-[#5db8a6]/35',
+      text: 'text-[#5db8a6]',
+      dot: 'bg-[#5db8a6]',
       label: 'Method',
     },
     A: {
-      bg: 'bg-cyan-950/40',
-      border: 'border-cyan-700/50',
-      text: 'text-cyan-300',
-      dot: 'bg-cyan-400',
+      bg: 'bg-[#3b82f6]/15',
+      border: 'border-[#3b82f6]/35',
+      text: 'text-[#60a5fa]',
+      dot: 'bg-[#60a5fa]',
       label: 'Accuracy',
     },
     R: {
-      bg: 'bg-indigo-950/40',
-      border: 'border-indigo-700/50',
-      text: 'text-indigo-300',
-      dot: 'bg-indigo-400',
+      bg: 'bg-[#8b5cf6]/15',
+      border: 'border-[#8b5cf6]/35',
+      text: 'text-[#a78bfa]',
+      dot: 'bg-[#a78bfa]',
       label: 'Reasoning',
     },
     AG: {
-      bg: 'bg-purple-950/40',
-      border: 'border-purple-700/50',
-      text: 'text-purple-300',
-      dot: 'bg-purple-400',
+      bg: 'bg-[#a855f7]/15',
+      border: 'border-[#a855f7]/35',
+      text: 'text-[#c084fc]',
+      dot: 'bg-[#c084fc]',
       label: 'Given',
     },
     N: {
-      bg: 'bg-blue-950/40',
-      border: 'border-blue-700/50',
-      text: 'text-blue-300',
-      dot: 'bg-blue-400',
+      bg: 'bg-[#64748b]/15',
+      border: 'border-[#64748b]/35',
+      text: 'text-[#94a3b8]',
+      dot: 'bg-[#94a3b8]',
       label: 'No Working',
     },
     FT: {
-      bg: 'bg-amber-950/40',
-      border: 'border-amber-700/50',
-      text: 'text-amber-300',
-      dot: 'bg-amber-400',
+      bg: 'bg-[#e8a55a]/15',
+      border: 'border-[#e8a55a]/35',
+      text: 'text-[#e8a55a]',
+      dot: 'bg-[#e8a55a]',
       label: 'Follow Through',
     },
   };
@@ -101,7 +101,7 @@ export const MarkCodeBadge: React.FC<MarkCodeBadgeProps> = ({
 
   return (
     <span
-      className={`inline-flex items-center gap-1.5 font-mono-code font-semibold rounded-md border ${sizeClasses} ${style.bg} ${style.border} ${style.text}`}
+      className={`inline-flex items-center gap-1.5 font-mono-code font-semibold rounded-lg border ${sizeClasses} ${style.bg} ${style.border} ${style.text}`}
       title={`${style.label} mark`}
     >
       <span className={`w-1.5 h-1.5 rounded-full ${style.dot}`} />

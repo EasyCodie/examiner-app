@@ -218,10 +218,10 @@ export default function ResultsPage() {
 
   if (loading) {
     return (
-      <div className="flex-1 flex items-center justify-center p-8">
+      <div className="flex-1 flex items-center justify-center p-8 bg-[#faf9f5]">
         <div className="text-center space-y-3">
-          <Sparkles className="w-8 h-8 text-[#f54e00] animate-spin mx-auto" />
-          <p className="text-sm font-mono-code text-[#9b9a95]">Loading examination session...</p>
+          <Sparkles className="w-8 h-8 text-[#cc785c] animate-spin mx-auto" />
+          <p className="text-sm font-mono-code text-[#6b6963]">Loading examination session...</p>
         </div>
       </div>
     );
@@ -229,15 +229,15 @@ export default function ResultsPage() {
 
   if (!session || !manifest) {
     return (
-      <div className="flex-1 flex flex-col items-center justify-center p-8 text-center space-y-4">
-        <AlertCircle className="w-12 h-12 text-[#cf2d56] mx-auto" />
-        <h2 className="text-xl font-medium text-[#f3f3f2]">Assessment Session Not Found</h2>
-        <p className="text-xs text-[#9b9a95] max-w-md">
+      <div className="flex-1 flex flex-col items-center justify-center p-8 text-center space-y-4 bg-[#faf9f5]">
+        <AlertCircle className="w-12 h-12 text-[#c64545] mx-auto" />
+        <h2 className="text-xl font-serif text-[#141413]">Assessment Session Not Found</h2>
+        <p className="text-xs text-[#6b6963] max-w-md">
           The requested exam evaluation could not be loaded from local storage.
         </p>
         <Link
           href="/"
-          className="px-4 py-2 cursor-btn-primary rounded-xl text-xs font-medium text-white transition"
+          className="px-4 py-2 claude-btn-primary rounded-xl text-xs font-medium text-white transition"
         >
           Return to Exam Library
         </Link>
@@ -292,32 +292,32 @@ export default function ResultsPage() {
   return (
     <div className="flex-1 p-4 sm:p-8 max-w-7xl mx-auto w-full space-y-8 select-text animate-in fade-in slide-in-from-bottom-2 duration-500">
       {/* Top Header Bar */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-white/[0.08] pb-4">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-[#e6dfd8] pb-5">
         <div>
-          <div className="flex items-center gap-2 mb-1.5">
+          <div className="flex items-center gap-2 mb-2">
             <Link
               href="/"
-              className="text-xs text-[#9b9a95] hover:text-[#f3f3f2] flex items-center gap-1 font-mono-code transition"
+              className="text-xs text-[#706e6a] hover:text-[#141413] flex items-center gap-1 font-mono-code transition"
             >
               <ArrowLeft className="w-3.5 h-3.5" />
               <span>Back</span>
             </Link>
-            <span className="text-white/20">•</span>
+            <span className="text-[#e6dfd8]">•</span>
             {isFinished ? (
-              <span className="text-[10px] font-mono-code font-semibold uppercase tracking-wider text-[#9fc9a2] bg-[#9fc9a2]/10 border border-[#9fc9a2]/20 px-2 py-0.5 rounded-full flex items-center gap-1">
-                <ShieldCheck className="w-3 h-3" /> Senior Examiner Grading Complete
+              <span className="text-[10px] font-mono-code font-semibold uppercase tracking-wider text-[#378575] bg-[#5db8a6]/15 border border-[#5db8a6]/30 px-2.5 py-0.5 rounded-full flex items-center gap-1">
+                <ShieldCheck className="w-3 h-3 text-[#5db8a6]" /> Senior Examiner Grading Complete
               </span>
             ) : (
-              <span className="text-[10px] font-mono-code font-semibold uppercase tracking-wider text-[#f54e00] bg-[#f54e00]/10 border border-[#f54e00]/20 px-2 py-0.5 rounded-full flex items-center gap-1 animate-pulse">
+              <span className="text-[10px] font-mono-code font-semibold uppercase tracking-wider text-[#cc785c] bg-[#cc785c]/10 border border-[#cc785c]/20 px-2.5 py-0.5 rounded-full flex items-center gap-1 animate-pulse">
                 <Loader2 className="w-3 h-3 animate-spin" /> Live Grading In Progress
               </span>
             )}
           </div>
 
-          <h1 className="text-2xl sm:text-3xl text-[#f3f3f2] tracking-tight">
+          <h1 className="text-2xl sm:text-4xl font-serif text-[#141413] tracking-tight">
             {manifest.title}
           </h1>
-          <p className="text-xs text-[#686763] font-mono-code mt-0.5">
+          <p className="text-xs text-[#706e6a] font-mono-code mt-1">
             Submitted on {new Date(session.submittedAt || session.startedAt).toLocaleString()} • {session.subjectCategory}
           </p>
         </div>
@@ -325,15 +325,15 @@ export default function ResultsPage() {
         <div className="flex items-center gap-2.5">
           <Link
             href={`/learn/${manifest.id}`}
-            className="px-3 py-1.5 cursor-btn-secondary text-xs font-mono-code flex items-center gap-1.5"
+            className="px-3.5 py-2 claude-btn-secondary text-xs font-mono-code flex items-center gap-1.5 shadow-2xs"
           >
-            <Compass className="w-3.5 h-3.5 text-[#f54e00]" />
+            <Compass className="w-3.5 h-3.5 text-[#cc785c]" />
             <span>Socratic Revision</span>
           </Link>
 
           <Link
             href={`/mock/${manifest.id}`}
-            className="px-3.5 py-1.5 cursor-btn-primary text-xs font-mono-code flex items-center gap-1.5"
+            className="px-4 py-2 claude-btn-primary text-xs font-mono-code flex items-center gap-1.5 shadow-sm"
           >
             <RotateCcw className="w-3.5 h-3.5" />
             <span>Retake Exam</span>
@@ -343,27 +343,27 @@ export default function ResultsPage() {
 
       {/* Live Stream Progress HUD (when evaluating) */}
       {isStreaming && (
-        <div className="bg-[#141517] border border-[#f54e00]/30 rounded-xl p-4 sm:p-5 space-y-3 shadow-lg animate-in fade-in duration-300">
+        <div className="bg-[#181715] border border-white/10 rounded-2xl p-5 space-y-3.5 shadow-xl animate-in fade-in duration-300">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-            <div className="flex items-center gap-2.5">
-              <Loader2 className="w-4 h-4 text-[#f54e00] animate-spin shrink-0" />
+            <div className="flex items-center gap-3">
+              <Loader2 className="w-5 h-5 text-[#cc785c] animate-spin shrink-0" />
               <div>
-                <h3 className="text-sm font-semibold text-white tracking-tight flex items-center gap-2">
+                <h3 className="text-sm font-medium text-white tracking-tight flex items-center gap-2">
                   <span>Senior Examiner Live Evaluation</span>
                   {effectiveEvaluations.length >= 1 && (
-                    <span className="text-[10px] font-mono-code font-normal text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full">
+                    <span className="text-[10px] font-mono-code font-normal text-[#5db8a6] bg-[#5db8a6]/15 border border-[#5db8a6]/30 px-2 py-0.5 rounded-full">
                       Question 1 Unlocked
                     </span>
                   )}
                 </h3>
-                <p className="text-xs text-[#9b9a95] font-mono-code mt-0.5">
+                <p className="text-xs text-[#a09d96] font-mono-code mt-0.5">
                   {streamStatus}
                 </p>
               </div>
             </div>
 
             <div className="text-right">
-              <span className="text-xs font-mono-code text-[#f54e00] font-bold">
+              <span className="text-xs font-mono-code text-[#cc785c] font-bold">
                 {effectiveEvaluations.length} of {totalQuestions} Questions Evaluated
               </span>
             </div>
@@ -371,13 +371,13 @@ export default function ResultsPage() {
 
           {/* Progress bar */}
           <div className="space-y-1">
-            <div className="w-full h-1.5 bg-[#0c0d0e] rounded-full overflow-hidden border border-white/[0.06]">
+            <div className="w-full h-1.5 bg-[#252320] rounded-full overflow-hidden border border-white/10">
               <div
-                className="h-full bg-[#f54e00] rounded-full transition-all duration-500 ease-out"
+                className="h-full bg-[#cc785c] rounded-full transition-all duration-500 ease-out"
                 style={{ width: `${Math.max(5, progressPct)}%` }}
               />
             </div>
-            <div className="flex justify-between text-[10px] font-mono-code text-[#686763]">
+            <div className="flex justify-between text-[10px] font-mono-code text-[#a09d96]">
               <span>Review Question 1 below while remaining questions stream in background</span>
               <span>{progressPct}%</span>
             </div>
@@ -387,15 +387,15 @@ export default function ResultsPage() {
 
       {/* Stream Error Notice */}
       {streamError && (
-        <div className="bg-rose-950/30 border border-rose-800/40 rounded-xl p-4 flex items-center gap-3 text-xs text-rose-300">
-          <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
+        <div className="bg-[#c64545]/15 border border-[#c64545]/30 rounded-xl p-4 flex items-center gap-3 text-xs text-[#c64545]">
+          <AlertCircle className="w-4 h-4 text-[#c64545] shrink-0" />
           <div className="flex-1">
             <span className="font-semibold">Evaluation Stream Notice:</span> {streamError}
           </div>
           <button
             type="button"
             onClick={() => startEvaluationStream(manifest, session)}
-            className="px-3 py-1 bg-rose-900/50 hover:bg-rose-900 border border-rose-700/50 rounded text-rose-200 font-mono-code text-[11px]"
+            className="px-3 py-1 bg-[#c64545]/20 hover:bg-[#c64545]/30 border border-[#c64545]/40 rounded-lg text-white font-mono-code text-[11px]"
           >
             Retry Stream
           </button>
@@ -415,12 +415,12 @@ export default function ResultsPage() {
           />
         </section>
       ) : (
-        <section className="bg-[#141517] border border-white/[0.08] rounded-2xl p-6 text-center space-y-2.5">
-          <div className="flex items-center justify-center gap-2 text-[#9b9a95] font-mono-code text-xs">
-            <Clock className="w-4 h-4 text-[#f54e00]" />
+        <section className="bg-[#efe9de] border border-[#e6dfd8] rounded-2xl p-6 text-center space-y-2 text-[#141413] shadow-xs">
+          <div className="flex items-center justify-center gap-2 text-[#706e6a] font-mono-code text-xs">
+            <Clock className="w-4 h-4 text-[#cc785c]" />
             <span>Predicted IB 1–7 Grade Boundaries and Syllabus Mastery Matrix calculate once all questions finalize</span>
           </div>
-          <p className="text-[11px] text-[#686763] font-mono-code">
+          <p className="text-[11px] text-[#706e6a] font-mono-code">
             Question-level examiner marking and Error Carried Forward notes are live below for immediate inspection.
           </p>
         </section>
@@ -429,11 +429,11 @@ export default function ResultsPage() {
       {/* 2. Side-by-Side Examiner Review (Instant feedback on Q1 while Q2..N stream) */}
       <section>
         <div className="mb-3">
-          <h2 className="text-lg font-normal text-[#f3f3f2] flex items-center gap-2">
-            <FileCheck className="w-4 h-4 text-[#f54e00]" />
+          <h2 className="text-xl font-serif font-normal text-[#141413] flex items-center gap-2">
+            <FileCheck className="w-4 h-4 text-[#cc785c]" />
             Examiner Question Review &amp; Mark Breakdown
           </h2>
-          <p className="text-xs text-[#9b9a95] font-mono-code">
+          <p className="text-xs text-[#706e6a] font-mono-code">
             Inspect each question attempt with red margin annotations and individual method/accuracy mark codes
           </p>
         </div>

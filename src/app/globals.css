@@ -1,242 +1,350 @@
-/* Sora: Precision Geometric Face for High-Stakes Evaluation & JetBrains Mono */
-@import url('https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+/* Cormorant Garamond (Serif Display), Inter (Humanist Sans), JetBrains Mono (Code/Math) */
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
 
 @import "tailwindcss";
 @import "katex/dist/katex.min.css";
 
 @theme {
-  --font-sans: 'Sora', sans-serif;
+  --font-serif: 'Cormorant Garamond', 'Tiempos Headline', Garamond, 'Times New Roman', serif;
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
 }
 
 :root {
-  --background: #0c0d0e;
-  --foreground: #f3f3f2;
+  /* ============================================================ */
+  /* CLAUDE.COM DESIGN SYSTEM TOKENS (from DESIGN.md)             */
+  /* ============================================================ */
 
-  /* Cursor Dark Mode Design Tokens */
-  --cursor-primary: #f54e00;
-  --cursor-primary-active: #d04200;
-  --cursor-canvas: #0c0d0e;
-  --cursor-canvas-soft: #141517;
-  --cursor-surface-card: #1a1b1e;
-  --cursor-surface-strong: #222428;
-  --cursor-surface-hover: #26282d;
-  --cursor-hairline: rgba(255, 255, 255, 0.08);
-  --cursor-hairline-strong: rgba(255, 255, 255, 0.16);
+  /* Brand & Accent */
+  --primary: #cc785c;              /* Signature Anthropic Warm Coral */
+  --primary-active: #a9583e;       /* Press / hover-darker variant */
+  --primary-disabled: #e6dfd8;     /* Desaturated cream-tinted disabled */
+  --accent-teal: #5db8a6;          /* Secondary product surface accent */
+  --accent-amber: #e8a55a;         /* Companion warm tone for ECF & badges */
 
-  --cursor-text-strong: #f3f3f2;
-  --cursor-text-body: #9b9a95;
-  --cursor-text-muted: #686763;
+  /* Surface */
+  --canvas: #faf9f5;               /* Tinted cream canvas - page floor */
+  --surface-soft: #f5f0e8;         /* Section dividers & subtle bands */
+  --surface-card: #efe9de;         /* Light cream feature cards */
+  --surface-cream-strong: #e8e0d2; /* Strong cream for tabs & callouts */
+  --surface-dark: #181715;         /* Dominant dark navy product surface */
+  --surface-dark-elevated: #252320;/* Elevated cards inside dark bands */
+  --surface-dark-soft: #1f1e1b;    /* Code block backgrounds in dark cards */
+  --hairline: #e6dfd8;             /* 1px border tone on cream surfaces */
+  --hairline-soft: #ebe6df;        /* Barely-visible divider */
 
-  /* Cursor Agent Timeline Pastels */
-  --timeline-thinking: #dfa88f;
-  --timeline-read: #9fbbe0;
-  --timeline-grep: #9fc9a2;
-  --timeline-codes: #c0a8dd;
-  --timeline-done: #c08532;
+  /* Text */
+  --ink: #141413;                  /* Headlines & primary text */
+  --body-strong: #252523;          /* Emphasized paragraphs & lead text */
+  --body: #3d3d3a;                 /* Default running text */
+  --muted: #6c6a64;                /* Subheadings & breadcrumbs */
+  --muted-soft: #8e8b82;           /* Captions & fine-print */
+  --on-primary: #ffffff;           /* Text on coral buttons */
+  --on-dark: #faf9f5;              /* Cream-tinted white on dark surfaces */
+  --on-dark-soft: #a09d96;         /* Secondary labels on dark surfaces */
+
+  /* Semantic Status */
+  --success: #5db872;              /* Full marks / correct */
+  --warning: #d4a017;              /* Warning callouts */
+  --error: #c64545;                /* Lost marks / error */
+
+  /* Examination Evaluation Semantics (Claude Palette) */
+  --mark-method: #5db8a6;          /* Method mark (Teal) */
+  --mark-accuracy: #5db872;        /* Accuracy mark (Green) */
+  --mark-reasoning: #7c6fcd;       /* Reasoning mark (Purple) */
+  --mark-ecf: #e8a55a;             /* Error Carried Forward (Amber) */
+  --mark-error: #c64545;           /* Forfeited marks (Red) */
+
+  /* Backward Compatibility Mappings */
+  --background: #faf9f5;
+  --foreground: #141413;
+  --card: #efe9de;
+  --card-foreground: #141413;
+  --border: #e6dfd8;
+  --cursor-primary: #cc785c;
+  --cursor-primary-active: #a9583e;
+  --cursor-canvas: #faf9f5;
+  --cursor-canvas-soft: #f5f0e8;
+  --cursor-surface-card: #efe9de;
+  --cursor-surface-strong: #e8e0d2;
+  --cursor-hairline: #e6dfd8;
+  --cursor-text-strong: #141413;
+  --cursor-text-body: #3d3d3a;
+  --cursor-text-muted: #6c6a64;
 }
 
 body {
-  background: var(--cursor-canvas);
-  color: var(--cursor-text-strong);
-  font-family: 'Sora', sans-serif;
+  background-color: var(--canvas);
+  color: var(--ink);
+  font-family: var(--font-sans);
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
 }
 
-/* Headings: weight 400 with negative tracking per Cursor magazine voice */
-h1,
-h2,
-h3 {
-  letter-spacing: -0.025em;
+/* ============================================================ */
+/* CLAUDE.COM TYPOGRAPHY SCALE (from DESIGN.md)                 */
+/* ============================================================ */
+
+.font-serif-display {
+  font-family: var(--font-serif);
   font-weight: 400;
+  letter-spacing: -0.025em;
 }
 
-/* Monospace for code, manifest keys, mark codes, and telemetry */
-.font-mono-code {
-  font-family: 'JetBrains Mono', monospace;
+.display-xl {
+  font-family: var(--font-serif);
+  font-size: clamp(36px, 5vw, 64px);
+  font-weight: 400;
+  line-height: 1.05;
+  letter-spacing: -1.5px;
+  color: var(--ink);
 }
 
-/* Cursor Dark Mode Panes and Cards */
-.cursor-card {
-  background-color: var(--cursor-surface-card);
-  border: 1px solid var(--cursor-hairline);
+.display-lg {
+  font-family: var(--font-serif);
+  font-size: clamp(28px, 4vw, 48px);
+  font-weight: 400;
+  line-height: 1.1;
+  letter-spacing: -1px;
+  color: var(--ink);
 }
 
-.cursor-card-soft {
-  background-color: var(--cursor-canvas-soft);
-  border: 1px solid var(--cursor-hairline);
+.display-md {
+  font-family: var(--font-serif);
+  font-size: clamp(24px, 3vw, 36px);
+  font-weight: 400;
+  line-height: 1.15;
+  letter-spacing: -0.5px;
+  color: var(--ink);
 }
 
-.cursor-card:hover {
-  border-color: var(--cursor-hairline-strong);
+.display-sm {
+  font-family: var(--font-serif);
+  font-size: 28px;
+  font-weight: 400;
+  line-height: 1.2;
+  letter-spacing: -0.3px;
+  color: var(--ink);
 }
 
-/* Primary Cursor Orange Button */
-.cursor-btn-primary {
-  background-color: var(--cursor-primary);
-  color: #ffffff;
+.title-lg {
+  font-family: var(--font-sans);
+  font-size: 22px;
   font-weight: 500;
+  line-height: 1.3;
+  color: var(--ink);
+}
+
+.title-md {
+  font-family: var(--font-sans);
+  font-size: 18px;
+  font-weight: 500;
+  line-height: 1.4;
+  color: var(--ink);
+}
+
+.title-sm {
+  font-family: var(--font-sans);
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 1.4;
+  color: var(--ink);
+}
+
+.body-md {
+  font-family: var(--font-sans);
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 1.55;
+  color: var(--body);
+}
+
+.body-sm {
+  font-family: var(--font-sans);
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.55;
+  color: var(--muted);
+}
+
+.caption {
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+.caption-uppercase {
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.4;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+}
+
+.font-mono-code {
+  font-family: var(--font-mono);
+}
+
+/* ============================================================ */
+/* CLAUDE.COM BUTTONS & COMPONENTS (from DESIGN.md)             */
+/* ============================================================ */
+
+.claude-btn-primary,
+.examon-btn-primary,
+.cursor-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background-color: var(--primary);
+  color: var(--on-primary);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  font-weight: 500;
+  height: 40px;
+  min-height: 40px;
+  padding: 0 20px;
   border-radius: 8px;
   transition: background-color 0.15s ease, transform 0.1s ease;
+  cursor: pointer;
+  border: none;
+  text-decoration: none;
+  white-space: nowrap;
 }
 
+.claude-btn-primary:hover,
+.examon-btn-primary:hover,
 .cursor-btn-primary:hover {
-  background-color: var(--cursor-primary-active);
+  background-color: var(--primary-active);
 }
 
+.claude-btn-primary:active,
+.examon-btn-primary:active,
 .cursor-btn-primary:active {
+  background-color: var(--primary-active);
   transform: scale(0.99);
 }
 
-/* Secondary Button */
+.claude-btn-secondary,
+.examon-btn-outline,
 .cursor-btn-secondary {
-  background-color: var(--cursor-surface-card);
-  color: var(--cursor-text-strong);
-  border: 1px solid var(--cursor-hairline);
-  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background-color: var(--canvas);
+  color: var(--ink);
+  border: 1px solid var(--hairline);
+  font-family: var(--font-sans);
+  font-size: 14px;
   font-weight: 500;
+  height: 40px;
+  min-height: 40px;
+  padding: 0 20px;
+  border-radius: 8px;
   transition: background-color 0.15s ease, border-color 0.15s ease;
+  cursor: pointer;
+  text-decoration: none;
+  white-space: nowrap;
 }
 
+.claude-btn-secondary:hover,
+.examon-btn-outline:hover,
 .cursor-btn-secondary:hover {
-  background-color: var(--cursor-surface-strong);
-  border-color: var(--cursor-hairline-strong);
+  background-color: var(--surface-soft);
+  border-color: #d6cfc5;
 }
 
-/* Timeline pill base */
-.timeline-pill {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  border-radius: 9999px;
-  padding: 3px 9px;
-  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+.claude-btn-secondary-on-dark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background-color: var(--surface-dark-elevated);
+  color: var(--on-dark);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  font-weight: 500;
+  height: 40px;
+  min-height: 40px;
+  padding: 0 20px;
+  border-radius: 8px;
+  transition: background-color 0.15s ease;
+  cursor: pointer;
+  text-decoration: none;
+  white-space: nowrap;
 }
 
-/* Hairline border */
-.hairline {
-  border: 1px solid var(--cursor-hairline);
+.claude-btn-secondary-on-dark:hover {
+  background-color: #312e2a;
 }
 
-/* Smooth motion choreography per /impeccable animate */
-@keyframes flowStepForward {
-  0% {
-    opacity: 0;
-    transform: translateX(12px) translateY(2px) scale(0.995);
-  }
-
-  100% {
-    opacity: 1;
-    transform: translateX(0) translateY(0) scale(1);
-  }
+/* Claude Surfaces */
+.claude-card-cream {
+  background-color: var(--surface-card);
+  border: 1px solid var(--hairline);
+  border-radius: 12px;
 }
 
-@keyframes flowStepBack {
-  0% {
-    opacity: 0;
-    transform: translateX(-12px) translateY(2px) scale(0.995);
-  }
-
-  100% {
-    opacity: 1;
-    transform: translateX(0) translateY(0) scale(1);
-  }
+.claude-card-dark {
+  background-color: var(--surface-dark);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  color: var(--on-dark);
 }
 
-@keyframes cardStagger {
-  0% {
-    opacity: 0;
-    transform: translateY(12px);
-  }
-
-  100% {
-    opacity: 1;
-    transform: translateY(0);
-  }
+.claude-card-coral {
+  background-color: var(--primary);
+  border-radius: 12px;
+  color: var(--on-primary);
 }
 
-.animate-step-enter,
-.animate-step-forward {
-  animation: flowStepForward 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+/* Selection */
+::selection {
+  background-color: rgba(204, 120, 92, 0.22);
+  color: #141413;
 }
 
-.animate-step-back {
-  animation: flowStepBack 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-}
-
-.animate-card-1 {
-  animation: cardStagger 0.35s cubic-bezier(0.16, 1, 0.3, 1) 0.05s forwards;
-  opacity: 0;
-}
-
-.animate-card-2 {
-  animation: cardStagger 0.35s cubic-bezier(0.16, 1, 0.3, 1) 0.12s forwards;
-  opacity: 0;
-}
-
-@media (prefers-reduced-motion: reduce) {
-
-  .animate-step-enter,
-  .animate-step-forward,
-  .animate-step-back,
-  .animate-card-1,
-  .animate-card-2 {
-    animation: none !important;
-    opacity: 1 !important;
-    transform: none !important;
-  }
-}
-
-/* Custom minimal scrollbar (Webkit & Standard CSS for Firefox) */
+/* Custom Minimal Scrollbar */
 * {
   scrollbar-width: thin;
-  scrollbar-color: #222428 #0c0d0e;
+  scrollbar-color: #d6cfc5 #faf9f5;
 }
 
 ::-webkit-scrollbar {
-  width: 5px;
-  height: 5px;
+  width: 6px;
+  height: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: var(--cursor-canvas);
+  background: var(--canvas);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--cursor-surface-strong);
+  background: #d6cfc5;
   border-radius: 9999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--cursor-surface-hover);
+  background: #b5ada2;
 }
 
-/* Accessible focus ring utility */
+/* Focus Ring */
 .focus-ring {
   outline: none;
 }
 
 .focus-ring:focus-visible {
-  outline: 2px solid var(--cursor-primary);
+  outline: 2px solid var(--primary);
   outline-offset: 2px;
 }
 
-/* Selection */
-::selection {
-  background: rgba(245, 78, 0, 0.3);
-  color: #ffffff;
-}
-
-/* Math rendering typography - calibrated for harmonious baseline alignment with Sora */
+/* KaTeX Harmonization */
 .katex {
-  font-size: 1.06em;
-}
-
-.math-content .katex {
-  font-size: 1.08em;
+  font-size: 1.05em;
 }
 
 .math-content .katex-display {
@@ -244,17 +352,4 @@ h3 {
   overflow-x: auto;
   overflow-y: hidden;
   padding: 6px 0;
-}
-
-.math-content .katex-display .katex {
-  font-size: 1.2em;
-}
-
-/* Socratic Tutor chat math expressions: 20% larger for optimal formula inspection */
-.socratic-math .katex {
-  font-size: 1.3em;
-}
-
-.socratic-math .katex-display .katex {
-  font-size: 1.44em;
 }
