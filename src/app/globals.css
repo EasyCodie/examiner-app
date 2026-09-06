@@ -16,32 +16,32 @@
   /* ============================================================ */
 
   /* Brand & Accent */
-  --primary: #a94e32;              /* Signature Anthropic Warm Coral (WCAG AA Deepened 5.49:1) */
-  --primary-active: #8f3f27;       /* Press / hover-darker variant (7.21:1) */
-  --primary-disabled: #e6dfd8;     /* Desaturated cream-tinted disabled */
+  --primary: #cc785c;              /* Signature Anthropic Warm Coral */
+  --primary-active: #b86247;       /* Press / hover-darker variant */
+  --primary-disabled: #3d3b36;     /* Dark disabled state */
   --accent-teal: #5db8a6;          /* Secondary product surface accent */
   --accent-amber: #e8a55a;         /* Companion warm tone for ECF & badges */
 
-  /* Surface */
-  --canvas: #faf9f5;               /* Tinted cream canvas - page floor */
-  --surface-soft: #f5f0e8;         /* Section dividers & subtle bands */
-  --surface-card: #efe9de;         /* Light cream feature cards */
-  --surface-cream-strong: #e8e0d2; /* Strong cream for tabs & callouts */
-  --surface-dark: #181715;         /* Dominant dark navy product surface */
+  /* Surface - Permanent Claude Dark Mode */
+  --canvas: #181715;               /* Dominant Claude obsidian canvas */
+  --surface-soft: #1f1e1b;         /* Subtle section dividers & bands */
+  --surface-card: #252320;         /* Elevated feature cards & dialogs */
+  --surface-cream-strong: #2c2a26; /* Highlighted cards & active tabs */
+  --surface-dark: #141413;         /* Deepest surface */
   --surface-dark-elevated: #252320;/* Elevated cards inside dark bands */
-  --surface-dark-soft: #1f1e1b;    /* Code block backgrounds in dark cards */
-  --hairline: #e6dfd8;             /* 1px border tone on cream surfaces */
-  --hairline-soft: #ebe6df;        /* Barely-visible divider */
+  --surface-dark-soft: #1f1e1b;    /* Code block backgrounds */
+  --hairline: rgba(255, 255, 255, 0.08); /* 1px border tone on dark */
+  --hairline-soft: rgba(255, 255, 255, 0.05); /* Barely-visible divider */
 
-  /* Text */
-  --ink: #141413;                  /* Headlines & primary text */
-  --body-strong: #252523;          /* Emphasized paragraphs & lead text */
-  --body: #3d3d3a;                 /* Default running text */
-  --muted: #54524c;                /* Subheadings & breadcrumbs (WCAG AA 6.5:1+) */
-  --muted-soft: #5e5b54;           /* Captions & fine-print (WCAG AA 5.6:1+) */
+  /* Text - Permanent Claude Dark Mode */
+  --ink: #faf9f5;                  /* Headlines & primary text */
+  --body-strong: #f3f3ee;          /* Emphasized paragraphs & lead text */
+  --body: #d6cfc5;                 /* Default running text */
+  --muted: #a09d95;                /* Subheadings & breadcrumbs */
+  --muted-soft: #85827a;           /* Captions & fine-print */
   --on-primary: #ffffff;           /* Text on coral buttons */
   --on-dark: #faf9f5;              /* Cream-tinted white on dark surfaces */
-  --on-dark-soft: #b8b5ad;         /* Secondary labels on dark surfaces (WCAG AA 7.6:1+) */
+  --on-dark-soft: #a09d95;         /* Secondary labels on dark surfaces */
 
   /* Semantic Status */
   --success: #5db872;              /* Full marks / correct */
@@ -56,21 +56,21 @@
   --mark-error: #c64545;           /* Forfeited marks (Red) */
 
   /* Backward Compatibility Mappings */
-  --background: #faf9f5;
-  --foreground: #141413;
-  --card: #efe9de;
-  --card-foreground: #141413;
-  --border: #e6dfd8;
-  --cursor-primary: #a94e32;
-  --cursor-primary-active: #8f3f27;
-  --cursor-canvas: #faf9f5;
-  --cursor-canvas-soft: #f5f0e8;
-  --cursor-surface-card: #efe9de;
-  --cursor-surface-strong: #e8e0d2;
-  --cursor-hairline: #e6dfd8;
-  --cursor-text-strong: #141413;
-  --cursor-text-body: #3d3d3a;
-  --cursor-text-muted: #6c6a64;
+  --background: #181715;
+  --foreground: #faf9f5;
+  --card: #252320;
+  --card-foreground: #faf9f5;
+  --border: rgba(255, 255, 255, 0.08);
+  --cursor-primary: #cc785c;
+  --cursor-primary-active: #b86247;
+  --cursor-canvas: #181715;
+  --cursor-canvas-soft: #1f1e1b;
+  --cursor-surface-card: #252320;
+  --cursor-surface-strong: #2c2a26;
+  --cursor-hairline: rgba(255, 255, 255, 0.08);
+  --cursor-text-strong: #faf9f5;
+  --cursor-text-body: #d6cfc5;
+  --cursor-text-muted: #a09d95;
 }
 
 body {
@@ -253,14 +253,14 @@ body {
 .claude-btn-secondary:hover,
 .examon-btn-outline:hover,
 .cursor-btn-secondary:hover {
-  background-color: var(--surface-soft);
-  border-color: #d6cfc5;
+  background-color: #312e2a;
+  border-color: rgba(255, 255, 255, 0.15);
 }
 
 .claude-btn-secondary:active,
 .examon-btn-outline:active,
 .cursor-btn-secondary:active {
-  background-color: var(--surface-card);
+  background-color: #3b3732;
   transform: scale(0.98);
 }
 
@@ -316,14 +316,14 @@ body {
 
 /* Selection */
 ::selection {
-  background-color: rgba(169, 78, 50, 0.22);
-  color: #141413;
+  background-color: rgba(204, 120, 92, 0.28);
+  color: #faf9f5;
 }
 
 /* Custom Minimal Scrollbar */
 * {
   scrollbar-width: thin;
-  scrollbar-color: #d6cfc5 #faf9f5;
+  scrollbar-color: #3e3b35 #181715;
 }
 
 ::-webkit-scrollbar {
@@ -336,12 +336,12 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #d6cfc5;
+  background: #3e3b35;
   border-radius: 9999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #b5ada2;
+  background: #4f4b44;
 }
 
 /* Focus Ring */
@@ -393,23 +393,8 @@ body {
   text-transform: uppercase;
 }
 
-/* Double-Bezel (Doppelrand) Architecture: Cream Surface */
-.double-bezel-outer-cream {
-  background-color: rgba(20, 20, 19, 0.03);
-  border: 1px solid rgba(20, 20, 19, 0.06);
-  border-radius: 2rem;
-  padding: 6px;
-  box-shadow: 0 10px 30px -10px rgba(20, 20, 19, 0.04);
-}
-
-.double-bezel-inner-cream {
-  background-color: var(--surface-card);
-  border: 1px solid rgba(255, 255, 255, 0.6);
-  border-radius: calc(2rem - 6px);
-  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.7), 0 1px 3px rgba(20, 20, 19, 0.03);
-}
-
-/* Double-Bezel (Doppelrand) Architecture: Obsidian Dark Product */
+/* Double-Bezel (Doppelrand) Architecture: Claude Obsidian Surface */
+.double-bezel-outer-cream,
 .double-bezel-outer-dark {
   background-color: rgba(255, 255, 255, 0.03);
   border: 1px solid rgba(255, 255, 255, 0.08);
@@ -418,8 +403,9 @@ body {
   box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.5);
 }
 
+.double-bezel-inner-cream,
 .double-bezel-inner-dark {
-  background-color: var(--surface-dark);
+  background-color: var(--surface-card);
   border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: calc(2rem - 6px);
   box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.12), 0 2px 8px rgba(0, 0, 0, 0.2);

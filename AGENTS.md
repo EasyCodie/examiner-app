@@ -34,7 +34,7 @@ Bias toward caution over speed. Keep diffs surgical, uphold hard boundaries, and
 
 ## Repository Role & Identity
 
-**IB Examiner** is an authoritative exam simulation, dual-document markscheme ingestion, method-level marking, and Error Carried Forward (ECF) grading platform for IB Diploma students.
+**Criterion** is an authoritative exam simulation, dual-document markscheme ingestion, method-level marking, and Error Carried Forward (ECF) grading platform for IB Diploma students.
 
 **Tech Stack**: Next.js 16 (App Router), React 19, TypeScript, Tailwind CSS v4, `@google/genai` (Gemini 2.5 Flash / Pro with thinkingBudget control), IndexedDB (`idb-keyval`), KaTeX.
 

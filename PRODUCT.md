@@ -13,7 +13,7 @@ High school students preparing for official International Baccalaureate (IB) Dip
 Deliver an examiner-grade revision and assessment environment that eliminates model hallucinations through dual-document ingestion (pairing official exam papers with official markschemes into immutable JSON manifests). It provides students with authentic timed mock exam conditions, granular method/accuracy marking with Error Carried Forward (ECF) protection, and sub-second Socratic tutoring without premature rubric leaks.
 
 ## Positioning
-Unlike generic AI study chatbots or broad flashcard tools, IB Examiner anchors evaluations to verified, official IB markschemes and command terms. Its core differentiator is the Error Carried Forward (ECF) grading protocol—modeled after official Senior Examiner conventions—which awards downstream method marks even when an early algebraic calculation slip occurred, preventing double penalization.
+Unlike generic AI study chatbots or broad flashcard tools, Criterion anchors evaluations to verified, official IB markschemes and command terms. Its core differentiator is the Error Carried Forward (ECF) grading protocol—modeled after official Senior Examiner conventions—which awards downstream method marks even when an early algebraic calculation slip occurred, preventing double penalization.
 
 ## Operating Context
 - **Timed Mock Exam Mode**: Strict countdown timer matching official IB exam durations, autosaving to IndexedDB.

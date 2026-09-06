@@ -292,32 +292,32 @@ export default function ResultsPage() {
   return (
     <div className="flex-1 p-4 sm:p-8 max-w-7xl mx-auto w-full space-y-8 select-text animate-in fade-in slide-in-from-bottom-2 duration-500">
       {/* Top Header Bar */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-[#e6dfd8] pb-5">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-white/10 pb-5">
         <div>
           <div className="flex items-center gap-2 mb-2">
             <Link
               href="/"
-              className="text-xs text-[#54524c] hover:text-[#141413] flex items-center gap-1 font-mono-code transition"
+              className="text-xs text-[#a09d96] hover:text-[#faf9f5] flex items-center gap-1 font-mono-code transition"
             >
               <ArrowLeft className="w-3.5 h-3.5" />
               <span>Back</span>
             </Link>
-            <span className="text-[#e6dfd8]">•</span>
+            <span className="text-white/20">•</span>
             {isFinished ? (
-              <span className="text-[10px] font-mono-code font-semibold uppercase tracking-wider text-[#1d6c5f] bg-[#1d6c5f]/15 border border-[#1d6c5f]/30 px-2.5 py-0.5 rounded-full flex items-center gap-1">
-                <ShieldCheck className="w-3 h-3 text-[#1d6c5f]" /> Grading Complete
+              <span className="text-[10px] font-mono-code font-semibold uppercase tracking-wider text-[#5db8a6] bg-[#5db8a6]/15 border border-[#5db8a6]/30 px-2.5 py-0.5 rounded-full flex items-center gap-1">
+                <ShieldCheck className="w-3 h-3 text-[#5db8a6]" /> Grading Complete
               </span>
             ) : (
-              <span className="text-[10px] font-mono-code font-semibold uppercase tracking-wider text-[#a94e32] bg-[#a94e32]/10 border border-[#a94e32]/20 px-2.5 py-0.5 rounded-full flex items-center gap-1 animate-pulse">
+              <span className="text-[10px] font-mono-code font-semibold uppercase tracking-wider text-[#cc785c] bg-[#cc785c]/10 border border-[#cc785c]/20 px-2.5 py-0.5 rounded-full flex items-center gap-1 animate-pulse">
                 <Loader2 className="w-3 h-3 animate-spin" /> Marking in Progress
               </span>
             )}
           </div>
 
-          <h1 className="text-2xl sm:text-4xl font-serif text-[#141413] tracking-tight">
+          <h1 className="text-2xl sm:text-4xl font-serif text-[#faf9f5] tracking-tight">
             {manifest.title}
           </h1>
-          <p className="text-xs text-[#54524c] font-mono-code mt-1">
+          <p className="text-xs text-[#a09d96] font-mono-code mt-1">
             Submitted on {new Date(session.submittedAt || session.startedAt).toLocaleString()} • {session.subjectCategory}
           </p>
         </div>
@@ -327,8 +327,8 @@ export default function ResultsPage() {
             href={`/learn/${manifest.id}`}
             className="claude-btn-pill-secondary text-xs px-4 py-2"
           >
-            <span className="btn-icon-bubble bg-[#efe9de] text-[#a94e32]">
-              <Compass className="w-3.5 h-3.5 text-[#a94e32]" />
+            <span className="btn-icon-bubble bg-white/10 text-[#cc785c]">
+              <Compass className="w-3.5 h-3.5 text-[#cc785c]" />
             </span>
             <span>Socratic Revision</span>
           </Link>
@@ -395,8 +395,8 @@ export default function ResultsPage() {
 
       {/* Stream Error Notice */}
       {streamError && (
-        <div className="bg-[#c64545]/15 border border-[#c64545]/30 rounded-xl p-4 flex items-center gap-3 text-xs text-[#c64545]">
-          <AlertCircle className="w-4 h-4 text-[#c64545] shrink-0" />
+        <div className="bg-[#c64545]/15 border border-[#c64545]/30 rounded-xl p-4 flex items-center gap-3 text-xs text-[#fca5a5]">
+          <AlertCircle className="w-4 h-4 text-[#fca5a5] shrink-0" />
           <div className="flex-1">
             <span className="font-semibold">Marking Notice:</span> {streamError}
           </div>
@@ -423,13 +423,13 @@ export default function ResultsPage() {
           />
         </section>
       ) : (
-        <section className="double-bezel-outer-cream">
-          <div className="double-bezel-inner-cream p-6 text-center space-y-2 text-[#141413]">
-            <div className="flex items-center justify-center gap-2 text-[#54524c] font-mono-code text-xs">
-              <Clock className="w-4 h-4 text-[#a94e32]" />
+        <section className="double-bezel-outer-dark">
+          <div className="double-bezel-inner-dark p-6 text-center space-y-2 text-[#faf9f5]">
+            <div className="flex items-center justify-center gap-2 text-[#a09d96] font-mono-code text-xs">
+              <Clock className="w-4 h-4 text-[#cc785c]" />
               <span>Your predicted 1-7 grade and topic strengths will calculate once all questions are marked</span>
             </div>
-            <p className="text-[11px] text-[#54524c] font-mono-code">
+            <p className="text-[11px] text-[#a09d96] font-mono-code">
               Examiner feedback and method marks are ready below for you to review.
             </p>
           </div>
@@ -439,11 +439,11 @@ export default function ResultsPage() {
       {/* 2. Side-by-Side Examiner Review (Instant feedback on Q1 while Q2..N stream) */}
       <section>
         <div className="mb-3">
-          <h2 className="text-xl font-serif font-normal text-[#141413] flex items-center gap-2">
-            <FileCheck className="w-4 h-4 text-[#a94e32]" />
+          <h2 className="text-xl font-serif font-normal text-[#faf9f5] flex items-center gap-2">
+            <FileCheck className="w-4 h-4 text-[#cc785c]" />
             Question Review &amp; Examiner Marks
           </h2>
-          <p className="text-xs text-[#54524c] font-mono-code">
+          <p className="text-xs text-[#a09d96] font-mono-code">
             See where marks were awarded, with examiner margin notes and method marks
           </p>
         </div>

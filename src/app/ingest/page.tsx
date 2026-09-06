@@ -35,8 +35,8 @@ const COMPILATION_PIPELINE: CompilationStep[] = [
   {
     stage: 'THINKING',
     pillLabel: 'Reading Files',
-    pastelBg: '#e6dfd8',
-    pastelText: '#141413',
+    pastelBg: '#252320',
+    pastelText: '#faf9f5',
     substeps: [
       'Reading PDF files...',
       'Checking page numbers and layout...',
@@ -213,31 +213,31 @@ export default function IngestPage() {
   };
 
   return (
-    <div className="flex-1 w-full bg-[#faf9f5] text-[#141413] py-10 px-4 sm:px-8">
+    <div className="flex-1 w-full bg-[#181715] text-[#faf9f5] py-10 px-4 sm:px-8">
       <div className="max-w-4xl mx-auto space-y-8">
         {/* Navigation Breadcrumb */}
         <div className="flex items-center justify-between">
           <Link
             href="/"
-            className="inline-flex items-center gap-2 text-xs font-medium text-[#54524c] hover:text-[#141413] transition active:scale-[0.98]"
+            className="inline-flex items-center gap-2 text-xs font-medium text-[#a09d95] hover:text-[#faf9f5] transition active:scale-[0.98]"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
             <span>Return to Exam Catalog</span>
           </Link>
 
-          <div className="eyebrow-pill bg-[#efe9de] border border-[#e6dfd8] text-[#141413] gap-2 px-3.5 py-1">
-            <SpikeMark className="w-3.5 h-3.5 text-[#a94e32]" />
-            <span className="font-semibold text-[#a94e32]">Add Past Paper</span>
-            <span className="text-[#54524c]">• Question Paper + Markscheme</span>
+          <div className="eyebrow-pill bg-[#252320] border border-white/10 text-[#faf9f5] gap-2 px-3.5 py-1">
+            <SpikeMark className="w-3.5 h-3.5 text-[#cc785c]" />
+            <span className="font-semibold text-[#cc785c]">Add Past Paper</span>
+            <span className="text-[#a09d95]">• Question Paper + Markscheme</span>
           </div>
         </div>
 
         {/* Page Header */}
         <div className="space-y-2 text-center sm:text-left">
-          <h1 className="display-lg font-serif-display font-normal text-[#141413] tracking-[-1.5px]">
+          <h1 className="display-lg font-serif-display font-normal text-[#faf9f5] tracking-[-1.5px]">
             Add Past Exam Papers
           </h1>
-          <p className="body-md text-[#3d3d3a] text-sm sm:text-base max-w-2xl leading-relaxed">
+          <p className="body-md text-[#d6cfc5] text-sm sm:text-base max-w-2xl leading-relaxed">
             Upload an official IB Question Paper and its matching Markscheme PDF. We will turn them into an interactive exam with step-by-step method marking and follow-through protection.
           </p>
         </div>
@@ -250,13 +250,13 @@ export default function IngestPage() {
             <div className="double-bezel-inner-cream p-6 sm:p-10 space-y-6">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {/* 1. Question Paper Dropzone */}
-                <div className="p-1 rounded-2xl bg-[#e6dfd8]/60 transition-fluid group/drop">
+                <div className="p-1 rounded-2xl bg-white/5 transition-fluid group/drop">
                   <div
                     onClick={() => paperInputRef.current?.click()}
                     className={`p-6 rounded-[calc(1rem+4px)] border text-center cursor-pointer transition-all duration-200 flex flex-col items-center justify-center min-h-[190px] ${
                       paperFile
-                        ? 'bg-[#faf9f5] border-[#a94e32] text-[#141413] shadow-xs'
-                        : 'bg-[#faf9f5] border-[#e6dfd8] hover:border-[#a94e32]/60 text-[#54524c] hover:text-[#141413]'
+                        ? 'bg-[#1f1e1b] border-[#cc785c] text-[#faf9f5] shadow-xs'
+                        : 'bg-[#181715] border-white/10 hover:border-[#cc785c]/60 text-[#a09d95] hover:text-[#faf9f5]'
                     }`}
                   >
                     <input
@@ -270,13 +270,13 @@ export default function IngestPage() {
                     />
                     {paperFile ? (
                       <div className="flex flex-col items-center space-y-1.5 animate-attach-settle">
-                        <div className="w-10 h-10 rounded-xl bg-[#a94e32]/10 border border-[#a94e32]/30 flex items-center justify-center text-[#a94e32] mb-1">
-                          <FileCheck className="w-5 h-5 text-[#a94e32]" />
+                        <div className="w-10 h-10 rounded-xl bg-[#cc785c]/10 border border-[#cc785c]/30 flex items-center justify-center text-[#cc785c] mb-1">
+                          <FileCheck className="w-5 h-5 text-[#cc785c]" />
                         </div>
-                        <span className="text-xs font-mono-code font-semibold text-[#141413] truncate max-w-[240px]">
+                        <span className="text-xs font-mono-code font-semibold text-[#faf9f5] truncate max-w-[240px]">
                           {paperFile.name}
                         </span>
-                        <span className="text-[11px] text-[#54524c] font-mono-code">
+                        <span className="text-[11px] text-[#a09d95] font-mono-code">
                           Question Paper • {(paperFile.size / 1024 / 1024).toFixed(2)} MB
                         </span>
                         <span className="text-[10px] text-[#5db872] font-mono-code font-semibold pt-1">
@@ -285,12 +285,12 @@ export default function IngestPage() {
                       </div>
                     ) : (
                       <>
-                        <div className="w-12 h-12 rounded-xl bg-[#efe9de] border border-[#e6dfd8] flex items-center justify-center text-[#a94e32] mb-3 group-hover/drop:scale-105 transition-spring">
+                        <div className="w-12 h-12 rounded-xl bg-[#252320] border border-white/10 flex items-center justify-center text-[#cc785c] mb-3 group-hover/drop:scale-105 transition-spring">
                           <FileUp className="w-6 h-6" />
                         </div>
-                        <span className="text-sm font-medium text-[#141413]">1. Question Paper PDF</span>
-                        <span className="text-xs text-[#54524c] mt-1">Click to select or drag booklet</span>
-                        <span className="text-[10px] text-[#54524c] font-mono-code mt-2">
+                        <span className="text-sm font-medium text-[#faf9f5]">1. Question Paper PDF</span>
+                        <span className="text-xs text-[#a09d95] mt-1">Click to select or drag booklet</span>
+                        <span className="text-[10px] text-[#a09d95] font-mono-code mt-2">
                           The questions and diagrams for students
                         </span>
                       </>
@@ -299,13 +299,13 @@ export default function IngestPage() {
                 </div>
 
                 {/* 2. Markscheme Dropzone */}
-                <div className="p-1 rounded-2xl bg-[#e6dfd8]/60 transition-fluid group/drop">
+                <div className="p-1 rounded-2xl bg-white/5 transition-fluid group/drop">
                   <div
                     onClick={() => markschemeInputRef.current?.click()}
                     className={`p-6 rounded-[calc(1rem+4px)] border text-center cursor-pointer transition-all duration-200 flex flex-col items-center justify-center min-h-[190px] ${
                       markschemeFile
-                        ? 'bg-[#faf9f5] border-[#a94e32] text-[#141413] shadow-xs'
-                        : 'bg-[#faf9f5] border-[#e6dfd8] hover:border-[#a94e32]/60 text-[#54524c] hover:text-[#141413]'
+                        ? 'bg-[#1f1e1b] border-[#cc785c] text-[#faf9f5] shadow-xs'
+                        : 'bg-[#181715] border-white/10 hover:border-[#cc785c]/60 text-[#a09d95] hover:text-[#faf9f5]'
                     }`}
                   >
                     <input
@@ -319,13 +319,13 @@ export default function IngestPage() {
                     />
                     {markschemeFile ? (
                       <div className="flex flex-col items-center space-y-1.5 animate-attach-settle">
-                        <div className="w-10 h-10 rounded-xl bg-[#a94e32]/10 border border-[#a94e32]/30 flex items-center justify-center text-[#a94e32] mb-1">
-                          <FileCheck className="w-5 h-5 text-[#a94e32]" />
+                        <div className="w-10 h-10 rounded-xl bg-[#cc785c]/10 border border-[#cc785c]/30 flex items-center justify-center text-[#cc785c] mb-1">
+                          <FileCheck className="w-5 h-5 text-[#cc785c]" />
                         </div>
-                        <span className="text-xs font-mono-code font-semibold text-[#141413] truncate max-w-[240px]">
+                        <span className="text-xs font-mono-code font-semibold text-[#faf9f5] truncate max-w-[240px]">
                           {markschemeFile.name}
                         </span>
-                        <span className="text-[11px] text-[#54524c] font-mono-code">
+                        <span className="text-[11px] text-[#a09d95] font-mono-code">
                           Markscheme • {(markschemeFile.size / 1024 / 1024).toFixed(2)} MB
                         </span>
                         <span className="text-[10px] text-[#5db872] font-mono-code font-semibold pt-1">
@@ -334,12 +334,12 @@ export default function IngestPage() {
                       </div>
                     ) : (
                       <>
-                        <div className="w-12 h-12 rounded-xl bg-[#efe9de] border border-[#e6dfd8] flex items-center justify-center text-[#a94e32] mb-3 group-hover/drop:scale-105 transition-spring">
+                        <div className="w-12 h-12 rounded-xl bg-[#252320] border border-white/10 flex items-center justify-center text-[#cc785c] mb-3 group-hover/drop:scale-105 transition-spring">
                           <FileUp className="w-6 h-6" />
                         </div>
-                        <span className="text-sm font-medium text-[#141413]">2. Official Markscheme PDF</span>
-                        <span className="text-xs text-[#54524c] mt-1">Click to select or drag booklet</span>
-                        <span className="text-[10px] text-[#54524c] font-mono-code mt-2">
+                        <span className="text-sm font-medium text-[#faf9f5]">2. Official Markscheme PDF</span>
+                        <span className="text-xs text-[#a09d95] mt-1">Click to select or drag booklet</span>
+                        <span className="text-[10px] text-[#a09d95] font-mono-code mt-2">
                           The official scoring rubric with mark codes
                         </span>
                       </>
@@ -355,8 +355,8 @@ export default function IngestPage() {
                 </div>
               )}
 
-              <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t border-[#e6dfd8]">
-                <div className="text-xs text-[#54524c] font-mono-code">
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t border-white/10">
+                <div className="text-xs text-[#a09d95] font-mono-code">
                   Ready to read questions, formulas, and mark codes
                 </div>
 
@@ -462,8 +462,8 @@ export default function IngestPage() {
             <div className="double-bezel-outer-cream">
               <div className="double-bezel-inner-cream p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                 <div className="space-y-1.5">
-                  <div className="flex items-center gap-2 text-xs font-mono-code text-[#54524c]">
-                    <span className="text-[#a94e32] font-semibold">{activeManifest.category}</span>
+                  <div className="flex items-center gap-2 text-xs font-mono-code text-[#a09d95]">
+                    <span className="text-[#cc785c] font-semibold">{activeManifest.category}</span>
                     <span>•</span>
                     <span>{activeManifest.durationMinutes} mins</span>
                     <span>•</span>
@@ -471,10 +471,10 @@ export default function IngestPage() {
                     <span>•</span>
                     <span>{activeManifest.questions.length} questions</span>
                   </div>
-                  <h2 className="font-serif-display text-2xl font-normal text-[#141413]">
+                  <h2 className="font-serif-display text-2xl font-normal text-[#faf9f5]">
                     {activeManifest.title}
                   </h2>
-                  <p className="text-xs text-[#54524c] font-mono-code">
+                  <p className="text-xs text-[#a09d95] font-mono-code">
                     {activeManifest.subtitle}
                   </p>
                 </div>
@@ -484,7 +484,7 @@ export default function IngestPage() {
                   onClick={resetForm}
                   className="claude-btn-pill-secondary text-xs flex items-center gap-1.5 active:scale-[0.98]"
                 >
-                  <RotateCcw className="w-3.5 h-3.5 text-[#54524c]" />
+                  <RotateCcw className="w-3.5 h-3.5 text-[#a09d95]" />
                   <span>Add Another Paper</span>
                 </button>
               </div>
@@ -497,17 +497,17 @@ export default function IngestPage() {
                 <div className="double-bezel-inner-cream p-7 flex flex-col justify-between space-y-6 h-full">
                   <div className="space-y-2.5">
                     <div className="flex items-center justify-between text-xs">
-                      <span className="eyebrow-pill bg-[#a94e32]/10 text-[#a94e32] border border-[#a94e32]/20 px-2.5 py-0.5">
+                      <span className="eyebrow-pill bg-[#cc785c]/10 text-[#cc785c] border border-[#cc785c]/20 px-2.5 py-0.5">
                         Exam Simulation
                       </span>
-                      <span className="text-[#54524c] font-mono-code flex items-center gap-1">
+                      <span className="text-[#a09d95] font-mono-code flex items-center gap-1">
                         <Clock className="w-3 h-3" /> {activeManifest.durationMinutes}m
                       </span>
                     </div>
-                    <h3 className="font-serif-display text-2xl font-normal text-[#141413]">
+                    <h3 className="font-serif-display text-2xl font-normal text-[#faf9f5]">
                       Timed Mock Exam
                     </h3>
-                    <p className="body-md text-[#3d3d3a] text-xs leading-relaxed">
+                    <p className="body-md text-[#d6cfc5] text-xs leading-relaxed">
                       Practice under real exam conditions with a built-in notepad and canvas. Your working is marked step-by-step with follow-through protection.
                     </p>
                   </div>
@@ -530,15 +530,15 @@ export default function IngestPage() {
                 <div className="double-bezel-inner-cream p-7 flex flex-col justify-between space-y-6 h-full">
                   <div className="space-y-2.5">
                     <div className="flex items-center justify-between text-xs">
-                      <span className="eyebrow-pill bg-[#1d6c5f]/10 text-[#1d6c5f] border border-[#1d6c5f]/30 px-2.5 py-0.5">
+                      <span className="eyebrow-pill bg-[#5db8a6]/15 text-[#5db8a6] border border-[#5db8a6]/30 px-2.5 py-0.5">
                         Collaborative Tutor
                       </span>
-                      <span className="text-[#54524c] font-mono-code">Step-by-Step Guidance</span>
+                      <span className="text-[#a09d95] font-mono-code">Step-by-Step Guidance</span>
                     </div>
-                    <h3 className="font-serif-display text-2xl font-normal text-[#141413]">
+                    <h3 className="font-serif-display text-2xl font-normal text-[#faf9f5]">
                       Socratic Learn Mode
                     </h3>
-                    <p className="body-md text-[#3d3d3a] text-xs leading-relaxed">
+                    <p className="body-md text-[#d6cfc5] text-xs leading-relaxed">
                       Work through problems step by step with targeted hints, formula booklet reminders, and guided feedback.
                     </p>
                   </div>
@@ -549,8 +549,8 @@ export default function IngestPage() {
                     className="claude-btn-pill-secondary w-full justify-between"
                   >
                     <span>Start Socratic Tutor</span>
-                    <span className="btn-icon-bubble bg-[#efe9de] text-[#a94e32]">
-                      <Compass className="w-3.5 h-3.5 text-[#a94e32]" />
+                    <span className="btn-icon-bubble bg-[#252320] text-[#cc785c]">
+                      <Compass className="w-3.5 h-3.5 text-[#cc785c]" />
                     </span>
                   </button>
                 </div>

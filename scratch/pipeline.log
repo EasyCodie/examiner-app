@@ -34,3 +34,10 @@
 [2026-09-06T07:33:53.444Z] GEMINI_SUCCESS - {"model":"gemini-3.5-flash-lite","responseChars":49712}
 [2026-09-06T07:33:53.445Z] MANIFEST_PARSED - {"title":"Mathematics: analysis and approaches Higher level","totalMarks":110,"questionCount":12}
 [2026-09-06T07:33:53.446Z] INGEST_SUCCESS - {"manifestId":"custom-1788680033445","questions":12,"gradeBoundaries":{"grade7":80,"grade6":68,"grade5":56,"grade4":44,"grade3":32,"grade2":18,"grade1":0}}
+[2026-09-06T14:34:35.280Z] INGEST_START - {"paperBytes":946286,"markschemeBytes":516861}
+[2026-09-06T14:34:35.281Z] GLM_OCR_START - Dispatching layout parsing for paper & markscheme...
+[2026-09-06T14:34:53.821Z] GLM_OCR_SUCCESS - {"paperMarkdownChars":20067,"markschemeMarkdownChars":38801,"omittedMarkschemeBinary":true}
+[2026-09-06T14:34:53.823Z] GEMINI_ATTEMPT - {"model":"gemini-3.5-flash-lite","thinkingLevel":"low","partsCount":2}
+[2026-09-06T14:35:10.892Z] GEMINI_SUCCESS - {"model":"gemini-3.5-flash-lite","responseChars":22456}
+[2026-09-06T14:35:10.893Z] MANIFEST_PARSED - {"title":"Economics Higher level Paper 2","totalMarks":40,"questionCount":4}
+[2026-09-06T14:35:10.894Z] INGEST_SUCCESS - {"manifestId":"custom-1788705310893","questions":4,"gradeBoundaries":{"grade7":80,"grade6":70,"grade5":60,"grade4":50,"grade3":40,"grade2":30,"grade1":0}}

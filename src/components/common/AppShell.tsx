@@ -93,7 +93,7 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) 
         hasFormulaBooklet,
       }}
     >
-      <div className="min-h-[100dvh] flex flex-col bg-[#faf9f5] text-[#141413]">
+      <div className="min-h-[100dvh] flex flex-col bg-[#181715] text-[#faf9f5]">
         <Header
           paperTitle={headerInfo.paperTitle}
           category={headerInfo.category}

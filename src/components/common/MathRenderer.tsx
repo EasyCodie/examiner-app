@@ -208,11 +208,11 @@ function parseLatexArrayToExamTable(arrayTex: string, lightMode = false): string
 
   const tableClass = lightMode
     ? 'w-full max-w-3xl border-collapse border-2 border-slate-900 text-center font-serif my-6 shadow-sm mx-auto'
-    : 'w-full max-w-3xl border-collapse border-2 border-white/60 text-center font-serif my-6 shadow-sm mx-auto';
+    : 'w-full max-w-3xl border-collapse border-2 border-white/20 text-center font-serif my-6 shadow-sm mx-auto';
 
   const cellBorderClass = lightMode
     ? 'border border-slate-800 px-8 py-4 text-slate-950 font-serif'
-    : 'border border-white/40 px-8 py-4 text-white font-serif';
+    : 'border border-white/10 px-8 py-4 text-[#faf9f5] font-serif';
 
   let html = `<div class="w-full my-6 flex justify-center overflow-x-auto"><table class="${tableClass}"><tbody>`;
 
@@ -227,7 +227,7 @@ function parseLatexArrayToExamTable(arrayTex: string, lightMode = false): string
 
       const bgClass = lightMode
         ? (isHeaderRow ? 'bg-slate-50/60 font-semibold' : 'bg-white')
-        : (isHeaderRow ? 'bg-white/[0.04] font-semibold' : 'bg-transparent');
+        : (isHeaderRow ? 'bg-white/[0.04] font-semibold text-[#faf9f5]' : 'bg-transparent text-[#faf9f5]');
 
       const fontClass = isFirstCol ? 'font-semibold' : 'font-normal';
       const cellContent = cell ? safeRenderKaTeX(cell, false) : '&nbsp;';
@@ -337,10 +337,10 @@ export const MathRenderer: React.FC<MathRendererProps> = React.memo(({
 
         const tableClass = lightMode
           ? 'w-full max-w-3xl border-collapse border-2 border-slate-900 text-center font-serif my-6 shadow-sm mx-auto'
-          : 'w-full max-w-3xl border-collapse border-2 border-white/60 text-center font-serif my-6 shadow-sm mx-auto';
+          : 'w-full max-w-3xl border-collapse border-2 border-white/20 text-center font-serif my-6 shadow-sm mx-auto';
         const cellClass = lightMode
           ? 'border border-slate-800 px-8 py-4 text-slate-950 font-serif text-[15px]'
-          : 'border border-white/40 px-8 py-4 text-white font-serif text-[15px]';
+          : 'border border-white/10 px-8 py-4 text-[#faf9f5] font-serif text-[15px]';
 
         let tableHtml = `<div class="w-full overflow-x-auto my-6 flex justify-center"><table class="${tableClass}"><thead><tr>`;
         headers.forEach((h) => {
@@ -431,7 +431,7 @@ export const MathRenderer: React.FC<MathRendererProps> = React.memo(({
     // PHASE 13: Markdown formatting on the remaining prose
     const strongClass = lightMode
       ? 'font-semibold text-slate-950 tracking-normal'
-      : 'font-semibold text-white tracking-normal';
+      : 'font-semibold text-[#faf9f5] tracking-normal';
 
     // Bold (**word** or __word__)
     text = text.replace(/\*\*(.*?)\*\*/g, (_, bold) => `<strong class="${strongClass}">${bold}</strong>`);
@@ -461,9 +461,7 @@ export const MathRenderer: React.FC<MathRendererProps> = React.memo(({
   const defaultTextColor =
     lightMode === true
       ? 'text-[#141413]'
-      : lightMode === false
-      ? 'text-[#faf9f5]'
-      : 'text-inherit';
+      : 'text-[#faf9f5]';
   const baseStyle = `${hasCustomTextColor ? '' : defaultTextColor} leading-relaxed math-content`;
 
   return (

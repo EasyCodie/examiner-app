@@ -82,33 +82,33 @@ export const DualUploadDropzone: React.FC<DualUploadDropzoneProps> = ({ onManife
   };
 
   return (
-    <div className="double-bezel-outer-cream">
-      <div className="double-bezel-inner-cream p-6 sm:p-8 relative overflow-hidden text-[#141413]">
+    <div className="double-bezel-outer-dark">
+      <div className="double-bezel-inner-dark p-6 sm:p-8 relative overflow-hidden text-[#faf9f5]">
         <div className="mb-6">
           <div className="flex items-center gap-2 mb-2">
-            <span className="eyebrow-pill text-[#a94e32] bg-[#a94e32]/10 border border-[#a94e32]/20 px-2.5 py-0.5 flex items-center gap-1.5">
-              <SpikeMark className="w-3 h-3 text-[#a94e32]" />
+            <span className="eyebrow-pill text-[#cc785c] bg-[#cc785c]/15 border border-[#cc785c]/30 px-2.5 py-0.5 flex items-center gap-1.5">
+              <SpikeMark className="w-3 h-3 text-[#cc785c]" />
               Add Exam Paper
             </span>
-            <span className="text-xs text-[#54524c] font-mono-code">• With Markscheme</span>
+            <span className="text-xs text-[#a09d96] font-mono-code">• With Markscheme</span>
           </div>
-          <h3 className="font-serif-display text-2xl font-normal text-[#141413] tracking-tight">
+          <h3 className="font-serif-display text-2xl font-normal text-[#faf9f5] tracking-tight">
             Add Past Exam Paper &amp; Markscheme
           </h3>
-          <p className="text-xs text-[#3d3d3a] mt-1 max-w-2xl leading-relaxed">
+          <p className="text-xs text-[#d6cfc5] mt-1 max-w-2xl leading-relaxed">
             Upload an official IB Question Paper alongside its matching Markscheme PDF. We will turn both files into an interactive exam with step-by-step marking.
           </p>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
           {/* Question Paper Dropzone */}
-          <div className="p-1 rounded-2xl bg-[#e6dfd8]/60 transition-fluid group/drop">
+          <div className="p-1 rounded-2xl bg-white/5 transition-fluid group/drop">
             <div
               onClick={() => paperInputRef.current?.click()}
               className={`border rounded-[calc(1rem+4px)] p-6 text-center cursor-pointer transition flex flex-col items-center justify-center min-h-[170px] ${
                 paperFile
-                  ? 'border-[#a94e32] bg-[#faf9f5] text-[#141413]'
-                  : 'border-[#e6dfd8] hover:border-[#a94e32]/50 bg-[#faf9f5] text-[#54524c] hover:text-[#141413]'
+                  ? 'border-[#cc785c] bg-[#181715] text-[#faf9f5]'
+                  : 'border-white/10 hover:border-[#cc785c]/50 bg-[#181715] text-[#a09d96] hover:text-[#faf9f5]'
               }`}
             >
               <input
@@ -122,32 +122,32 @@ export const DualUploadDropzone: React.FC<DualUploadDropzoneProps> = ({ onManife
               />
               {paperFile ? (
                 <div className="flex flex-col items-center animate-attach-settle">
-                  <FileCheck className="w-8 h-8 text-[#a94e32] mb-2" />
-                  <span className="text-xs font-semibold font-mono-code text-[#141413] truncate max-w-xs">{paperFile.name}</span>
-                  <span className="text-[10px] text-[#54524c] font-mono-code mt-1">
+                  <FileCheck className="w-8 h-8 text-[#cc785c] mb-2" />
+                  <span className="text-xs font-semibold font-mono-code text-[#faf9f5] truncate max-w-xs">{paperFile.name}</span>
+                  <span className="text-[10px] text-[#a09d96] font-mono-code mt-1">
                     {(paperFile.size / 1024 / 1024).toFixed(2)} MB • Question Paper PDF
                   </span>
                 </div>
               ) : (
                 <>
-                  <div className="w-10 h-10 rounded-lg bg-[#efe9de] border border-[#e6dfd8] flex items-center justify-center text-[#a94e32] mb-2.5 group-hover/drop:scale-105 transition-spring">
+                  <div className="w-10 h-10 rounded-lg bg-[#252320] border border-white/10 flex items-center justify-center text-[#cc785c] mb-2.5 group-hover/drop:scale-105 transition-spring">
                     <FileUp className="w-5 h-5" />
                   </div>
-                  <span className="text-xs font-medium text-[#141413]">1. Question Paper PDF</span>
-                  <span className="text-[10px] text-[#54524c] font-mono-code mt-0.5">Click or drop official exam PDF</span>
+                  <span className="text-xs font-medium text-[#faf9f5]">1. Question Paper PDF</span>
+                  <span className="text-[10px] text-[#a09d96] font-mono-code mt-0.5">Click or drop official exam PDF</span>
                 </>
               )}
             </div>
           </div>
 
           {/* Markscheme Dropzone */}
-          <div className="p-1 rounded-2xl bg-[#e6dfd8]/60 transition-fluid group/drop">
+          <div className="p-1 rounded-2xl bg-white/5 transition-fluid group/drop">
             <div
               onClick={() => markschemeInputRef.current?.click()}
               className={`border rounded-[calc(1rem+4px)] p-6 text-center cursor-pointer transition flex flex-col items-center justify-center min-h-[170px] ${
                 markschemeFile
-                  ? 'border-[#a94e32] bg-[#faf9f5] text-[#141413]'
-                  : 'border-[#e6dfd8] hover:border-[#a94e32]/50 bg-[#faf9f5] text-[#54524c] hover:text-[#141413]'
+                  ? 'border-[#cc785c] bg-[#181715] text-[#faf9f5]'
+                  : 'border-white/10 hover:border-[#cc785c]/50 bg-[#181715] text-[#a09d96] hover:text-[#faf9f5]'
               }`}
             >
               <input
@@ -161,19 +161,19 @@ export const DualUploadDropzone: React.FC<DualUploadDropzoneProps> = ({ onManife
               />
               {markschemeFile ? (
                 <div className="flex flex-col items-center animate-attach-settle">
-                  <FileCheck className="w-8 h-8 text-[#a94e32] mb-2" />
-                  <span className="text-xs font-semibold font-mono-code text-[#141413] truncate max-w-xs">{markschemeFile.name}</span>
-                  <span className="text-[10px] text-[#54524c] font-mono-code mt-1">
+                  <FileCheck className="w-8 h-8 text-[#cc785c] mb-2" />
+                  <span className="text-xs font-semibold font-mono-code text-[#faf9f5] truncate max-w-xs">{markschemeFile.name}</span>
+                  <span className="text-[10px] text-[#a09d96] font-mono-code mt-1">
                     {(markschemeFile.size / 1024 / 1024).toFixed(2)} MB • Markscheme PDF
                   </span>
                 </div>
               ) : (
                 <>
-                  <div className="w-10 h-10 rounded-lg bg-[#efe9de] border border-[#e6dfd8] flex items-center justify-center text-[#a94e32] mb-2.5 group-hover/drop:scale-105 transition-spring">
+                  <div className="w-10 h-10 rounded-lg bg-[#252320] border border-white/10 flex items-center justify-center text-[#cc785c] mb-2.5 group-hover/drop:scale-105 transition-spring">
                     <FileUp className="w-5 h-5" />
                   </div>
-                  <span className="text-xs font-medium text-[#141413]">2. Official Markscheme PDF</span>
-                  <span className="text-[10px] text-[#54524c] font-mono-code mt-0.5">Click or drop matching rubric PDF</span>
+                  <span className="text-xs font-medium text-[#faf9f5]">2. Official Markscheme PDF</span>
+                  <span className="text-[10px] text-[#a09d96] font-mono-code mt-0.5">Click or drop matching rubric PDF</span>
                 </>
               )}
             </div>
@@ -181,19 +181,19 @@ export const DualUploadDropzone: React.FC<DualUploadDropzoneProps> = ({ onManife
         </div>
 
         {error && (
-          <div className="mb-4 p-3.5 rounded-lg bg-[#c64545]/10 border border-[#c64545]/30 text-[#c64545] text-xs flex items-center gap-2 font-mono-code animate-message-enter">
-            <AlertCircle className="w-4 h-4 text-[#c64545] shrink-0" />
+          <div className="mb-4 p-3.5 rounded-lg bg-[#c64545]/15 border border-[#c64545]/30 text-[#fca5a5] text-xs flex items-center gap-2 font-mono-code animate-message-enter">
+            <AlertCircle className="w-4 h-4 text-[#fca5a5] shrink-0" />
             <span>{error}</span>
           </div>
         )}
 
         {isIngesting && (
-          <div className="mb-4 p-4 rounded-xl bg-[#faf9f5] border border-[#a94e32]/30 text-xs flex items-center gap-3 relative overflow-hidden animate-message-enter">
-            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#a94e32]/10 to-transparent animate-beam-scan pointer-events-none" />
-            <Loader2 className="w-5 h-5 text-[#a94e32] animate-spin shrink-0 relative z-10" />
+          <div className="mb-4 p-4 rounded-xl bg-[#1f1e1b] border border-[#cc785c]/30 text-xs flex items-center gap-3 relative overflow-hidden animate-message-enter">
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#cc785c]/10 to-transparent animate-beam-scan pointer-events-none" />
+            <Loader2 className="w-5 h-5 text-[#cc785c] animate-spin shrink-0 relative z-10" />
             <div className="relative z-10">
-              <span className="font-semibold block text-[#141413] mb-0.5 font-mono-code">Preparing Your Exam Paper</span>
-              <span className="text-[#54524c] font-mono-code">{ingestStatus}</span>
+              <span className="font-semibold block text-[#faf9f5] mb-0.5 font-mono-code">Preparing Your Exam Paper</span>
+              <span className="text-[#a09d96] font-mono-code">{ingestStatus}</span>
             </div>
           </div>
         )}

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useSearchParams } from 'next/navigation';
 import {
   ExamManifest,
@@ -100,7 +100,7 @@ export default function SocraticLearnPage() {
 
   const currentQuestion: QuestionItem | undefined = manifest?.questions[selectedQuestionIndex];
 
-  const handleSelectQuestion = (idx: number) => {
+  const handleSelectQuestion = useCallback((idx: number) => {
     setSelectedQuestionIndex(idx);
     setCurrentTier(1);
     setIsMarkschemeUnlocked(false);
@@ -123,7 +123,39 @@ export default function SocraticLearnPage() {
         };
       });
     }
-  };
+  }, [manifest]);
+
+  // Keyboard navigation: ArrowLeft / ArrowRight to switch questions (when not typing)
+  useEffect(() => {
+    const handleKeyNav = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement | null;
+      if (
+        target &&
+        (target.tagName === 'INPUT' ||
+          target.tagName === 'TEXTAREA' ||
+          target.isContentEditable)
+      ) {
+        return;
+      }
+
+      if (!manifest) return;
+
+      if (e.key === 'ArrowLeft') {
+        if (selectedQuestionIndex > 0) {
+          e.preventDefault();
+          handleSelectQuestion(selectedQuestionIndex - 1);
+        }
+      } else if (e.key === 'ArrowRight') {
+        if (selectedQuestionIndex < manifest.questions.length - 1) {
+          e.preventDefault();
+          handleSelectQuestion(selectedQuestionIndex + 1);
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyNav);
+    return () => window.removeEventListener('keydown', handleKeyNav);
+  }, [selectedQuestionIndex, manifest, handleSelectQuestion]);
 
   // Send message to Socratic tutor
   const handleSendMessage = async (userText: string, tier: PedagogicalTier) => {
@@ -210,7 +242,7 @@ export default function SocraticLearnPage() {
   if (!manifest || !currentQuestion) {
     return (
       <div className="flex-1 flex items-center justify-center p-8">
-        <Sparkles className="w-8 h-8 text-[#a94e32] animate-spin" />
+        <Sparkles className="w-8 h-8 text-[#cc785c] animate-spin" />
       </div>
     );
   }
@@ -219,51 +251,68 @@ export default function SocraticLearnPage() {
 
   return (
     <div className="flex-1 flex flex-col p-4 sm:p-6 max-w-7xl mx-auto w-full gap-5 select-text pb-16">
-      {/* Sticky Question Tabs Bar (Double-Bezel Dark Island) */}
-      <div className="sticky top-12 z-20 double-bezel-outer-dark">
-        <div className="double-bezel-inner-dark p-2.5 flex items-center justify-between">
-          <div className="flex items-center gap-1.5 overflow-x-auto">
-            <span className="text-[10px] font-mono-code uppercase text-[#a09d96] font-semibold px-1">Q:</span>
-            {manifest.questions.map((q, idx) => {
-              const isSelected = idx === selectedQuestionIndex;
-              return (
-                <button
-                  key={q.id}
-                  type="button"
-                  onClick={() => handleSelectQuestion(idx)}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-mono-code whitespace-nowrap transition-fluid flex items-center justify-center ${isSelected
-                      ? 'bg-[#a94e32] text-white font-medium shadow-sm ring-1 ring-white/20'
-                      : 'bg-[#252320] text-[#a09d96] hover:text-[#faf9f5] border border-white/5'
-                    }`}
-                >
-                  <span>{q.number.replace(/^Question\s*/i, '')}</span>
-                </button>
-              );
-            })}
+      {/* Sticky Question Tabs Bar: Clean frosted glass island resting beneath floating header */}
+      <div className="sticky top-[72px] sm:top-[76px] z-30 w-full">
+        <div className="bg-[#1f1e1b]/95 backdrop-blur-xl border border-white/10 rounded-2xl p-2 px-3 sm:px-4 flex items-center justify-between shadow-xl transition-all">
+          <div className="flex items-center gap-2 overflow-x-auto min-w-0 pr-2">
+            <span className="text-[10px] font-mono-code uppercase text-[#a09d96] font-semibold px-1 shrink-0">
+              Q:
+            </span>
+            <div className="flex items-center gap-1.5">
+              {manifest.questions.map((q, idx) => {
+                const isSelected = idx === selectedQuestionIndex;
+                return (
+                  <button
+                    key={q.id}
+                    type="button"
+                    onClick={() => handleSelectQuestion(idx)}
+                    className={`px-2.5 sm:px-3 py-1 rounded-lg text-xs font-mono-code whitespace-nowrap transition-fluid flex items-center justify-center shrink-0 ${isSelected
+                        ? 'bg-[#cc785c] text-white font-semibold shadow-xs ring-1 ring-[#cc785c]/50'
+                        : 'bg-[#252320] text-[#a09d96] hover:text-[#faf9f5] border border-white/5'
+                      }`}
+                  >
+                    <span>{q.number.replace(/^Question\s*/i, '')}</span>
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Active Question Metadata Badge */}
+            <div className="hidden sm:flex items-center gap-2 pl-2 border-l border-white/10 shrink-0">
+              <span className="text-[10px] font-mono-code uppercase font-semibold text-[#cc785c] bg-[#cc785c]/15 px-2.5 py-0.5 rounded-full border border-[#cc785c]/30">
+                {currentQuestion.commandTerm}
+              </span>
+              <span className="hidden md:inline-block text-[11px] font-mono-code text-[#a09d96]">
+                [{currentQuestion.totalMarks} Marks]
+              </span>
+            </div>
           </div>
 
-          <div className="flex items-center gap-1 text-xs text-[#a09d96] font-mono-code shrink-0 pl-2">
+          <div className="flex items-center gap-1 text-xs text-[#a09d96] font-mono-code shrink-0 pl-3 border-l border-white/10">
             <button
               type="button"
               disabled={selectedQuestionIndex <= 0}
               onClick={() => handleSelectQuestion(selectedQuestionIndex - 1)}
-              className="p-1 hover:text-[#faf9f5] disabled:opacity-30 transition"
-              title="Previous Question"
+              className="p-1.5 rounded-md hover:text-[#faf9f5] hover:bg-white/5 disabled:opacity-30 transition focus-ring"
+              title="Previous Question (Arrow Left)"
             >
               <ChevronLeft className="w-4 h-4" />
             </button>
-            <span className="px-1 text-[11px]">
-              {selectedQuestionIndex + 1} / {manifest.questions.length}
+            <span className="px-1.5 text-xs text-[#faf9f5] font-medium">
+              {selectedQuestionIndex + 1} of {manifest.questions.length}
             </span>
             <button
               type="button"
               disabled={selectedQuestionIndex >= manifest.questions.length - 1}
               onClick={() => handleSelectQuestion(selectedQuestionIndex + 1)}
-              className="p-1 hover:text-[#faf9f5] disabled:opacity-30 transition"
-              title="Next Question"
+              className="p-1.5 rounded-md hover:text-[#faf9f5] hover:bg-white/5 disabled:opacity-30 transition focus-ring"
+              title="Next Question (Arrow Right)"
             >
               <ChevronRight className="w-4 h-4" />
             </button>
+            <span className="hidden lg:inline text-[10px] text-[#a09d96]/50 font-mono-code pl-1 select-none">
+              [← / →]
+            </span>
           </div>
         </div>
       </div>
@@ -271,30 +320,9 @@ export default function SocraticLearnPage() {
       {/* Main Socratic Split Workspace */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start flex-1">
         {/* LEFT PANE (Col 1-7): Student Workspace (Canvas / Editor) */}
-        <div className="lg:col-span-7 flex flex-col space-y-3.5">
+        <div className="lg:col-span-7 flex flex-col space-y-3.5 relative min-w-0">
           {isStem ? (
-            <>
-              {/* Canvas Toolbar */}
-              <div className="w-full flex justify-center">
-                <CanvasToolbar
-                  tool={tool}
-                  setTool={setTool}
-                  color={color}
-                  setColor={setColor}
-                  width={width}
-                  setWidth={setWidth}
-                  canUndo={canUndo}
-                  canRedo={canRedo}
-                  onUndo={() => canvasRef.current?.undo()}
-                  onRedo={() => canvasRef.current?.redo()}
-                  onClear={() => canvasRef.current?.clear()}
-                  currentPage={currentQuestion.pageNumber}
-                  totalPages={Math.max(1, ...manifest.questions.map((q) => q.pageNumber))}
-                  onPageChange={() => { }}
-                  showPageNav={false}
-                />
-              </div>
-
+            <div className="relative flex flex-col">
               {/* Interactive Canvas Sheet */}
               <DrawingCanvas
                 key={`learn-canvas-${currentQuestion.id}`}
@@ -319,41 +347,64 @@ export default function SocraticLearnPage() {
                 }}
                 compact={true}
               />
-            </>
+
+              {/* Persistent Bottom-Docked Floating Drawing Dock */}
+              <div className="sticky bottom-6 z-30 w-full flex justify-center pointer-events-none mt-[-58px] pb-2">
+                <div className="pointer-events-auto">
+                  <CanvasToolbar
+                    tool={tool}
+                    setTool={setTool}
+                    color={color}
+                    setColor={setColor}
+                    width={width}
+                    setWidth={setWidth}
+                    canUndo={canUndo}
+                    canRedo={canRedo}
+                    onUndo={() => canvasRef.current?.undo()}
+                    onRedo={() => canvasRef.current?.redo()}
+                    onClear={() => canvasRef.current?.clear()}
+                    currentPage={currentQuestion.pageNumber}
+                    totalPages={Math.max(1, ...manifest.questions.map((q) => q.pageNumber))}
+                    onPageChange={() => {}}
+                    showPageNav={false}
+                  />
+                </div>
+              </div>
+            </div>
           ) : (
-            <div className="double-bezel-outer-cream flex-1">
-              <div className="double-bezel-inner-cream p-6 flex flex-col space-y-4">
-                <div className="border-b border-[#e6dfd8] pb-3">
+            <div className="double-bezel-outer-dark flex-1">
+              <div className="double-bezel-inner-dark p-6 flex flex-col space-y-4">
+                <div className="border-b border-white/10 pb-3">
                   <div className="flex items-center gap-2">
-                    <span className="eyebrow-pill text-[#a94e32] bg-[#a94e32]/10 px-2.5 py-0.5 border border-[#a94e32]/20">
+                    <span className="eyebrow-pill text-[#cc785c] bg-[#cc785c]/15 px-2.5 py-0.5 border border-[#cc785c]/30">
                       {currentQuestion.commandTerm}
                     </span>
-                    <span className="text-xs text-[#54524c] font-mono-code">
+                    <span className="text-xs text-[#a09d96] font-mono-code">
                       {currentQuestion.syllabusSubtopic}
                     </span>
                   </div>
-                  <h3 className="text-xl font-serif font-normal text-[#141413] mt-2 tracking-tight">
+                  <h3 className="text-xl font-serif font-normal text-[#faf9f5] mt-2 tracking-tight">
                     {currentQuestion.number.replace(/^Question\s*/i, '')} ({currentQuestion.totalMarks} Marks)
                   </h3>
                 </div>
 
-                <div className="bg-[#faf9f5] p-5 rounded-xl border border-[#e6dfd8] text-[#141413] text-sm shadow-2xs">
-                  <MathRenderer content={currentQuestion.promptText} lightMode={true} />
+                <div className="bg-[#181715] p-5 rounded-xl border border-white/10 text-[#faf9f5] text-sm shadow-2xs">
+                  <MathRenderer content={currentQuestion.promptText} lightMode={false} />
                 </div>
 
                 <div className="flex-1 flex flex-col space-y-3">
                   <div className="flex items-center justify-between">
-                    <label className="text-xs font-mono-code font-semibold text-[#54524c] uppercase tracking-wider">
+                    <label className="text-xs font-mono-code font-semibold text-[#a09d96] uppercase tracking-wider">
                       Your Draft Response:
                     </label>
                     <button
                       type="button"
                       onClick={() => setShowHumanitiesDiagram(!showHumanitiesDiagram)}
                       className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono-code transition ${showHumanitiesDiagram
-                          ? 'bg-[#a94e32] text-white font-medium shadow-sm'
+                          ? 'bg-[#cc785c] text-white font-medium shadow-sm'
                           : humanitiesDiagrams[currentQuestion.id]
-                            ? 'bg-[#1d6c5f]/15 text-[#1d6c5f] border border-[#1d6c5f]/30'
-                            : 'bg-[#faf9f5] text-[#54524c] hover:text-[#141413] border border-[#e6dfd8]'
+                            ? 'bg-[#5db8a6]/15 text-[#5db8a6] border border-[#5db8a6]/30'
+                            : 'bg-[#252320] text-[#a09d96] hover:text-[#faf9f5] border border-white/10'
                         }`}
                     >
                       <PieChart className="w-3.5 h-3.5" />
@@ -380,7 +431,7 @@ export default function SocraticLearnPage() {
 
                   {/* Essay Structure Helper Toolbar */}
                   <div className="flex flex-wrap items-center gap-1.5 pt-1">
-                    <span className="text-[10px] font-mono-code uppercase font-semibold text-[#54524c] mr-1">
+                    <span className="text-[10px] font-mono-code uppercase font-semibold text-[#a09d96] mr-1">
                       Structure Helpers:
                     </span>
                     <button
@@ -393,7 +444,7 @@ export default function SocraticLearnPage() {
                           [currentQuestion.id]: existing ? `${existing}\n\n${snippet}` : snippet,
                         }));
                       }}
-                      className="text-[10px] font-mono-code font-medium text-[#54524c] hover:text-[#141413] bg-[#faf9f5] hover:bg-[#e5ded2] border border-[#e6dfd8] px-2.5 py-1 rounded-lg transition"
+                      className="text-[10px] font-mono-code font-medium text-[#a09d96] hover:text-[#faf9f5] bg-[#252320] hover:bg-[#2c2a26] border border-white/10 px-2.5 py-1 rounded-lg transition"
                     >
                       + Definition
                     </button>
@@ -407,7 +458,7 @@ export default function SocraticLearnPage() {
                           [currentQuestion.id]: existing ? `${existing}\n\n${snippet}` : snippet,
                         }));
                       }}
-                      className="text-[10px] font-mono-code font-medium text-[#54524c] hover:text-[#141413] bg-[#faf9f5] hover:bg-[#e5ded2] border border-[#e6dfd8] px-2.5 py-1 rounded-lg transition"
+                      className="text-[10px] font-mono-code font-medium text-[#a09d96] hover:text-[#faf9f5] bg-[#252320] hover:bg-[#2c2a26] border border-white/10 px-2.5 py-1 rounded-lg transition"
                     >
                       + Diagram Analysis
                     </button>
@@ -421,7 +472,7 @@ export default function SocraticLearnPage() {
                           [currentQuestion.id]: existing ? `${existing}\n\n${snippet}` : snippet,
                         }));
                       }}
-                      className="text-[10px] font-mono-code font-medium text-[#54524c] hover:text-[#141413] bg-[#faf9f5] hover:bg-[#e5ded2] border border-[#e6dfd8] px-2.5 py-1 rounded-lg transition"
+                      className="text-[10px] font-mono-code font-medium text-[#a09d96] hover:text-[#faf9f5] bg-[#252320] hover:bg-[#2c2a26] border border-white/10 px-2.5 py-1 rounded-lg transition"
                     >
                       + Example
                     </button>
@@ -435,7 +486,7 @@ export default function SocraticLearnPage() {
                           [currentQuestion.id]: existing ? `${existing}\n\n${snippet}` : snippet,
                         }));
                       }}
-                      className="text-[10px] font-mono-code font-medium text-[#a94e32] bg-[#a94e32]/10 hover:bg-[#a94e32]/20 border border-[#a94e32]/30 px-2.5 py-1 rounded-lg transition"
+                      className="text-[10px] font-mono-code font-medium text-[#cc785c] bg-[#cc785c]/15 hover:bg-[#cc785c]/25 border border-[#cc785c]/30 px-2.5 py-1 rounded-lg transition"
                     >
                       + Evaluation
                     </button>
@@ -448,7 +499,7 @@ export default function SocraticLearnPage() {
                       setHumanitiesText((prev) => ({ ...prev, [currentQuestion.id]: text }));
                     }}
                     placeholder="Draft your thoughts or write your working here..."
-                    className="flex-1 min-h-[300px] bg-[#faf9f5] border border-[#e6dfd8] rounded-xl p-4 text-xs font-mono-code text-[#141413] placeholder:text-[#54524c] outline-none focus:border-[#a94e32]"
+                    className="flex-1 min-h-[300px] bg-[#181715] border border-white/10 rounded-xl p-4 text-xs font-mono-code text-[#faf9f5] placeholder:text-[#a09d96] outline-none focus:border-[#cc785c]"
                   />
                 </div>
               </div>
@@ -457,7 +508,7 @@ export default function SocraticLearnPage() {
         </div>
 
         {/* RIGHT PANE (Col 8-12): Sticky Low-Latency Socratic Sidebar */}
-        <div className="lg:col-span-5 lg:sticky lg:top-24 h-auto lg:h-[calc(100vh-120px)] min-h-[500px] lg:max-h-[860px] flex flex-col">
+        <div className="lg:col-span-5 lg:sticky lg:top-[140px] h-auto lg:h-[calc(100vh-160px)] min-h-[520px] lg:max-h-[880px] flex flex-col">
           <SocraticSidebar
             question={currentQuestion}
             currentTier={currentTier}

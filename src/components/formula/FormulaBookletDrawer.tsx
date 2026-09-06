@@ -159,12 +159,13 @@ export const FormulaBookletDrawer: React.FC<FormulaBookletDrawerProps> = ({
       {/* Drawer Panel */}
       <aside
         ref={containerRef}
-        className="pointer-events-auto relative w-full sm:w-[540px] lg:w-[620px] h-full bg-[#faf9f5] border-l border-[#e6dfd8] shadow-2xl flex flex-col z-10 animate-slideLeft transition-transform duration-300"
+        aria-label="Formula Booklet"
+        className="pointer-events-auto relative w-full sm:w-[540px] lg:w-[620px] h-full bg-[#181715] border-l border-white/10 shadow-2xl flex flex-col z-10 animate-slideLeft transition-transform duration-300 text-[#faf9f5]"
       >
         {/* ============================================================ */}
         {/* 1. DRAWER HEADER                                             */}
         {/* ============================================================ */}
-        <div className="p-4 sm:p-5 border-b border-[#e6dfd8] bg-[#efe9de]/50 space-y-3 shrink-0">
+        <div className="p-4 sm:p-5 border-b border-white/10 bg-[#1f1e1b]/90 space-y-3 shrink-0">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2.5">
               <div className="w-8 h-8 rounded-full bg-[#cc785c]/15 border border-[#cc785c]/30 flex items-center justify-center text-[#cc785c]">
@@ -173,11 +174,11 @@ export const FormulaBookletDrawer: React.FC<FormulaBookletDrawerProps> = ({
               <div>
                 <h2
                   id="formula-booklet-title"
-                  className="font-serif-display text-lg font-normal text-[#141413] leading-tight"
+                  className="font-serif-display text-lg font-normal text-[#faf9f5] leading-tight"
                 >
                   {booklet.title}
                 </h2>
-                <div className="flex items-center gap-2 text-[10px] font-mono-code text-[#6c6a64]">
+                <div className="flex items-center gap-2 text-[10px] font-mono-code text-[#a09d95]">
                   <span>Official IB Reference</span>
                   <span>•</span>
                   <span>{booklet.version}</span>
@@ -190,7 +191,7 @@ export const FormulaBookletDrawer: React.FC<FormulaBookletDrawerProps> = ({
             <button
               type="button"
               onClick={onClose}
-              className="p-2 rounded-full text-[#6c6a64] hover:text-[#141413] hover:bg-[#e6dfd8] transition-spring active:scale-95"
+              className="p-2 rounded-full text-[#a09d95] hover:text-[#faf9f5] hover:bg-white/10 transition-spring active:scale-95"
               title="Close Formula Booklet (Esc)"
               aria-label="Close Formula Booklet"
             >
@@ -200,20 +201,20 @@ export const FormulaBookletDrawer: React.FC<FormulaBookletDrawerProps> = ({
 
           {/* Search Bar */}
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#8e8b82]" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#a09d95]" />
             <input
               ref={searchInputRef}
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search by code (e.g. 5.5, 3.13), topic, or math keywords..."
-              className="w-full bg-[#faf9f5] border border-[#e6dfd8] rounded-xl pl-9 pr-8 py-2 text-xs font-mono-code text-[#141413] placeholder-[#54524c] focus:outline-none focus:border-[#a94e32] focus:ring-1 focus:ring-[#a94e32] shadow-2xs"
+              className="w-full bg-[#252320] border border-white/10 rounded-xl pl-9 pr-8 py-2 text-xs font-mono-code text-[#faf9f5] placeholder-[#a09d95] focus:outline-none focus:border-[#cc785c] focus:ring-1 focus:ring-[#cc785c] shadow-2xs"
             />
             {searchQuery && (
               <button
                 type="button"
                 onClick={() => setSearchQuery('')}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-xs font-mono-code text-[#54524c] hover:text-[#141413]"
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-xs font-mono-code text-[#a09d95] hover:text-[#faf9f5]"
               >
                 Clear
               </button>
@@ -231,8 +232,8 @@ export const FormulaBookletDrawer: React.FC<FormulaBookletDrawerProps> = ({
                   onClick={() => setSelectedTopic(tab.id)}
                   className={`px-3 py-1 rounded-full text-[11px] font-mono-code whitespace-nowrap transition-fluid ${
                     isActive
-                      ? 'bg-[#a94e32] text-white font-medium shadow-2xs'
-                      : 'bg-[#faf9f5] border border-[#e6dfd8] text-[#54524c] hover:text-[#141413] hover:bg-[#e8e0d2]'
+                      ? 'bg-[#cc785c] text-white font-medium shadow-2xs'
+                      : 'bg-[#252320] border border-white/10 text-[#a09d95] hover:text-[#faf9f5] hover:bg-[#2c2a26]'
                   }`}
                 >
                   {tab.label}
@@ -248,13 +249,13 @@ export const FormulaBookletDrawer: React.FC<FormulaBookletDrawerProps> = ({
         <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4">
           {filteredFormulas.length === 0 ? (
             <div className="text-center py-16 space-y-3">
-              <div className="w-12 h-12 rounded-full bg-[#efe9de] border border-[#e6dfd8] flex items-center justify-center mx-auto text-[#54524c]">
+              <div className="w-12 h-12 rounded-full bg-[#252320] border border-white/10 flex items-center justify-center mx-auto text-[#a09d95]">
                 <Search className="w-6 h-6" />
               </div>
-              <h3 className="font-serif-display text-base text-[#141413]">
+              <h3 className="font-serif-display text-base text-[#faf9f5]">
                 No matching formulas found
               </h3>
-              <p className="text-xs text-[#54524c] max-w-xs mx-auto">
+              <p className="text-xs text-[#a09d95] max-w-xs mx-auto">
                 Try searching for a different section number (e.g. &quot;5.5&quot;), calculus rule, or topic.
               </p>
               <button
@@ -263,7 +264,7 @@ export const FormulaBookletDrawer: React.FC<FormulaBookletDrawerProps> = ({
                   setSearchQuery('');
                   setSelectedTopic('all');
                 }}
-                className="text-xs font-mono-code text-[#a94e32] hover:underline"
+                className="text-xs font-mono-code text-[#cc785c] hover:underline"
               >
                 Reset search and filters
               </button>
@@ -277,10 +278,10 @@ export const FormulaBookletDrawer: React.FC<FormulaBookletDrawerProps> = ({
                 <div
                   key={item.id}
                   id={item.id}
-                  className={`p-4 sm:p-5 rounded-2xl border transition-all duration-500 bg-[#faf9f5] ${
+                  className={`p-4 sm:p-5 rounded-2xl border transition-all duration-500 bg-[#252320] ${
                     isTargeted
-                      ? 'border-[#a94e32] ring-2 ring-[#a94e32] bg-[#a94e32]/[0.06] shadow-md animate-pulse'
-                      : 'border-[#e6dfd8] hover:border-[#a94e32]/40 hover:shadow-2xs'
+                      ? 'border-[#cc785c] ring-2 ring-[#cc785c] bg-[#cc785c]/[0.08] shadow-md animate-pulse'
+                      : 'border-white/10 hover:border-[#cc785c]/40 hover:shadow-2xs'
                   }`}
                 >
                   {/* Card Header */}
@@ -290,7 +291,7 @@ export const FormulaBookletDrawer: React.FC<FormulaBookletDrawerProps> = ({
                         className={`text-[10px] font-mono-code uppercase font-semibold px-2 py-0.5 rounded-md ${
                           item.isAhl
                             ? 'bg-[#7c6fcd]/15 text-[#7c6fcd] border border-[#7c6fcd]/30'
-                            : 'bg-[#efe9de] text-[#141413] border border-[#e6dfd8]'
+                            : 'bg-[#1f1e1b] text-[#faf9f5] border border-white/10'
                         }`}
                       >
                         {item.code}
@@ -300,7 +301,7 @@ export const FormulaBookletDrawer: React.FC<FormulaBookletDrawerProps> = ({
                           Higher Level
                         </span>
                       )}
-                      <h4 className="text-xs sm:text-sm font-semibold text-[#141413]">
+                      <h4 className="text-xs sm:text-sm font-semibold text-[#faf9f5]">
                         {item.title}
                       </h4>
                     </div>
@@ -309,7 +310,7 @@ export const FormulaBookletDrawer: React.FC<FormulaBookletDrawerProps> = ({
                       type="button"
                       onClick={() => handleCopyLatex(item)}
                       title="Copy LaTeX formula"
-                      className="p-1.5 rounded-lg text-[#54524c] hover:text-[#a94e32] hover:bg-[#efe9de] transition-spring shrink-0"
+                      className="p-1.5 rounded-lg text-[#a09d95] hover:text-[#cc785c] hover:bg-white/5 transition-spring shrink-0"
                     >
                       {isCopied ? (
                         <Check className="w-3.5 h-3.5 text-[#5db872]" />
@@ -320,13 +321,13 @@ export const FormulaBookletDrawer: React.FC<FormulaBookletDrawerProps> = ({
                   </div>
 
                   {/* Math Formula Body */}
-                  <div className="bg-[#efe9de]/40 border border-[#e6dfd8]/70 rounded-xl p-3 sm:p-4 my-2 overflow-x-auto text-center">
+                  <div className="bg-[#181715] border border-white/10 rounded-xl p-3 sm:p-4 my-2 overflow-x-auto text-center">
                     <MathRenderer content={`$$${item.latex}$$`} />
                   </div>
 
                   {/* Variables / Usage Description */}
                   {item.variablesDescription && (
-                    <p className="text-[11px] text-[#54524c] font-serif italic pt-1 leading-relaxed">
+                    <p className="text-[13px] text-[#d6cfc5] font-sans not-italic pt-1.5 leading-relaxed">
                       {item.variablesDescription}
                     </p>
                   )}
@@ -339,9 +340,9 @@ export const FormulaBookletDrawer: React.FC<FormulaBookletDrawerProps> = ({
         {/* ============================================================ */}
         {/* 3. DRAWER FOOTER                                             */}
         {/* ============================================================ */}
-        <div className="p-3 sm:p-4 border-t border-[#e6dfd8] bg-[#efe9de]/30 text-[10px] font-mono-code text-[#54524c] flex items-center justify-between shrink-0">
+        <div className="p-3 sm:p-4 border-t border-white/10 bg-[#1f1e1b] text-[10px] font-mono-code text-[#a09d95] flex items-center justify-between shrink-0">
           <span>Showing {filteredFormulas.length} of {allFormulas.length} formulas</span>
-          <span>Shortcut: <kbd className="px-1.5 py-0.5 rounded bg-[#e6dfd8] text-[#141413]">Esc</kbd> to close</span>
+          <span>Shortcut: <kbd className="px-1.5 py-0.5 rounded bg-[#252320] text-[#faf9f5] border border-white/10">Esc</kbd> to close</span>
         </div>
       </aside>
     </div>

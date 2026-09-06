@@ -1,4 +1,4 @@
-# IB Examiner
+# Criterion
 
 Authoritative exam simulation, rigorous method-level marking, and Error Carried Forward assessment for IB Diploma students.
 

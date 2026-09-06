@@ -43,10 +43,15 @@ export const SocraticSidebar: React.FC<SocraticSidebarProps> = ({
 }) => {
   const { hasFormulaBooklet, openFormulaBooklet } = useAppShell();
   const [inputText, setInputText] = useState('');
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (messagesContainerRef.current) {
+      messagesContainerRef.current.scrollTo({
+        top: messagesContainerRef.current.scrollHeight,
+        behavior: 'smooth',
+      });
+    }
   }, [messages, isLoading]);
 
   const handleSend = async (e: React.FormEvent) => {
@@ -127,7 +132,7 @@ export const SocraticSidebar: React.FC<SocraticSidebarProps> = ({
         </div>
 
         {/* Messages Feed */}
-        <div className="flex-1 p-4 overflow-y-auto space-y-4 select-text bg-[#181715]">
+        <div ref={messagesContainerRef} className="flex-1 p-4 overflow-y-auto space-y-4 select-text bg-[#181715]">
           {messages.map((m) => {
             const isTutor = m.sender === 'tutor';
             return (
@@ -213,8 +218,15 @@ export const SocraticSidebar: React.FC<SocraticSidebarProps> = ({
               </div>
             </div>
           )}
+        </div>
 
-          <div ref={messagesEndRef} />
+        {/* Working Snapshot Attached Indicator */}
+        <div className="px-3.5 py-1.5 bg-[#1f1e1b] border-t border-white/10 flex items-center justify-between text-[10px] font-mono-code text-[#a09d96]">
+          <span className="flex items-center gap-1.5 text-[#5db8a6]">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#5db8a6] animate-pulse" />
+            Working snapshot attached
+          </span>
+          <span className="text-[#a09d96]/60">Gemini 2.5 Vision</span>
         </div>
 
         {/* Input Area */}

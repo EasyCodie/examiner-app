@@ -96,6 +96,7 @@ export const DrawingCanvas = forwardRef<DrawingCanvasRef, DrawingCanvasProps>(({
   boxStrokesRef.current = boxStrokes;
 
   const [boxRedoStacks, setBoxRedoStacks] = useState<Record<string, CanvasStroke[][]>>({});
+  const [confirmClearBoxId, setConfirmClearBoxId] = useState<string | null>(null);
   const isDrawingRef = useRef(false);
   const currentStrokeRef = useRef<CanvasStroke | null>(null);
 
@@ -674,17 +675,40 @@ export const DrawingCanvas = forwardRef<DrawingCanvasRef, DrawingCanvasProps>(({
                   {/* Authentic 28px Ruled Lines Grid */}
                   <div className="absolute inset-0 bg-[linear-gradient(to_bottom,#f1f5f9_1px,transparent_1px)] bg-[size:100%_28px] pointer-events-none" />
 
-                  {/* Clear Button */}
+                  {/* Clear Button with Confirmation Safeguard */}
                   <div className="absolute top-3 right-3 z-20 pointer-events-auto">
-                    <button
-                      type="button"
-                      onClick={() => handleClearBox(q.id)}
-                      title={`Clear working for Question ${cleanNumber}`}
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-white hover:bg-[#c64545]/10 text-slate-700 hover:text-[#c64545] border border-slate-300 shadow-sm text-xs font-mono-code transition active:scale-95"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                      <span>Clear</span>
-                    </button>
+                    {confirmClearBoxId === q.id ? (
+                      <div className="flex items-center gap-1.5 p-1 bg-white border border-slate-300 rounded-lg shadow-md text-xs font-mono-code animate-message-enter">
+                        <span className="text-[11px] text-slate-700 px-1 font-sans">Clear working?</span>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            handleClearBox(q.id);
+                            setConfirmClearBoxId(null);
+                          }}
+                          className="px-2 py-0.5 rounded bg-[#c64545] text-white hover:bg-[#a83232] font-semibold transition"
+                        >
+                          Yes, clear
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setConfirmClearBoxId(null)}
+                          className="px-2 py-0.5 rounded bg-slate-100 text-slate-700 hover:bg-slate-200 transition"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => setConfirmClearBoxId(q.id)}
+                        title={`Clear working for Question ${cleanNumber}`}
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-white hover:bg-[#c64545]/10 text-slate-700 hover:text-[#c64545] border border-slate-300 shadow-sm text-xs font-mono-code transition active:scale-95"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                        <span>Clear</span>
+                      </button>
+                    )}
                   </div>
 
                   <canvas
