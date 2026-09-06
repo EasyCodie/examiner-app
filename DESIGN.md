@@ -1,35 +1,29 @@
 ---
-version: 2.0.0
-name: Geneva-Diplomatic-Examiner
-description: Authoritative dark-mode Geneva Diplomatic design system for the IB Examiner application. A prestigious, distraction-free environment featuring a sovereign midnight slate canvas (#090d16), deep academic surfaces (#0e1522 / #131c2b), hairline borders (1px white/8% and cyan/20%), an authoritative primary accent of IB Crest Gilded Amber (#d97706), paired with Geneva Azure (#38bdf8) for AI intelligence, formula clues, and official verification. Incorporates signature pastel timeline pills (Sky, Blue, Mint, Violet, Gold) for the ingestion pipeline, display weight at 400 with negative tracking for an editorial feel, and JetBrains Mono across all code, manifest, mark codes, and examination metadata surfaces.
+version: 1.0.0
+name: Cursor-Dark-Examiner
+description: Dark-mode Cursor developer-tools design system for the IB Examiner application. A quietly-confident, distraction-free environment featuring a deep warm obsidian canvas (#0c0d0e), dark editor panes (#141517), surface cards (#1a1b1e), hairline-only depth (1px white/8%), and a single high-voltage brand accent of Cursor Orange (#f54e00). Incorporates signature pastel timeline pills (thinking, read, index, codes, done) for AI agent pipelines, display weight at 400 with negative tracking for an editorial feel, and JetBrains Mono across all code, manifest, and examination metadata surfaces.
 
 colors:
-  primary: "#d97706"
-  primary-active: "#b45309"
-  primary-hover: "#f59e0b"
-  canvas: "#090d16"
-  canvas-soft: "#0e1522"
-  surface-card: "#131c2b"
-  surface-strong: "#1a263a"
-  surface-hover: "#1e2c44"
+  primary: "#f54e00"
+  primary-active: "#d04200"
+  canvas: "#0c0d0e"
+  canvas-soft: "#141517"
+  surface-card: "#1a1b1e"
+  surface-strong: "#222428"
+  surface-hover: "#26282d"
   hairline: "rgba(255, 255, 255, 0.08)"
-  hairline-strong: "rgba(56, 189, 248, 0.20)"
-  text-strong: "#f8fafc"
-  text-body: "#94a3b8"
-  text-muted: "#64748b"
+  hairline-strong: "rgba(255, 255, 255, 0.16)"
+  text-strong: "#f3f3f2"
+  text-body: "#9b9a95"
+  text-muted: "#686763"
   on-primary: "#ffffff"
-  diplomatic-azure: "#38bdf8"
-  timeline-thinking: "#7dd3fc"
-  timeline-read: "#93c5fd"
-  timeline-grep: "#86efac"
-  timeline-codes: "#c4b5fd"
-  timeline-done: "#fcd34d"
-  semantic-error: "#f43f5e"
-  semantic-success: "#10b981"
-  mark-method: "#38bdf8"
-  mark-accuracy: "#10b981"
-  mark-reasoning: "#a78bfa"
-  mark-ecf: "#fbbf24"
+  timeline-thinking: "#dfa88f"
+  timeline-read: "#9fbbe0"
+  timeline-grep: "#9fc9a2"
+  timeline-codes: "#c0a8dd"
+  timeline-done: "#c08532"
+  semantic-error: "#cf2d56"
+  semantic-success: "#1f8a65"
 
 typography:
   display-lg:
@@ -88,11 +82,9 @@ spacing:
 
 ## Brand & Aesthetic Principles
 
-1. **Sovereign Examination Authority**: Deep midnight slate floor (`#090d16`) with elevation surfaces (`#0e1522` / `#131c2b`). Distraction-free, zero glare, commanding academic gravitas.
-2. **IB Crest Gold Scarcity**: `#d97706` (Gilded Amber) is reserved strictly for primary actions ("Submit Exam", "Begin Paper"), active question selection, and IB Grade achievement medals.
-3. **Geneva Azure for Intelligence**: `#38bdf8` (Geneva Cyan/Azure) denotes AI intelligence, formula booklet clues, Socratic reasoning, and official verification badges.
-4. **Display Weight at 400**: Headings sit at regular weight with subtle negative letter spacing (-0.02em to -0.03em), evoking an authoritative editorial publication.
-5. **Hairline-Only Depth**: Exactly 1px borders (`rgba(255, 255, 255, 0.08)`) with subtle azure glow on active focus (`rgba(56, 189, 248, 0.20)`).
-6. **AI Timeline Signature**: The 5-stage pastel pill sequence (Sky Thinking, Azure Reading, Mint Indexing, Violet Codes, Gold Ready) illuminates the ground-truth ingestion pipeline.
-7. **JetBrains Mono Everywhere Necessary**: Manifest keys, mark codes (M1, A1, R1), command terms, timers, and mathematical formulas.
-
+1. **Quiet Developer Confidence**: Deep warm obsidian floor (`#0c0d0e`) with surface panes (`#141517` / `#1a1b1e`). No colorful background gradients, no messy shadows.
+2. **Cursor Orange Scarcity**: `#f54e00` is reserved strictly for primary actions, active highlights, and status pulses.
+3. **Display Weight at 400**: Headings sit at regular weight with subtle negative letter spacing (-0.02em to -0.03em), evoking an editorial publication rather than tech marketing hype.
+4. **Hairline-Only Depth**: Exactly 1px border (`rgba(255, 255, 255, 0.08)`). No drop shadows.
+5. **AI Timeline Signature**: The 5-stage pastel pill sequence (Peach Thinking, Blue Reading, Mint Indexing, Lavender Codes, Gold Done) illuminates the ground-truth ingestion pipeline.
+6. **JetBrains Mono Everywhere Necessary**: Manifest keys, mark codes (M1, A1, R1), command terms, timers, and mathematical formulas.

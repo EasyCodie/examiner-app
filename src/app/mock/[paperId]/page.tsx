@@ -196,8 +196,8 @@ export default function MockExamPage() {
     return (
       <div className="flex-1 flex items-center justify-center p-8">
         <div className="text-center space-y-3">
-          <Sparkles className="w-8 h-8 text-[var(--cursor-primary)] animate-spin mx-auto" />
-          <p className="text-sm font-mono-code text-[var(--cursor-text-muted)]">Loading authentic IB examination paper...</p>
+          <Sparkles className="w-8 h-8 text-[#f54e00] animate-spin mx-auto" />
+          <p className="text-sm font-mono-code text-[#9b9a95]">Loading authentic IB examination paper...</p>
         </div>
       </div>
     );
@@ -212,24 +212,23 @@ export default function MockExamPage() {
 
   return (
     <div
-      className={`flex-1 flex flex-col p-4 sm:p-6 mx-auto w-full select-text ${
-        isHumanities ? 'max-w-7xl pb-12' : 'max-w-5xl pb-28'
-      }`}
+      className={`flex-1 flex flex-col p-4 sm:p-6 mx-auto w-full select-text ${isHumanities ? 'max-w-7xl pb-12' : 'max-w-5xl pb-28'
+        }`}
     >
-      {/* 1. TOP EXAM HUD (Geneva Diplomatic) */}
-      <div className="bg-[var(--cursor-surface-card)] border border-white/[0.08] rounded-xl p-4 sm:p-5 mb-6 space-y-3.5 shadow-lg">
+      {/* 1. TOP EXAM HUD (Cursor Dark Mode) */}
+      <div className="bg-[#141517] border border-white/[0.08] rounded-xl p-4 sm:p-5 mb-6 space-y-3.5 shadow-lg">
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
           {/* Left: Paper Badge */}
           <div className="flex items-center gap-2">
-            <span className="text-[11px] font-mono-code uppercase bg-[var(--cursor-surface-strong)] border border-white/[0.08] px-2.5 py-1 rounded text-[var(--cursor-text-muted)]">
+            <span className="text-[11px] font-mono-code uppercase bg-[#1a1b1e] border border-white/[0.08] px-2.5 py-1 rounded text-[#9b9a95]">
               {isHumanities ? 'Humanities • Extended Response' : 'Authentic Exam Paper'}
             </span>
           </div>
 
           {/* Centered Exam Title */}
           <div className="text-center md:text-left">
-            <h1 className="text-base font-normal text-[var(--cursor-text-strong)] tracking-tight">{manifest.title}</h1>
-            <p className="text-[11px] text-[var(--cursor-text-faint)] font-mono-code">{manifest.subtitle}</p>
+            <h1 className="text-base font-normal text-[#f3f3f2] tracking-tight">{manifest.title}</h1>
+            <p className="text-[11px] text-[#686763] font-mono-code">{manifest.subtitle}</p>
           </div>
 
           {/* Right: Submit Button */}
@@ -250,7 +249,7 @@ export default function MockExamPage() {
         {!isHumanities && (
           <div className="flex items-center justify-between pt-3 border-t border-white/[0.06] gap-2">
             <div className="flex items-center gap-1.5 overflow-x-auto">
-              <span className="text-[10px] font-mono-code uppercase text-[var(--cursor-text-faint)] font-semibold px-1">Q:</span>
+              <span className="text-[10px] font-mono-code uppercase text-[#686763] font-semibold px-1">Q:</span>
               {manifest.questions.map((q) => {
                 const isActive = q.pageNumber === currentPage;
                 return (
@@ -258,11 +257,10 @@ export default function MockExamPage() {
                     key={q.id}
                     type="button"
                     onClick={() => setCurrentPage(q.pageNumber)}
-                    className={`px-3 py-1 rounded-md text-xs font-mono-code transition flex items-center justify-center ${
-                      isActive
-                        ? 'bg-[var(--cursor-primary)] text-white font-semibold shadow-sm'
-                        : 'bg-[var(--cursor-canvas)] text-[var(--cursor-text-muted)] hover:text-white border border-white/[0.06]'
-                    }`}
+                    className={`px-3 py-1 rounded-md text-xs font-mono-code transition flex items-center justify-center ${isActive
+                        ? 'bg-[#f54e00] text-white font-semibold shadow-sm'
+                        : 'bg-[#0c0d0e] text-[#9b9a95] hover:text-white border border-white/[0.06]'
+                      }`}
                   >
                     <span>{q.number.replace(/^Question\s*/i, '')}</span>
                   </button>
@@ -270,7 +268,7 @@ export default function MockExamPage() {
               })}
             </div>
 
-            <div className="flex items-center gap-1 text-xs text-[var(--cursor-text-muted)] font-mono-code shrink-0 pl-2">
+            <div className="flex items-center gap-1 text-xs text-[#9b9a95] font-mono-code shrink-0 pl-2">
               <button
                 type="button"
                 disabled={currentQuestionPageIndex <= 1}
@@ -314,26 +312,26 @@ export default function MockExamPage() {
         <div className="w-full flex flex-col items-center">
           {/* Official Exam Instructions Drawer */}
           {manifest.instructions && manifest.instructions.length > 0 && (
-            <div className="w-full max-w-4xl bg-[var(--cursor-surface-card)] border border-white/[0.08] rounded-xl overflow-hidden mb-4 shadow-sm">
+            <div className="w-full max-w-4xl bg-[#141517] border border-white/[0.08] rounded-xl overflow-hidden mb-4 shadow-sm">
               <button
                 type="button"
                 onClick={() => setShowInstructions(!showInstructions)}
                 className="w-full px-4 py-2.5 flex items-center justify-between text-left hover:bg-white/[0.02] transition"
               >
-                <div className="flex items-center gap-2 text-xs font-mono-code text-[var(--cursor-text-strong)]">
-                  <Info className="w-3.5 h-3.5 text-[var(--cursor-primary)]" />
+                <div className="flex items-center gap-2 text-xs font-mono-code text-[#f3f3f2]">
+                  <Info className="w-3.5 h-3.5 text-[#f54e00]" />
                   <span className="font-semibold">Official Examination Instructions</span>
-                  <span className="text-[10px] text-[var(--cursor-text-muted)]">({manifest.instructions.length} rules)</span>
+                  <span className="text-[10px] text-[#9b9a95]">({manifest.instructions.length} rules)</span>
                 </div>
-                <span className="text-xs text-[var(--cursor-text-muted)] font-mono-code">
+                <span className="text-xs text-[#9b9a95] font-mono-code">
                   {showInstructions ? 'Hide ▲' : 'View ▼'}
                 </span>
               </button>
               {showInstructions && (
-                <div className="px-4 py-3 bg-[var(--cursor-canvas)] border-t border-white/[0.06] text-xs text-[var(--cursor-text-muted)] space-y-1.5 font-mono-code">
+                <div className="px-4 py-3 bg-[#0c0d0e] border-t border-white/[0.06] text-xs text-[#9b9a95] space-y-1.5 font-mono-code">
                   {manifest.instructions.map((inst, idx) => (
                     <div key={idx} className="flex items-start gap-2">
-                      <span className="text-[var(--cursor-primary)] font-bold">•</span>
+                      <span className="text-[#f54e00] font-bold">•</span>
                       <span className="leading-relaxed">{inst}</span>
                     </div>
                   ))}
@@ -396,19 +394,19 @@ export default function MockExamPage() {
       {/* Submission Confirmation Modal */}
       {showSubmitModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-in fade-in">
-          <div className="bg-[var(--cursor-surface-card)] border border-white/[0.08] rounded-xl max-w-sm w-full p-5 space-y-4">
+          <div className="bg-[#141517] border border-white/[0.08] rounded-xl max-w-sm w-full p-5 space-y-4">
             <div className="space-y-1 text-center">
-              <h3 className="text-base font-normal text-[var(--cursor-text-strong)] tracking-tight">
+              <h3 className="text-base font-normal text-[#f3f3f2] tracking-tight">
                 Submit examination?
               </h3>
-              <p className="text-xs text-[var(--cursor-text-muted)] leading-relaxed">
+              <p className="text-xs text-[#9b9a95] leading-relaxed">
                 Your answers will be evaluated against official mark scheme criteria with Error Carried Forward (ECF) rules applied.
               </p>
             </div>
 
-            <div className="bg-[var(--cursor-canvas)] p-2.5 rounded-lg border border-white/[0.06] text-xs text-[var(--cursor-text-muted)] flex items-center justify-between font-mono-code">
+            <div className="bg-[#0c0d0e] p-2.5 rounded-lg border border-white/[0.06] text-xs text-[#9b9a95] flex items-center justify-between font-mono-code">
               <span>Time remaining:</span>
-              <span className="font-medium text-[var(--cursor-primary)]">{formatTimer(timeRemainingSeconds)}</span>
+              <span className="font-medium text-[#f54e00]">{formatTimer(timeRemainingSeconds)}</span>
             </div>
 
             <div className="flex items-center gap-2 pt-1">
@@ -434,22 +432,22 @@ export default function MockExamPage() {
       {/* Grading Overlay */}
       {isSubmitting && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in">
-          <div className="bg-[var(--cursor-surface-card)] border border-white/[0.08] rounded-xl max-w-md w-full p-6 space-y-4 text-center">
+          <div className="bg-[#141517] border border-white/[0.08] rounded-xl max-w-md w-full p-6 space-y-4 text-center">
             <div className="space-y-1">
-              <h2 className="text-base font-normal text-[var(--cursor-text-strong)] tracking-tight">
+              <h2 className="text-base font-normal text-[#f3f3f2] tracking-tight">
                 Grading in progress
               </h2>
-              <p className="text-xs text-[var(--cursor-text-muted)] font-mono-code">{gradingProgress}</p>
+              <p className="text-xs text-[#9b9a95] font-mono-code">{gradingProgress}</p>
             </div>
 
             <div className="space-y-1.5">
-              <div className="w-full h-1.5 bg-[var(--cursor-canvas)] rounded-full overflow-hidden border border-white/[0.06]">
+              <div className="w-full h-1.5 bg-[#0c0d0e] rounded-full overflow-hidden border border-white/[0.06]">
                 <div
-                  className="h-full bg-[var(--cursor-primary)] rounded-full transition-all duration-300"
+                  className="h-full bg-[#f54e00] rounded-full transition-all duration-300"
                   style={{ width: `${gradingPercentage}%` }}
                 />
               </div>
-              <div className="flex justify-between text-[10px] font-mono-code text-[var(--cursor-text-faint)]">
+              <div className="flex justify-between text-[10px] font-mono-code text-[#686763]">
                 <span>Evaluating method &amp; accuracy marks</span>
                 <span>{gradingPercentage}%</span>
               </div>

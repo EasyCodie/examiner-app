@@ -10,42 +10,30 @@
 }
 
 :root {
-  --background: #090d16;
-  --foreground: #f8fafc;
+  --background: #0c0d0e;
+  --foreground: #f3f3f2;
 
-  /* Geneva Diplomatic Design Tokens */
-  --cursor-primary: #d97706;
-  --cursor-primary-active: #b45309;
-  --cursor-primary-hover: #f59e0b;
-  --cursor-canvas: #090d16;
-  --cursor-canvas-soft: #0e1522;
-  --cursor-surface-card: #131c2b;
-  --cursor-surface-strong: #1a263a;
-  --cursor-surface-hover: #1e2c44;
+  /* Cursor Dark Mode Design Tokens */
+  --cursor-primary: #f54e00;
+  --cursor-primary-active: #d04200;
+  --cursor-canvas: #0c0d0e;
+  --cursor-canvas-soft: #141517;
+  --cursor-surface-card: #1a1b1e;
+  --cursor-surface-strong: #222428;
+  --cursor-surface-hover: #26282d;
   --cursor-hairline: rgba(255, 255, 255, 0.08);
-  --cursor-hairline-strong: rgba(56, 189, 248, 0.20);
+  --cursor-hairline-strong: rgba(255, 255, 255, 0.16);
 
-  --cursor-text-strong: #f8fafc;
-  --cursor-text-body: #94a3b8;
-  --cursor-text-muted: #64748b;
+  --cursor-text-strong: #f3f3f2;
+  --cursor-text-body: #9b9a95;
+  --cursor-text-muted: #686763;
 
-  /* Secondary / Diplomatic Azure */
-  --diplomatic-azure: #38bdf8;
-  --diplomatic-azure-deep: #0284c7;
-
-  /* Examination Evaluation Semantics */
-  --mark-method: #38bdf8;
-  --mark-accuracy: #10b981;
-  --mark-reasoning: #a78bfa;
-  --mark-ecf: #fbbf24;
-  --mark-error: #f43f5e;
-
-  /* Geneva Agent Timeline Pastels */
-  --timeline-thinking: #7dd3fc;
-  --timeline-read: #93c5fd;
-  --timeline-grep: #86efac;
-  --timeline-codes: #c4b5fd;
-  --timeline-done: #fcd34d;
+  /* Cursor Agent Timeline Pastels */
+  --timeline-thinking: #dfa88f;
+  --timeline-read: #9fbbe0;
+  --timeline-grep: #9fc9a2;
+  --timeline-codes: #c0a8dd;
+  --timeline-done: #c08532;
 }
 
 body {
@@ -57,7 +45,9 @@ body {
 }
 
 /* Headings: weight 400 with negative tracking per Cursor magazine voice */
-h1, h2, h3 {
+h1,
+h2,
+h3 {
   letter-spacing: -0.025em;
   font-weight: 400;
 }
@@ -137,6 +127,7 @@ h1, h2, h3 {
     opacity: 0;
     transform: translateX(12px) translateY(2px) scale(0.995);
   }
+
   100% {
     opacity: 1;
     transform: translateX(0) translateY(0) scale(1);
@@ -148,6 +139,7 @@ h1, h2, h3 {
     opacity: 0;
     transform: translateX(-12px) translateY(2px) scale(0.995);
   }
+
   100% {
     opacity: 1;
     transform: translateX(0) translateY(0) scale(1);
@@ -159,6 +151,7 @@ h1, h2, h3 {
     opacity: 0;
     transform: translateY(12px);
   }
+
   100% {
     opacity: 1;
     transform: translateY(0);
@@ -185,6 +178,7 @@ h1, h2, h3 {
 }
 
 @media (prefers-reduced-motion: reduce) {
+
   .animate-step-enter,
   .animate-step-forward,
   .animate-step-back,
@@ -199,7 +193,7 @@ h1, h2, h3 {
 /* Custom minimal scrollbar (Webkit & Standard CSS for Firefox) */
 * {
   scrollbar-width: thin;
-  scrollbar-color: #1a263a #090d16;
+  scrollbar-color: #222428 #0c0d0e;
 }
 
 ::-webkit-scrollbar {
@@ -224,6 +218,7 @@ h1, h2, h3 {
 .focus-ring {
   outline: none;
 }
+
 .focus-ring:focus-visible {
   outline: 2px solid var(--cursor-primary);
   outline-offset: 2px;
@@ -231,7 +226,7 @@ h1, h2, h3 {
 
 /* Selection */
 ::selection {
-  background: rgba(217, 119, 6, 0.35);
+  background: rgba(245, 78, 0, 0.3);
   color: #ffffff;
 }
 
@@ -263,4 +258,3 @@ h1, h2, h3 {
 .socratic-math .katex-display .katex {
   font-size: 1.44em;
 }
-

@@ -15,7 +15,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className="dark h-full antialiased">
-      <body className="min-h-full flex flex-col bg-[var(--cursor-canvas)] text-[var(--cursor-text-strong)]">
+      <body className="min-h-full flex flex-col bg-[#0c0d0e] text-[#f3f3f2]">
         <AppShell>{children}</AppShell>
       </body>
     </html>
