@@ -51,11 +51,11 @@ export const ScaffoldLadder: React.FC<ScaffoldLadderProps> = ({
           <h3 className="text-xs font-semibold uppercase tracking-wider text-[#141413] font-mono-code">
             Step-by-Step Guidance
           </h3>
-          <p className="text-[11px] text-[#706e6a]">
+          <p className="text-[11px] text-[#54524c]">
             Get hints and check your work before revealing the markscheme
           </p>
         </div>
-        <span className="text-[11px] font-mono-code font-medium text-[#cc785c] bg-[#cc785c]/10 border border-[#cc785c]/20 px-2.5 py-0.5 rounded-full">
+        <span className="text-[11px] font-mono-code font-medium text-[#a94e32] bg-[#a94e32]/10 border border-[#a94e32]/20 px-2.5 py-0.5 rounded-full">
           Step {currentTier} Active
         </span>
       </div>
@@ -77,27 +77,27 @@ export const ScaffoldLadder: React.FC<ScaffoldLadderProps> = ({
                 }
               }}
               className={`p-3 rounded-xl text-left border transition-all flex flex-col justify-between ${isActive
-                  ? 'bg-[#faf9f5] border-[#cc785c] ring-1 ring-[#cc785c] text-[#141413] shadow-xs'
-                  : 'bg-[#faf9f5] border-[#e6dfd8] text-[#706e6a] hover:text-[#141413] hover:border-[#cc785c]/40'
+                  ? 'bg-[#faf9f5] border-[#a94e32] ring-1 ring-[#a94e32] text-[#141413] shadow-xs'
+                  : 'bg-[#faf9f5] border-[#e6dfd8] text-[#54524c] hover:text-[#141413] hover:border-[#a94e32]/40'
                 }`}
             >
               <div className="flex items-center justify-between mb-1.5">
                 <div className="flex items-center gap-1.5">
                   <Icon
-                    className={`w-3.5 h-3.5 ${isActive ? 'text-[#cc785c]' : isTier4 ? 'text-[#e8a55a]' : 'text-[#706e6a]'
+                    className={`w-3.5 h-3.5 ${isActive ? 'text-[#a94e32]' : isTier4 ? 'text-[#8f530d]' : 'text-[#54524c]'
                       }`}
                   />
-                  <span className={`text-xs font-medium ${isActive ? 'text-[#141413]' : 'text-[#706e6a]'}`}>
+                  <span className={`text-xs font-medium ${isActive ? 'text-[#141413]' : 'text-[#54524c]'}`}>
                     {title}
                   </span>
                 </div>
                 {isTier4 && !isMarkschemeUnlocked && (
-                  <span className="text-[10px] text-[#e8a55a] flex items-center gap-0.5 font-mono-code">
+                  <span className="text-[10px] text-[#8f530d] flex items-center gap-0.5 font-mono-code">
                     <Lock className="w-3 h-3" /> Locked
                   </span>
                 )}
               </div>
-              <p className="text-[11px] text-[#706e6a] line-clamp-1">{subtitle}</p>
+              <p className="text-[11px] text-[#54524c] line-clamp-1">{subtitle}</p>
             </button>
           );
         })}

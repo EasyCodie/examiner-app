@@ -47,3 +47,8 @@ _Avoid_: Test mode, raw exam, unfiltered view
 **Pedagogical Scaffolding**:
 Structured guidance mechanisms (such as command term definitions, formula hints, essay structure templates, and markscheme rubrics) strictly confined to Socratic Learn Mode or post-evaluation review, engineered to teach without prematurely leaking assessment solutions.
 _Avoid_: Hints, cheat codes, training wheels
+
+**Formula Booklet**:
+The official International Baccalaureate reference document providing authorized mathematical, physical, or chemical formulas. In Authentic Exam Conditions, it is available strictly as an unassisted, searchable reference without contextual hinting; in Pedagogical Scaffolding (Socratic Learn Mode), specific formula anchors are highlighted to train formula identification and retrieval.
+_Avoid_: Formula sheet, cheat sheet, reference guide, equation list.
+

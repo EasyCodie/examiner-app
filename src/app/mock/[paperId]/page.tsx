@@ -91,6 +91,7 @@ export default function MockExamPage() {
           category: m.category,
           mode: 'TIMED_MOCK',
           paperId: m.id,
+          subjectCode: m.subjectCode,
         });
       }
     });
@@ -215,84 +216,88 @@ export default function MockExamPage() {
       className={`flex-1 flex flex-col p-4 sm:p-6 mx-auto w-full select-text ${isHumanities ? 'max-w-7xl pb-12' : 'max-w-5xl pb-28'
         }`}
     >
-      {/* 1. TOP EXAM HUD (Claude Product Chrome) */}
-      <div className="bg-[#181715] border border-white/10 rounded-2xl p-4 sm:p-5 mb-6 space-y-3.5 shadow-xl">
-        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-          {/* Left: Paper Badge */}
-          <div className="flex items-center gap-2">
-            <span className="text-[11px] font-mono-code uppercase bg-[#252320] border border-white/10 px-2.5 py-1 rounded-full text-[#a09d96]">
-              {isHumanities ? 'Humanities • Extended Response' : 'Practice Exam'}
-            </span>
-          </div>
-
-          {/* Centered Exam Title */}
-          <div className="text-center md:text-left">
-            <h1 className="text-lg font-serif font-normal text-[#faf9f5] tracking-tight">{manifest.title}</h1>
-            <p className="text-[11px] text-[#a09d96] font-mono-code">{manifest.subtitle}</p>
-          </div>
-
-          {/* Right: Submit Button */}
-          <div className="flex items-center gap-2.5">
-            <button
-              type="button"
-              onClick={() => setShowSubmitModal(true)}
-              disabled={isSubmitting}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg claude-btn-primary text-xs font-medium disabled:opacity-40 transition active:scale-95 shadow-sm"
-            >
-              <Send className="w-3.5 h-3.5" />
-              <span>Submit Exam</span>
-            </button>
-          </div>
-        </div>
-
-        {/* Question Navigator & Page Jumper Row (Only for STEM multi-page paper) */}
-        {!isHumanities && (
-          <div className="flex items-center justify-between pt-3 border-t border-white/10 gap-2">
-            <div className="flex items-center gap-1.5 overflow-x-auto">
-              <span className="text-[10px] font-mono-code uppercase text-[#a09d96] font-semibold px-1">Q:</span>
-              {manifest.questions.map((q) => {
-                const isActive = q.pageNumber === currentPage;
-                return (
-                  <button
-                    key={q.id}
-                    type="button"
-                    onClick={() => setCurrentPage(q.pageNumber)}
-                    className={`px-3 py-1 rounded-lg text-xs font-mono-code transition flex items-center justify-center ${isActive
-                        ? 'bg-[#cc785c] text-white font-medium shadow-sm'
-                        : 'bg-[#252320] text-[#a09d96] hover:text-[#faf9f5] border border-white/5'
-                      }`}
-                  >
-                    <span>{q.number.replace(/^Question\s*/i, '')}</span>
-                  </button>
-                );
-              })}
-            </div>
-
-            <div className="flex items-center gap-1 text-xs text-[#a09d96] font-mono-code shrink-0 pl-2">
-              <button
-                type="button"
-                disabled={currentQuestionPageIndex <= 1}
-                onClick={() => handlePageChange(Math.max(1, currentQuestionPageIndex - 1))}
-                className="p-1 hover:text-[#faf9f5] disabled:opacity-30 transition"
-                title="Previous Page"
-              >
-                <ChevronLeft className="w-4 h-4" />
-              </button>
-              <span className="px-1 text-[11px]">
-                Page {currentQuestionPageIndex} / {totalQuestionPages}
+      {/* 1. TOP EXAM HUD (Double-Bezel Dark Island) */}
+      <div className="double-bezel-outer-dark mb-6">
+        <div className="double-bezel-inner-dark p-4 sm:p-5 space-y-4">
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+            {/* Left: Paper Badge */}
+            <div className="flex items-center gap-2">
+              <span className="eyebrow-pill bg-[#252320] border border-white/10 text-[#a09d96] px-3 py-1">
+                {isHumanities ? 'Humanities • Extended Response' : 'Practice Exam'}
               </span>
+            </div>
+
+            {/* Centered Exam Title */}
+            <div className="text-center md:text-left">
+              <h1 className="text-lg font-serif font-normal text-[#faf9f5] tracking-tight">{manifest.title}</h1>
+              <p className="text-[11px] text-[#a09d96] font-mono-code">{manifest.subtitle}</p>
+            </div>
+
+            {/* Right: Submit Button */}
+            <div className="flex items-center gap-2.5">
               <button
                 type="button"
-                disabled={currentQuestionPageIndex >= totalQuestionPages}
-                onClick={() => handlePageChange(Math.min(totalQuestionPages, currentQuestionPageIndex + 1))}
-                className="p-1 hover:text-[#faf9f5] disabled:opacity-30 transition"
-                title="Next Page"
+                onClick={() => setShowSubmitModal(true)}
+                disabled={isSubmitting}
+                className="claude-btn-pill-primary text-xs px-4 py-2 disabled:opacity-40"
               >
-                <ChevronRight className="w-4 h-4" />
+                <span>Submit Exam</span>
+                <span className="btn-icon-bubble">
+                  <Send className="w-3.5 h-3.5 text-white" />
+                </span>
               </button>
             </div>
           </div>
-        )}
+
+          {/* Question Navigator & Page Jumper Row (Only for STEM multi-page paper) */}
+          {!isHumanities && (
+            <div className="flex items-center justify-between pt-3 border-t border-white/10 gap-2">
+              <div className="flex items-center gap-1.5 overflow-x-auto">
+                <span className="text-[10px] font-mono-code uppercase text-[#a09d96] font-semibold px-1">Q:</span>
+                {manifest.questions.map((q) => {
+                  const isActive = q.pageNumber === currentPage;
+                  return (
+                    <button
+                      key={q.id}
+                      type="button"
+                      onClick={() => setCurrentPage(q.pageNumber)}
+                      className={`px-3 py-1 rounded-lg text-xs font-mono-code transition-fluid flex items-center justify-center ${isActive
+                          ? 'bg-[#cc785c] text-white font-medium shadow-sm ring-1 ring-white/20'
+                          : 'bg-[#252320] text-[#a09d96] hover:text-[#faf9f5] border border-white/5'
+                        }`}
+                    >
+                      <span>{q.number.replace(/^Question\s*/i, '')}</span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              <div className="flex items-center gap-1 text-xs text-[#a09d96] font-mono-code shrink-0 pl-2">
+                <button
+                  type="button"
+                  disabled={currentQuestionPageIndex <= 1}
+                  onClick={() => handlePageChange(Math.max(1, currentQuestionPageIndex - 1))}
+                  className="p-1 hover:text-[#faf9f5] disabled:opacity-30 transition"
+                  title="Previous Page"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </button>
+                <span className="px-1 text-[11px]">
+                  Page {currentQuestionPageIndex} / {totalQuestionPages}
+                </span>
+                <button
+                  type="button"
+                  disabled={currentQuestionPageIndex >= totalQuestionPages}
+                  onClick={() => handlePageChange(Math.min(totalQuestionPages, currentQuestionPageIndex + 1))}
+                  className="p-1 hover:text-[#faf9f5] disabled:opacity-30 transition"
+                  title="Next Page"
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* 2. MAIN WORKSPACE */}
@@ -393,37 +398,42 @@ export default function MockExamPage() {
 
       {/* Submission Confirmation Modal */}
       {showSubmitModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-in fade-in">
-          <div className="bg-[#181715] border border-white/10 rounded-2xl max-w-sm w-full p-6 space-y-4 shadow-2xl">
-            <div className="space-y-1 text-center">
-              <h3 className="text-lg font-serif font-normal text-[#faf9f5] tracking-tight">
-                Submit your exam?
-              </h3>
-              <p className="text-xs text-[#a09d96] leading-relaxed">
-                Your paper will be marked against the official markscheme, with full credit for your method and follow-through working.
-              </p>
-            </div>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-md animate-in fade-in">
+          <div className="double-bezel-outer-dark max-w-sm w-full">
+            <div className="double-bezel-inner-dark p-6 space-y-4">
+              <div className="space-y-1 text-center">
+                <h3 className="text-lg font-serif font-normal text-[#faf9f5] tracking-tight">
+                  Submit your exam?
+                </h3>
+                <p className="text-xs text-[#a09d96] leading-relaxed">
+                  Your paper will be marked against the official markscheme, with full credit for your method and follow-through working.
+                </p>
+              </div>
 
-            <div className="bg-[#252320] p-3 rounded-xl border border-white/10 text-xs text-[#a09d96] flex items-center justify-between font-mono-code">
-              <span>Time remaining:</span>
-              <span className="font-medium text-[#cc785c]">{formatTimer(timeRemainingSeconds)}</span>
-            </div>
+              <div className="bg-[#141413] p-3 rounded-xl border border-white/10 text-xs text-[#a09d96] flex items-center justify-between font-mono-code shadow-inner">
+                <span>Time remaining:</span>
+                <span className="font-medium text-[#cc785c]">{formatTimer(timeRemainingSeconds)}</span>
+              </div>
 
-            <div className="flex items-center gap-2 pt-1">
-              <button
-                type="button"
-                onClick={() => setShowSubmitModal(false)}
-                className="flex-1 py-2.5 rounded-lg claude-btn-secondary text-xs"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={handleConfirmSubmit}
-                className="flex-1 py-2.5 rounded-lg claude-btn-primary text-xs"
-              >
-                Submit for Marking
-              </button>
+              <div className="flex items-center gap-2 pt-1">
+                <button
+                  type="button"
+                  onClick={() => setShowSubmitModal(false)}
+                  className="flex-1 py-2.5 claude-btn-pill-secondary text-xs"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={handleConfirmSubmit}
+                  className="flex-1 py-2.5 claude-btn-pill-primary text-xs justify-between"
+                >
+                  <span>Submit Exam</span>
+                  <span className="btn-icon-bubble">
+                    <Send className="w-3 h-3 text-white" />
+                  </span>
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -431,25 +441,27 @@ export default function MockExamPage() {
 
       {/* Grading Overlay */}
       {isSubmitting && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-in fade-in">
-          <div className="bg-[#181715] border border-white/10 rounded-2xl max-w-md w-full p-6 space-y-4 text-center shadow-2xl">
-            <div className="space-y-1">
-              <h2 className="text-lg font-serif font-normal text-[#faf9f5] tracking-tight">
-                Marking in progress
-              </h2>
-              <p className="text-xs text-[#a09d96] font-mono-code">{gradingProgress}</p>
-            </div>
-
-            <div className="space-y-1.5">
-              <div className="w-full h-1.5 bg-[#252320] rounded-full overflow-hidden border border-white/10">
-                <div
-                  className="h-full bg-[#cc785c] rounded-full transition-all duration-300"
-                  style={{ width: `${gradingPercentage}%` }}
-                />
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in">
+          <div className="double-bezel-outer-dark max-w-md w-full">
+            <div className="double-bezel-inner-dark p-6 space-y-4 text-center">
+              <div className="space-y-1">
+                <h2 className="text-lg font-serif font-normal text-[#faf9f5] tracking-tight">
+                  Marking in progress
+                </h2>
+                <p className="text-xs text-[#a09d96] font-mono-code">{gradingProgress}</p>
               </div>
-              <div className="flex justify-between text-[10px] font-mono-code text-[#a09d96]">
-                <span>Checking your steps and calculating marks</span>
-                <span>{gradingPercentage}%</span>
+
+              <div className="space-y-1.5">
+                <div className="w-full h-2 bg-[#141413] rounded-full overflow-hidden border border-white/10 p-0.5">
+                  <div
+                    className="h-full bg-linear-to-r from-[#cc785c] to-[#e8a55a] rounded-full transition-fluid duration-300 shadow-[0_0_8px_rgba(204,120,92,0.4)]"
+                    style={{ width: `${gradingPercentage}%` }}
+                  />
+                </div>
+                <div className="flex justify-between text-[10px] font-mono-code text-[#a09d96]">
+                  <span>Checking your steps and calculating marks</span>
+                  <span>{gradingPercentage}%</span>
+                </div>
               </div>
             </div>
           </div>

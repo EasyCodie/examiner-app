@@ -86,14 +86,14 @@ export const SyllabusMatrix: React.FC<SyllabusMatrixProps> = ({
   const getStatusStyles = (itemStatus: 'mastered' | 'developing' | 'critical') => {
     return {
       mastered: {
-        badge: 'bg-[#5db8a6]/15 text-[#378575] border-[#5db8a6]/30',
-        bar: 'bg-[#5db8a6]',
+        badge: 'bg-[#1d6c5f]/15 text-[#1d6c5f] border-[#1d6c5f]/30',
+        bar: 'bg-[#1d6c5f]',
         label: 'Strong (Grade 7 Standard)',
         icon: CheckCircle2,
       },
       developing: {
-        badge: 'bg-[#e8a55a]/15 text-[#b07432] border-[#e8a55a]/30',
-        bar: 'bg-[#e8a55a]',
+        badge: 'bg-[#8f530d]/15 text-[#8f530d] border-[#8f530d]/30',
+        bar: 'bg-[#8f530d]',
         label: 'Making Progress (Grade 5-6)',
         icon: AlertCircle,
       },
@@ -107,50 +107,51 @@ export const SyllabusMatrix: React.FC<SyllabusMatrixProps> = ({
   };
 
   return (
-    <div className="bg-[#efe9de] border border-[#e6dfd8] rounded-2xl p-6 shadow-md transition-all">
-      {/* Dynamic Header with Context & Mode Switcher */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 border-b border-[#e6dfd8] mb-6">
-        <div>
-          <h3 className="text-base font-normal text-[#141413] flex items-center gap-2">
-            <Target className="w-4 h-4 text-[#cc785c]" />
-            <span className="font-serif text-lg">
-              Topic Strengths &amp; Recommended Practice
-              {viewMode === 'focused' && activeQNum ? ` • Question ${activeQNum}` : ' • All Exam Topics'}
-            </span>
-          </h3>
-          <p className="text-xs text-[#706e6a] mt-0.5 font-mono-code">
-            {viewMode === 'focused' && activeQuestion
-              ? `Topic breakdown and practice tips for Question ${activeQNum} (${activeQuestion.totalMarks} marks)`
-              : 'Summary of marks awarded across each official syllabus topic'}
-          </p>
-        </div>
+    <div className="double-bezel-outer-cream">
+      <div className="double-bezel-inner-cream p-6 transition-fluid">
+        {/* Dynamic Header with Context & Mode Switcher */}
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 border-b border-[#e6dfd8] mb-6">
+          <div>
+            <h3 className="text-base font-normal text-[#141413] flex items-center gap-2">
+              <Target className="w-4 h-4 text-[#a94e32]" />
+              <span className="font-serif text-lg">
+                Topic Strengths &amp; Recommended Practice
+                {viewMode === 'focused' && activeQNum ? ` • Question ${activeQNum}` : ' • All Exam Topics'}
+              </span>
+            </h3>
+            <p className="text-xs text-[#54524c] mt-0.5 font-mono-code">
+              {viewMode === 'focused' && activeQuestion
+                ? `Topic breakdown and practice tips for Question ${activeQNum} (${activeQuestion.totalMarks} marks)`
+                : 'Summary of marks awarded across each official syllabus topic'}
+            </p>
+          </div>
 
-        {/* View Mode Segmented Pill Control */}
-        <div className="flex items-center gap-1 bg-[#faf9f5] p-1 rounded-xl border border-[#e6dfd8] text-xs font-mono-code shrink-0">
-          <button
-            type="button"
-            onClick={() => setViewMode('focused')}
-            className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 ${viewMode === 'focused'
-                ? 'bg-[#cc785c] text-white font-medium shadow-xs'
-                : 'text-[#706e6a] hover:text-[#141413] hover:bg-[#efe9de]'
-              }`}
-          >
-            <Target className="w-3.5 h-3.5" />
-            <span>Focus: Q{activeQNum ?? '1'}</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => setViewMode('all')}
-            className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 ${viewMode === 'all'
-                ? 'bg-[#cc785c] text-white font-medium shadow-xs'
-                : 'text-[#706e6a] hover:text-[#141413] hover:bg-[#efe9de]'
-              }`}
-          >
-            <Layers className="w-3.5 h-3.5" />
-            <span>All Exam Topics ({syllabusBreakdown.length || '...'})</span>
-          </button>
+          {/* View Mode Segmented Pill Control */}
+          <div className="flex items-center gap-1 bg-[#faf9f5] p-1 rounded-xl border border-[#e6dfd8] text-xs font-mono-code shrink-0 shadow-xs">
+            <button
+              type="button"
+              onClick={() => setViewMode('focused')}
+              className={`px-3 py-1.5 rounded-lg transition-fluid flex items-center gap-1.5 ${viewMode === 'focused'
+                  ? 'bg-[#a94e32] text-white font-medium shadow-xs'
+                  : 'text-[#54524c] hover:text-[#141413] hover:bg-[#efe9de]'
+                }`}
+            >
+              <Target className="w-3.5 h-3.5" />
+              <span>Focus: Q{activeQNum ?? '1'}</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setViewMode('all')}
+              className={`px-3 py-1.5 rounded-lg transition-fluid flex items-center gap-1.5 ${viewMode === 'all'
+                  ? 'bg-[#a94e32] text-white font-medium shadow-xs'
+                  : 'text-[#54524c] hover:text-[#141413] hover:bg-[#efe9de]'
+                }`}
+            >
+              <Layers className="w-3.5 h-3.5" />
+              <span>All Exam Topics ({syllabusBreakdown.length || '...'})</span>
+            </button>
+          </div>
         </div>
-      </div>
 
       {/* 1. FOCUSED VIEW: Question-Specific Diagnosis Card */}
       {viewMode === 'focused' && (
@@ -166,11 +167,11 @@ export const SyllabusMatrix: React.FC<SyllabusMatrixProps> = ({
                   <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
                     <div className="space-y-1">
                       <div className="flex items-center gap-2">
-                        <span className="text-[10px] font-mono-code uppercase px-2.5 py-0.5 rounded-full bg-[#cc785c]/10 text-[#cc785c] font-semibold border border-[#cc785c]/20">
+                        <span className="text-[10px] font-mono-code uppercase px-2.5 py-0.5 rounded-full bg-[#a94e32]/10 text-[#a94e32] font-semibold border border-[#a94e32]/20">
                           Question {activeQNum} Syllabus Focus
                         </span>
                         {sharedQuestions.length > 0 && (
-                          <span className="text-[10px] font-mono-code text-[#706e6a] bg-[#efe9de] px-2 py-0.5 rounded border border-[#e6dfd8]">
+                          <span className="text-[10px] font-mono-code text-[#54524c] bg-[#efe9de] px-2 py-0.5 rounded border border-[#e6dfd8]">
                             Also tested in: {sharedQuestions.map((q) => `Q${q.number.replace(/^Question\s*/i, '')}`).join(', ')}
                           </span>
                         )}
@@ -190,7 +191,7 @@ export const SyllabusMatrix: React.FC<SyllabusMatrixProps> = ({
 
                   {/* Score Breakdown & Progress Bar */}
                   <div className="space-y-1.5 bg-[#efe9de] p-3.5 rounded-xl border border-[#e6dfd8]">
-                    <div className="flex justify-between text-xs font-mono-code text-[#706e6a]">
+                    <div className="flex justify-between text-xs font-mono-code text-[#54524c]">
                       <span>
                         Question Score: <strong className="text-[#141413]">{marksAwarded}</strong> / {totalMarks} marks
                       </span>
@@ -207,32 +208,34 @@ export const SyllabusMatrix: React.FC<SyllabusMatrixProps> = ({
                   {/* Targeted Actionable Drill Recommendation */}
                   <div className="p-4 rounded-xl bg-[#efe9de] border border-[#e6dfd8] text-xs text-[#141413] leading-relaxed space-y-2.5">
                     <div className="flex items-center justify-between gap-2">
-                      <span className="font-semibold text-[#cc785c] flex items-center gap-1.5 font-mono-code">
-                        <BookOpen className="w-4 h-4 text-[#cc785c]" />
+                      <span className="font-semibold text-[#a94e32] flex items-center gap-1.5 font-mono-code">
+                        <BookOpen className="w-4 h-4 text-[#a94e32]" />
                         Practice Tip for Question {activeQNum}:
                       </span>
                       {activeEvaluation?.ecfApplied && (
-                        <span className="text-[10px] font-mono-code text-[#b07432] flex items-center gap-1 bg-[#e8a55a]/15 border border-[#e8a55a]/30 px-2 py-0.5 rounded-full">
-                          <Sparkles className="w-3 h-3 text-[#e8a55a]" /> Includes Follow-Through Notes
+                        <span className="text-[10px] font-mono-code text-[#8f530d] flex items-center gap-1 bg-[#8f530d]/15 border border-[#8f530d]/30 px-2 py-0.5 rounded-full">
+                          <Sparkles className="w-3 h-3 text-[#8f530d]" /> Includes Follow-Through Notes
                         </span>
                       )}
                     </div>
 
-                    <div className="text-[#706e6a]">
+                    <div className="text-[#54524c]">
                       <MathRenderer content={targetedDrill} />
                     </div>
 
                     {socraticLink && status !== 'mastered' && (
                       <div className="pt-2.5 border-t border-[#e6dfd8] flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                        <span className="text-[11px] font-mono-code text-[#706e6a]">
+                        <span className="text-[11px] font-mono-code text-[#54524c]">
                           Practice this type of question step by step with our tutor
                         </span>
                         <Link
                           href={socraticLink}
-                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg claude-btn-primary text-xs font-mono-code font-medium transition shrink-0"
+                          className="claude-btn-pill-primary text-xs px-3.5 py-1.5 shrink-0"
                         >
                           <span>Practice Question {activeQNum} with Tutor</span>
-                          <ArrowRight className="w-3.5 h-3.5" />
+                          <span className="btn-icon-bubble">
+                            <ArrowRight className="w-3.5 h-3.5 text-white" />
+                          </span>
                         </Link>
                       </div>
                     )}
@@ -244,10 +247,10 @@ export const SyllabusMatrix: React.FC<SyllabusMatrixProps> = ({
             /* In-Flight State for Queued / Streaming Question */
             <div className="bg-[#faf9f5] border border-[#e6dfd8] rounded-xl p-5 space-y-3 shadow-2xs">
               <div className="flex items-center justify-between gap-3">
-                <span className="text-[10px] font-mono-code uppercase px-2.5 py-0.5 rounded-full bg-[#cc785c]/10 text-[#cc785c] font-semibold border border-[#cc785c]/20">
+                <span className="text-[10px] font-mono-code uppercase px-2.5 py-0.5 rounded-full bg-[#a94e32]/10 text-[#a94e32] font-semibold border border-[#a94e32]/20">
                   Question {activeQNum} • Topic Outline
                 </span>
-                <span className="text-[10px] font-mono-code px-2.5 py-0.5 rounded-full border border-[#e8a55a]/30 bg-[#e8a55a]/10 text-[#b07432] flex items-center gap-1.5">
+                <span className="text-[10px] font-mono-code px-2.5 py-0.5 rounded-full border border-[#8f530d]/30 bg-[#8f530d]/10 text-[#8f530d] flex items-center gap-1.5">
                   <Clock className="w-3 h-3 animate-spin" />
                   Examiner Marking in Progress
                 </span>
@@ -255,7 +258,7 @@ export const SyllabusMatrix: React.FC<SyllabusMatrixProps> = ({
               <h4 className="text-sm font-medium text-[#141413] font-mono-code">
                 {focusedSubtopic}
               </h4>
-              <p className="text-xs text-[#706e6a] font-mono-code">
+              <p className="text-xs text-[#54524c] font-mono-code">
                 Your examiner is currently marking this question. Your score and practice tips will appear once it is ready.
               </p>
             </div>
@@ -266,12 +269,12 @@ export const SyllabusMatrix: React.FC<SyllabusMatrixProps> = ({
       {/* 2. ALL TOPICS VIEW: Complete Exam Paper Matrix */}
       {viewMode === 'all' && (
         <div className="space-y-4">
-          <div className="flex items-center justify-between text-xs font-mono-code text-[#706e6a]">
+          <div className="flex items-center justify-between text-xs font-mono-code text-[#54524c]">
             <span>Showing all {syllabusBreakdown.length} topics on this exam paper</span>
             <button
               type="button"
               onClick={() => setViewMode('focused')}
-              className="text-[#cc785c] hover:text-[#a9583e] underline underline-offset-4 flex items-center gap-1"
+              className="text-[#a94e32] hover:text-[#8f3f27] underline underline-offset-4 flex items-center gap-1"
             >
               <span>Return to Question {activeQNum ?? '1'} Focus</span>
               <ExternalLink className="w-3 h-3" />
@@ -304,7 +307,7 @@ export const SyllabusMatrix: React.FC<SyllabusMatrixProps> = ({
 
                       {/* Score and Bar */}
                       <div className="space-y-1.5 mt-2">
-                        <div className="flex justify-between text-[11px] font-mono-code text-[#706e6a]">
+                        <div className="flex justify-between text-[11px] font-mono-code text-[#54524c]">
                           <span>
                             Score: <strong className="text-[#141413]">{item.marksAwarded}</strong> / {item.totalMarks} marks
                           </span>
@@ -321,18 +324,18 @@ export const SyllabusMatrix: React.FC<SyllabusMatrixProps> = ({
 
                     {/* Actionable Drill Recommendation */}
                     <div className="p-3 rounded-lg bg-[#efe9de] border border-[#e6dfd8] text-[11px] text-[#141413] leading-relaxed">
-                      <span className="font-semibold text-[#cc785c] block mb-1 flex items-center gap-1 font-mono-code">
+                      <span className="font-semibold text-[#a94e32] block mb-1 flex items-center gap-1 font-mono-code">
                         <BookOpen className="w-3 h-3" /> Practice Tip:
                       </span>
-                      <p className="line-clamp-2 text-[#706e6a]">{item.targetedDrillPrompt}</p>
+                      <p className="line-clamp-2 text-[#54524c]">{item.targetedDrillPrompt}</p>
 
                       {paperId && item.status !== 'mastered' && (
                         <Link
                           href={`/learn/${paperId}`}
-                          className="inline-flex items-center gap-1 text-[11px] font-mono-code text-[#cc785c] hover:text-[#a9583e] mt-2 font-medium transition"
+                          className="inline-flex items-center gap-1.5 text-[11px] font-mono-code text-[#a94e32] hover:text-[#8f3f27] mt-2 font-medium transition group"
                         >
                           <span>Practice with Tutor</span>
-                          <ArrowRight className="w-3 h-3" />
+                          <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-spring" />
                         </Link>
                       )}
                     </div>
@@ -340,13 +343,14 @@ export const SyllabusMatrix: React.FC<SyllabusMatrixProps> = ({
                 );
               })
             ) : (
-              <div className="col-span-2 p-8 text-center bg-[#faf9f5] rounded-xl border border-[#e6dfd8] text-xs font-mono-code text-[#706e6a]">
+              <div className="col-span-2 p-8 text-center bg-[#faf9f5] rounded-xl border border-[#e6dfd8] text-xs font-mono-code text-[#54524c]">
                 Exam topics will appear here as each question is marked.
               </div>
             )}
           </div>
         </div>
       )}
+      </div>
     </div>
   );
 };

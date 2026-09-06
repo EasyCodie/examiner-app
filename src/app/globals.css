@@ -16,8 +16,8 @@
   /* ============================================================ */
 
   /* Brand & Accent */
-  --primary: #cc785c;              /* Signature Anthropic Warm Coral */
-  --primary-active: #a9583e;       /* Press / hover-darker variant */
+  --primary: #a94e32;              /* Signature Anthropic Warm Coral (WCAG AA Deepened 5.49:1) */
+  --primary-active: #8f3f27;       /* Press / hover-darker variant (7.21:1) */
   --primary-disabled: #e6dfd8;     /* Desaturated cream-tinted disabled */
   --accent-teal: #5db8a6;          /* Secondary product surface accent */
   --accent-amber: #e8a55a;         /* Companion warm tone for ECF & badges */
@@ -37,11 +37,11 @@
   --ink: #141413;                  /* Headlines & primary text */
   --body-strong: #252523;          /* Emphasized paragraphs & lead text */
   --body: #3d3d3a;                 /* Default running text */
-  --muted: #6c6a64;                /* Subheadings & breadcrumbs */
-  --muted-soft: #8e8b82;           /* Captions & fine-print */
+  --muted: #54524c;                /* Subheadings & breadcrumbs (WCAG AA 6.5:1+) */
+  --muted-soft: #5e5b54;           /* Captions & fine-print (WCAG AA 5.6:1+) */
   --on-primary: #ffffff;           /* Text on coral buttons */
   --on-dark: #faf9f5;              /* Cream-tinted white on dark surfaces */
-  --on-dark-soft: #a09d96;         /* Secondary labels on dark surfaces */
+  --on-dark-soft: #b8b5ad;         /* Secondary labels on dark surfaces (WCAG AA 7.6:1+) */
 
   /* Semantic Status */
   --success: #5db872;              /* Full marks / correct */
@@ -61,8 +61,8 @@
   --card: #efe9de;
   --card-foreground: #141413;
   --border: #e6dfd8;
-  --cursor-primary: #cc785c;
-  --cursor-primary-active: #a9583e;
+  --cursor-primary: #a94e32;
+  --cursor-primary-active: #8f3f27;
   --cursor-canvas: #faf9f5;
   --cursor-canvas-soft: #f5f0e8;
   --cursor-surface-card: #efe9de;
@@ -316,7 +316,7 @@ body {
 
 /* Selection */
 ::selection {
-  background-color: rgba(204, 120, 92, 0.22);
+  background-color: rgba(169, 78, 50, 0.22);
   color: #141413;
 }
 
@@ -364,6 +364,337 @@ body {
   overflow-x: auto;
   overflow-y: hidden;
   padding: 6px 0;
+}
+
+/* ============================================================ */
+/* HIGH-END AGENCY VISUAL DESIGN TOKENS (from SKILL.md)         */
+/* ============================================================ */
+
+/* Fluid cubic-bezier timing tokens */
+.transition-fluid {
+  transition: all 500ms cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+.transition-spring {
+  transition: all 400ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Eyebrow Micro-Badges */
+.eyebrow-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: 9999px;
+  padding: 4px 14px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+
+/* Double-Bezel (Doppelrand) Architecture: Cream Surface */
+.double-bezel-outer-cream {
+  background-color: rgba(20, 20, 19, 0.03);
+  border: 1px solid rgba(20, 20, 19, 0.06);
+  border-radius: 2rem;
+  padding: 6px;
+  box-shadow: 0 10px 30px -10px rgba(20, 20, 19, 0.04);
+}
+
+.double-bezel-inner-cream {
+  background-color: var(--surface-card);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  border-radius: calc(2rem - 6px);
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.7), 0 1px 3px rgba(20, 20, 19, 0.03);
+}
+
+/* Double-Bezel (Doppelrand) Architecture: Obsidian Dark Product */
+.double-bezel-outer-dark {
+  background-color: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 2rem;
+  padding: 6px;
+  box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.5);
+}
+
+.double-bezel-inner-dark {
+  background-color: var(--surface-dark);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: calc(2rem - 6px);
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.12), 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Button-in-Button Trailing Icon Pod Architecture */
+.claude-btn-pill-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  background-color: var(--primary);
+  color: #ffffff;
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 500;
+  height: 44px;
+  padding: 0 8px 0 22px;
+  border-radius: 9999px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 2px 6px rgba(169, 78, 50, 0.25), inset 0 1px 1px rgba(255, 255, 255, 0.3);
+  transition: all 300ms cubic-bezier(0.32, 0.72, 0, 1);
+  cursor: pointer;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.claude-btn-pill-primary:hover {
+  background-color: var(--primary-active);
+  box-shadow: 0 4px 14px rgba(169, 78, 50, 0.35);
+}
+
+.claude-btn-pill-primary:active {
+  transform: scale(0.98);
+}
+
+.claude-btn-pill-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  background-color: var(--canvas);
+  color: var(--ink);
+  border: 1px solid var(--hairline);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 500;
+  height: 44px;
+  padding: 0 8px 0 22px;
+  border-radius: 9999px;
+  box-shadow: 0 1px 3px rgba(20, 20, 19, 0.04), inset 0 1px 1px rgba(255, 255, 255, 0.8);
+  transition: all 300ms cubic-bezier(0.32, 0.72, 0, 1);
+  cursor: pointer;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.claude-btn-pill-secondary:hover {
+  background-color: var(--surface-soft);
+  border-color: #d6cfc5;
+}
+
+.claude-btn-pill-secondary:active {
+  transform: scale(0.98);
+}
+
+.claude-btn-pill-dark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  background-color: var(--surface-dark-elevated);
+  color: var(--on-dark);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 500;
+  height: 44px;
+  padding: 0 8px 0 22px;
+  border-radius: 9999px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2), inset 0 1px 1px rgba(255, 255, 255, 0.1);
+  transition: all 300ms cubic-bezier(0.32, 0.72, 0, 1);
+  cursor: pointer;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.claude-btn-pill-dark:hover {
+  background-color: #312e2a;
+  border-color: rgba(255, 255, 255, 0.18);
+}
+
+.claude-btn-pill-dark:active {
+  transform: scale(0.98);
+}
+
+.btn-icon-bubble {
+  width: 28px;
+  height: 28px;
+  border-radius: 9999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 300ms cubic-bezier(0.32, 0.72, 0, 1);
+  flex-shrink: 0;
+}
+
+.claude-btn-pill-primary .btn-icon-bubble {
+  background-color: rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+}
+
+.claude-btn-pill-primary:hover .btn-icon-bubble {
+  transform: translate(2px, -1px) scale(1.08);
+}
+
+.claude-btn-pill-secondary .btn-icon-bubble {
+  background-color: rgba(20, 20, 19, 0.06);
+  color: var(--ink);
+}
+
+.claude-btn-pill-secondary:hover .btn-icon-bubble {
+  transform: translate(2px, -1px) scale(1.08);
+}
+
+.claude-btn-pill-dark .btn-icon-bubble {
+  background-color: rgba(255, 255, 255, 0.12);
+  color: var(--on-dark);
+}
+
+.claude-btn-pill-dark:hover .btn-icon-bubble {
+  transform: translate(2px, -1px) scale(1.08);
+}
+
+/* ============================================================ */
+/* IMPECCABLE ANIMATE: PURPOSEFUL MOTION DESIGN SYSTEM         */
+/* ============================================================ */
+
+/* 1. Focal Entrance Sequence (Home Hero & Surfaces) */
+@keyframes heroEntrance {
+  0% {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes heroCardEntrance {
+  0% {
+    opacity: 0;
+    transform: translateY(18px) scale(0.985);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.animate-hero-eyebrow {
+  animation: heroEntrance 500ms cubic-bezier(0.16, 1, 0.3, 1) 80ms both;
+}
+
+.animate-hero-headline {
+  animation: heroEntrance 600ms cubic-bezier(0.16, 1, 0.3, 1) 180ms both;
+}
+
+.animate-hero-sub {
+  animation: heroEntrance 600ms cubic-bezier(0.16, 1, 0.3, 1) 280ms both;
+}
+
+.animate-hero-actions {
+  animation: heroEntrance 600ms cubic-bezier(0.16, 1, 0.3, 1) 380ms both;
+}
+
+.animate-hero-card {
+  animation: heroCardEntrance 700ms cubic-bezier(0.16, 1, 0.3, 1) 220ms both;
+}
+
+/* 2. Tactile Feedback: Attach Snap */
+@keyframes attachSettle {
+  0% {
+    transform: scale(0.97);
+    opacity: 0.7;
+  }
+  60% {
+    transform: scale(1.015);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.animate-attach-settle {
+  animation: attachSettle 280ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* 3. Authoritative Senior Examiner Radar Scan */
+@keyframes beamScan {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(250%);
+  }
+}
+
+.animate-beam-scan {
+  animation: beamScan 2.4s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+/* 4. Examiner Stamp Reveal (Marking / Completed Milestones) */
+@keyframes stampReveal {
+  0% {
+    transform: scale(1.25);
+    opacity: 0;
+  }
+  70% {
+    transform: scale(0.96);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.animate-stamp-reveal {
+  animation: stampReveal 240ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* 5. Natural Message & Feedback Arrival */
+@keyframes messageEnter {
+  0% {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-message-enter {
+  animation: messageEnter 240ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* 6. Subtle Breathing Status Pulse */
+@keyframes pulseSubtle {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.animate-pulse-subtle {
+  animation: pulseSubtle 2.2s ease-in-out infinite;
+}
+
+/* Subtle Fixed Paper Grain / Texture Overlay */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 45;
+  pointer-events: none;
+  opacity: 0.025;
+  background-image: radial-gradient(#141413 0.75px, transparent 0.75px);
+  background-size: 16px 16px;
 }
 
 /* Reduced Motion Override (Section 6.B) */

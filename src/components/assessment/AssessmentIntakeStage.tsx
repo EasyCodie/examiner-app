@@ -109,135 +109,138 @@ export const AssessmentIntakeStage: React.FC<AssessmentIntakeStageProps> = ({
 
   return (
     <div className="w-full max-w-2xl mx-auto py-8 sm:py-16 px-4 animate-in fade-in zoom-in-95 duration-500">
-      <div className="relative bg-[#181715] border border-white/10 rounded-2xl p-6 sm:p-8 space-y-6 shadow-2xl overflow-hidden">
-        {/* Subtle radial ambient glow */}
-        <div className="absolute -top-24 left-1/2 -translate-x-1/2 w-96 h-96 bg-[#cc785c]/[0.05] rounded-full blur-3xl pointer-events-none" />
+      <div className="double-bezel-outer-dark">
+        <div className="double-bezel-inner-dark p-6 sm:p-8 space-y-6 relative overflow-hidden">
+          {/* Subtle radial ambient glow */}
+          <div className="absolute -top-24 left-1/2 -translate-x-1/2 w-96 h-96 bg-[#cc785c]/[0.08] rounded-full blur-3xl pointer-events-none animate-pulse-subtle" />
 
-        {/* Top Header & Credentials */}
-        <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-white/10 pb-5">
-          <div className="space-y-1">
-            <div className="flex items-center gap-2">
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-mono-code font-semibold tracking-wider uppercase bg-[#cc785c]/10 border border-[#cc785c]/20 text-[#cc785c]">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#cc785c] animate-ping" />
-                {isStreaming ? 'Examiner Review in Progress' : 'Preparing Examiner Review'}
-              </span>
-              <span className="text-white/20 text-xs">•</span>
-              <span className="text-[11px] font-mono-code text-[#a09d96]">
-                {session.id.slice(0, 16)}...
-              </span>
+          {/* Top Header & Credentials */}
+          <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-white/10 pb-5">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <span className="eyebrow-pill bg-[#cc785c]/15 border border-[#cc785c]/30 text-[#cc785c] gap-1.5 px-2.5 py-0.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#cc785c] animate-ping" />
+                  {isStreaming ? 'Examiner Review in Progress' : 'Preparing Examiner Review'}
+                </span>
+                <span className="text-white/20 text-xs">•</span>
+                <span className="text-[11px] font-mono-code text-[#a09d96]">
+                  {session.id.slice(0, 16)}...
+                </span>
+              </div>
+              <h2 className="text-xl sm:text-2xl text-[#faf9f5] font-serif font-normal tracking-tight">
+                Reviewing Your Exam Paper
+              </h2>
+              <p className="text-xs text-[#a09d96] font-mono-code">
+                {manifest.title} • {manifest.category}
+              </p>
             </div>
-            <h2 className="text-xl sm:text-2xl text-[#faf9f5] font-serif font-normal tracking-tight">
-              Reviewing Your Exam Paper
-            </h2>
-            <p className="text-xs text-[#a09d96] font-mono-code">
-              {manifest.title} • {manifest.category}
-            </p>
-          </div>
 
-          <div className="flex items-center gap-2 bg-[#252320] border border-white/10 px-3 py-1.5 rounded-lg text-xs font-mono-code text-[#a09d96] shrink-0">
-            <Clock className="w-3.5 h-3.5 text-[#cc785c]" />
-            <span>{formatTimer(elapsedSeconds)}</span>
-          </div>
-        </div>
-
-        {/* Stream Error Notice if failed */}
-        {streamError ? (
-          <div className="bg-[#c64545]/15 border border-[#c64545]/30 rounded-xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs text-[#c64545]">
-            <div className="flex items-center gap-2.5">
-              <AlertCircle className="w-4 h-4 text-[#c64545] shrink-0" />
-              <span>{streamError}</span>
+            <div className="flex items-center gap-2 bg-[#252320] border border-white/10 px-3 py-1.5 rounded-lg text-xs font-mono-code text-[#a09d96] shrink-0">
+              <Clock className="w-3.5 h-3.5 text-[#cc785c]" />
+              <span>{formatTimer(elapsedSeconds)}</span>
             </div>
-            <button
-              type="button"
-              onClick={onRetry}
-              className="px-3 py-1.5 bg-[#c64545]/20 hover:bg-[#c64545]/30 border border-[#c64545]/40 text-white rounded-lg font-mono-code transition text-xs"
-            >
-              Try Again
-            </button>
           </div>
-        ) : (
-          /* Intake Pipeline Milestones */
-          <div className="space-y-3 relative z-10">
-            {INTAKE_STEPS.map((step, idx) => {
-              const isCompleted = activeStepIndex > idx || firstQuestionReady;
-              const isActive = activeStepIndex === idx && !firstQuestionReady;
-              const Icon = step.icon;
 
-              return (
-                <div
-                  key={step.id}
-                  className={`flex items-start gap-3.5 p-3.5 rounded-xl border transition-all duration-300 ${isCompleted
-                      ? 'bg-[#252320]/60 border-[#5db8a6]/25 text-[#faf9f5]'
-                      : isActive
-                        ? 'bg-[#252320] border-[#cc785c]/50 shadow-sm text-white'
+          {/* Stream Error Notice if failed */}
+          {streamError ? (
+            <div className="bg-[#c64545]/15 border border-[#c64545]/30 rounded-xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs text-[#c64545]">
+              <div className="flex items-center gap-2.5">
+                <AlertCircle className="w-4 h-4 text-[#c64545] shrink-0" />
+                <span>{streamError}</span>
+              </div>
+              <button
+                type="button"
+                onClick={onRetry}
+                className="px-3 py-1.5 bg-[#c64545]/20 hover:bg-[#c64545]/30 border border-[#c64545]/40 text-white rounded-lg font-mono-code transition text-xs"
+              >
+                Try Again
+              </button>
+            </div>
+          ) : (
+            /* Intake Pipeline Milestones */
+            <div className="space-y-3 relative z-10">
+              {INTAKE_STEPS.map((step, idx) => {
+                const isCompleted = activeStepIndex > idx || firstQuestionReady;
+                const isActive = activeStepIndex === idx && !firstQuestionReady;
+                const Icon = step.icon;
+
+                return (
+                  <div
+                    key={step.id}
+                    className={`flex items-start gap-3.5 p-3.5 rounded-xl border transition-fluid duration-300 ${
+                      isCompleted
+                        ? 'bg-[#252320]/60 border-[#5db8a6]/25 text-[#faf9f5]'
+                        : isActive
+                        ? 'bg-[#252320] border-[#cc785c]/50 shadow-sm text-white ring-1 ring-[#cc785c]/30'
                         : 'bg-[#181715]/40 border-white/5 text-[#a09d96] opacity-50'
                     }`}
-                >
-                  {/* Step Status Indicator */}
-                  <div className="mt-0.5 shrink-0">
-                    {isCompleted ? (
-                      <div className="w-6 h-6 rounded-full bg-[#5db8a6]/15 border border-[#5db8a6]/30 flex items-center justify-center text-[#5db8a6]">
-                        <CheckCircle2 className="w-3.5 h-3.5" />
-                      </div>
-                    ) : isActive ? (
-                      <div className="w-6 h-6 rounded-full bg-[#cc785c]/15 border border-[#cc785c]/30 flex items-center justify-center text-[#cc785c]">
-                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                      </div>
-                    ) : (
-                      <div className="w-6 h-6 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-[#a09d96]">
-                        <Icon className="w-3.5 h-3.5 text-[#a09d96]" />
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Step Description */}
-                  <div className="flex-1 min-w-0 space-y-0.5">
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs font-medium tracking-tight">
-                        {step.label}
-                      </span>
-                      <span
-                        className={`text-[9px] font-mono-code uppercase font-semibold px-1.5 py-0.5 rounded border ${step.badgeClass}`}
-                      >
-                        {step.badge}
-                      </span>
+                  >
+                    {/* Step Status Indicator */}
+                    <div className="mt-0.5 shrink-0">
+                      {isCompleted ? (
+                        <div className="w-6 h-6 rounded-full bg-[#5db8a6]/15 border border-[#5db8a6]/30 flex items-center justify-center text-[#5db8a6] animate-stamp-reveal">
+                          <CheckCircle2 className="w-3.5 h-3.5" />
+                        </div>
+                      ) : isActive ? (
+                        <div className="w-6 h-6 rounded-full bg-[#cc785c]/15 border border-[#cc785c]/30 flex items-center justify-center text-[#cc785c]">
+                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        </div>
+                      ) : (
+                        <div className="w-6 h-6 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-[#a09d96]">
+                          <Icon className="w-3.5 h-3.5 text-[#a09d96]" />
+                        </div>
+                      )}
                     </div>
-                    <p className="text-[11px] font-mono-code text-[#a09d96] leading-relaxed">
-                      {step.detail}
-                    </p>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
 
-        {/* Live Status Bar & Completion Highlight */}
-        <div className="relative z-10 pt-2 border-t border-white/10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs">
-          <div className="flex items-center gap-2 font-mono-code text-[11px] text-[#a09d96]">
-            {firstQuestionReady ? (
-              <span className="text-[#5db8a6] flex items-center gap-1.5 font-semibold">
-                <CheckCircle2 className="w-3.5 h-3.5" />
-                Question 1 is marked. Opening your review...
-              </span>
-            ) : (
-              <span className="flex items-center gap-1.5 text-[#cc785c]">
-                <Sparkles className="w-3.5 h-3.5 animate-pulse" />
-                {streamStatus || 'Reading your answers...'}
-              </span>
+                    {/* Step Description */}
+                    <div className="flex-1 min-w-0 space-y-0.5">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-medium tracking-tight">
+                          {step.label}
+                        </span>
+                        <span
+                          className={`text-[9px] font-mono-code uppercase font-semibold px-1.5 py-0.5 rounded border ${step.badgeClass}`}
+                        >
+                          {step.badge}
+                        </span>
+                      </div>
+                      <p className="text-[11px] font-mono-code text-[#a09d96] leading-relaxed">
+                        {step.detail}
+                      </p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Live Status Bar & Completion Highlight */}
+          <div className="relative z-10 pt-2 border-t border-white/10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs">
+            <div className="flex items-center gap-2 font-mono-code text-[11px] text-[#a09d96]">
+              {firstQuestionReady ? (
+                <span className="text-[#5db8a6] flex items-center gap-1.5 font-semibold animate-message-enter">
+                  <CheckCircle2 className="w-3.5 h-3.5 animate-stamp-reveal" />
+                  Question 1 is marked. Opening your review...
+                </span>
+              ) : (
+                <span className="flex items-center gap-1.5 text-[#cc785c]">
+                  <Sparkles className="w-3.5 h-3.5 animate-pulse" />
+                  {streamStatus || 'Reading your answers...'}
+                </span>
+              )}
+            </div>
+
+            {onSkip && !firstQuestionReady && (
+              <button
+                type="button"
+                onClick={onSkip}
+                className="text-[11px] font-mono-code text-[#a09d96] hover:text-[#faf9f5] transition flex items-center gap-1"
+              >
+                <span>Skip directly to results</span>
+                <ArrowRight className="w-3 h-3" />
+              </button>
             )}
           </div>
-
-          {onSkip && !firstQuestionReady && (
-            <button
-              type="button"
-              onClick={onSkip}
-              className="text-[11px] font-mono-code text-[#a09d96] hover:text-[#faf9f5] transition flex items-center gap-1"
-            >
-              <span>Skip directly to results</span>
-              <ArrowRight className="w-3 h-3" />
-            </button>
-          )}
         </div>
       </div>
     </div>

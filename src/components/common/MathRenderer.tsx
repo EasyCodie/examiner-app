@@ -458,7 +458,12 @@ export const MathRenderer: React.FC<MathRendererProps> = React.memo(({
   }, [content, lightMode]);
 
   const hasCustomTextColor = /\btext-/.test(className);
-  const defaultTextColor = lightMode ? 'text-slate-900' : 'text-[#f3f3f2]';
+  const defaultTextColor =
+    lightMode === true
+      ? 'text-[#141413]'
+      : lightMode === false
+      ? 'text-[#faf9f5]'
+      : 'text-inherit';
   const baseStyle = `${hasCustomTextColor ? '' : defaultTextColor} leading-relaxed math-content`;
 
   return (

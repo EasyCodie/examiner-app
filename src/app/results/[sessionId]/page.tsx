@@ -297,18 +297,18 @@ export default function ResultsPage() {
           <div className="flex items-center gap-2 mb-2">
             <Link
               href="/"
-              className="text-xs text-[#706e6a] hover:text-[#141413] flex items-center gap-1 font-mono-code transition"
+              className="text-xs text-[#54524c] hover:text-[#141413] flex items-center gap-1 font-mono-code transition"
             >
               <ArrowLeft className="w-3.5 h-3.5" />
               <span>Back</span>
             </Link>
             <span className="text-[#e6dfd8]">•</span>
             {isFinished ? (
-              <span className="text-[10px] font-mono-code font-semibold uppercase tracking-wider text-[#378575] bg-[#5db8a6]/15 border border-[#5db8a6]/30 px-2.5 py-0.5 rounded-full flex items-center gap-1">
-                <ShieldCheck className="w-3 h-3 text-[#5db8a6]" /> Grading Complete
+              <span className="text-[10px] font-mono-code font-semibold uppercase tracking-wider text-[#1d6c5f] bg-[#1d6c5f]/15 border border-[#1d6c5f]/30 px-2.5 py-0.5 rounded-full flex items-center gap-1">
+                <ShieldCheck className="w-3 h-3 text-[#1d6c5f]" /> Grading Complete
               </span>
             ) : (
-              <span className="text-[10px] font-mono-code font-semibold uppercase tracking-wider text-[#cc785c] bg-[#cc785c]/10 border border-[#cc785c]/20 px-2.5 py-0.5 rounded-full flex items-center gap-1 animate-pulse">
+              <span className="text-[10px] font-mono-code font-semibold uppercase tracking-wider text-[#a94e32] bg-[#a94e32]/10 border border-[#a94e32]/20 px-2.5 py-0.5 rounded-full flex items-center gap-1 animate-pulse">
                 <Loader2 className="w-3 h-3 animate-spin" /> Marking in Progress
               </span>
             )}
@@ -317,7 +317,7 @@ export default function ResultsPage() {
           <h1 className="text-2xl sm:text-4xl font-serif text-[#141413] tracking-tight">
             {manifest.title}
           </h1>
-          <p className="text-xs text-[#706e6a] font-mono-code mt-1">
+          <p className="text-xs text-[#54524c] font-mono-code mt-1">
             Submitted on {new Date(session.submittedAt || session.startedAt).toLocaleString()} • {session.subjectCategory}
           </p>
         </div>
@@ -325,61 +325,69 @@ export default function ResultsPage() {
         <div className="flex items-center gap-2.5">
           <Link
             href={`/learn/${manifest.id}`}
-            className="px-3.5 py-2 claude-btn-secondary text-xs font-mono-code flex items-center gap-1.5 shadow-2xs"
+            className="claude-btn-pill-secondary text-xs px-4 py-2"
           >
-            <Compass className="w-3.5 h-3.5 text-[#cc785c]" />
+            <span className="btn-icon-bubble bg-[#efe9de] text-[#a94e32]">
+              <Compass className="w-3.5 h-3.5 text-[#a94e32]" />
+            </span>
             <span>Socratic Revision</span>
           </Link>
 
           <Link
             href={`/mock/${manifest.id}`}
-            className="px-4 py-2 claude-btn-primary text-xs font-mono-code flex items-center gap-1.5 shadow-sm"
+            className="claude-btn-pill-primary text-xs px-4 py-2"
           >
-            <RotateCcw className="w-3.5 h-3.5" />
             <span>Retake Exam</span>
+            <span className="btn-icon-bubble">
+              <RotateCcw className="w-3.5 h-3.5 text-white" />
+            </span>
           </Link>
         </div>
       </div>
 
       {/* Live Stream Progress HUD (when evaluating) */}
       {isStreaming && (
-        <div className="bg-[#181715] border border-white/10 rounded-2xl p-5 space-y-3.5 shadow-xl animate-in fade-in duration-300">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-            <div className="flex items-center gap-3">
-              <Loader2 className="w-5 h-5 text-[#cc785c] animate-spin shrink-0" />
-              <div>
-                <h3 className="text-sm font-medium text-white tracking-tight flex items-center gap-2">
-                  <span>Examiner Marking in Progress</span>
-                  {effectiveEvaluations.length >= 1 && (
-                    <span className="text-[10px] font-mono-code font-normal text-[#5db8a6] bg-[#5db8a6]/15 border border-[#5db8a6]/30 px-2 py-0.5 rounded-full">
-                      Question 1 Ready
-                    </span>
-                  )}
-                </h3>
-                <p className="text-xs text-[#a09d96] font-mono-code mt-0.5">
-                  {streamStatus}
-                </p>
+        <div className="double-bezel-outer-dark">
+          <div className="double-bezel-inner-dark p-5 space-y-4">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <Loader2 className="w-5 h-5 text-[#cc785c] animate-spin shrink-0" />
+                <div>
+                  <h3 className="text-sm font-medium text-white tracking-tight flex items-center gap-2">
+                    <span>Examiner Marking in Progress</span>
+                    {effectiveEvaluations.length >= 1 && (
+                      <span className="eyebrow-pill text-[#5db8a6] bg-[#5db8a6]/15 border border-[#5db8a6]/30 px-2 py-0.5">
+                        Question 1 Ready
+                      </span>
+                    )}
+                  </h3>
+                  <p className="text-xs text-[#a09d96] font-mono-code mt-0.5">
+                    {streamStatus}
+                  </p>
+                </div>
+              </div>
+
+              <div className="text-right">
+                <span className="eyebrow-pill bg-[#cc785c]/15 text-[#cc785c] border border-[#cc785c]/30 px-3 py-1">
+                  {effectiveEvaluations.length} of {totalQuestions} Questions Marked
+                </span>
               </div>
             </div>
 
-            <div className="text-right">
-              <span className="text-xs font-mono-code text-[#cc785c] font-bold">
-                {effectiveEvaluations.length} of {totalQuestions} Questions Marked
-              </span>
-            </div>
-          </div>
-
-          {/* Progress bar */}
-          <div className="space-y-1">
-            <div className="w-full h-1.5 bg-[#252320] rounded-full overflow-hidden border border-white/10">
-              <div
-                className="h-full bg-[#cc785c] rounded-full transition-all duration-500 ease-out"
-                style={{ width: `${Math.max(5, progressPct)}%` }}
-              />
-            </div>
-            <div className="flex justify-between text-[10px] font-mono-code text-[#a09d96]">
-              <span>Read your Question 1 feedback below while the remaining questions are reviewed</span>
-              <span>{progressPct}%</span>
+            {/* Progress bar */}
+            <div className="space-y-1.5">
+              <div className="w-full h-2 bg-[#252320] rounded-full overflow-hidden border border-white/10 p-0.5 relative">
+                <div
+                  className="h-full bg-linear-to-r from-[#cc785c] to-[#e8a55a] rounded-full transition-fluid duration-500 shadow-[0_0_10px_rgba(204,120,92,0.4)] relative overflow-hidden"
+                  style={{ width: `${Math.max(5, progressPct)}%` }}
+                >
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent animate-beam-scan pointer-events-none" />
+                </div>
+              </div>
+              <div className="flex justify-between text-[10px] font-mono-code text-[#a09d96]">
+                <span>Read your Question 1 feedback below while the remaining questions are reviewed</span>
+                <span>{progressPct}%</span>
+              </div>
             </div>
           </div>
         </div>
@@ -415,14 +423,16 @@ export default function ResultsPage() {
           />
         </section>
       ) : (
-        <section className="bg-[#efe9de] border border-[#e6dfd8] rounded-2xl p-6 text-center space-y-2 text-[#141413] shadow-xs">
-          <div className="flex items-center justify-center gap-2 text-[#706e6a] font-mono-code text-xs">
-            <Clock className="w-4 h-4 text-[#cc785c]" />
-            <span>Your predicted 1-7 grade and topic strengths will calculate once all questions are marked</span>
+        <section className="double-bezel-outer-cream">
+          <div className="double-bezel-inner-cream p-6 text-center space-y-2 text-[#141413]">
+            <div className="flex items-center justify-center gap-2 text-[#54524c] font-mono-code text-xs">
+              <Clock className="w-4 h-4 text-[#a94e32]" />
+              <span>Your predicted 1-7 grade and topic strengths will calculate once all questions are marked</span>
+            </div>
+            <p className="text-[11px] text-[#54524c] font-mono-code">
+              Examiner feedback and method marks are ready below for you to review.
+            </p>
           </div>
-          <p className="text-[11px] text-[#706e6a] font-mono-code">
-            Examiner feedback and method marks are ready below for you to review.
-          </p>
         </section>
       )}
 
@@ -430,10 +440,10 @@ export default function ResultsPage() {
       <section>
         <div className="mb-3">
           <h2 className="text-xl font-serif font-normal text-[#141413] flex items-center gap-2">
-            <FileCheck className="w-4 h-4 text-[#cc785c]" />
+            <FileCheck className="w-4 h-4 text-[#a94e32]" />
             Question Review &amp; Examiner Marks
           </h2>
-          <p className="text-xs text-[#706e6a] font-mono-code">
+          <p className="text-xs text-[#54524c] font-mono-code">
             See where marks were awarded, with examiner margin notes and method marks
           </p>
         </div>

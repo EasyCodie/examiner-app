@@ -10,7 +10,9 @@ import {
   Trash2,
   ChevronLeft,
   ChevronRight,
+  BookOpen,
 } from 'lucide-react';
+import { useAppShell } from '@/components/common/AppShell';
 
 export interface CanvasToolbarProps {
   tool: 'pen' | 'highlighter' | 'eraser';
@@ -55,6 +57,8 @@ export const CanvasToolbar: React.FC<CanvasToolbarProps> = ({
   onPageChange,
   showPageNav = true,
 }) => {
+  const { hasFormulaBooklet, toggleFormulaBooklet, isFormulaBookletOpen } = useAppShell();
+
   return (
     <aside
       aria-label="Drawing Tools"
@@ -188,6 +192,26 @@ export const CanvasToolbar: React.FC<CanvasToolbarProps> = ({
           <span>Delete</span>
         </button>
       </div>
+
+      {/* Official IB Formula Booklet Fast Trigger */}
+      {hasFormulaBooklet && (
+        <div className="flex items-center bg-[#252320] p-1 rounded-lg border border-white/5 shrink-0">
+          <button
+            type="button"
+            onClick={() => toggleFormulaBooklet()}
+            aria-label="Toggle official IB Formula Booklet"
+            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-mono-code transition focus-ring ${
+              isFormulaBookletOpen
+                ? 'bg-[#cc785c] text-white font-medium shadow-sm'
+                : 'text-[#a09d96] hover:text-[#faf9f5]'
+            }`}
+            title="Formula Booklet (Ctrl+B)"
+          >
+            <BookOpen className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">Booklet</span>
+          </button>
+        </div>
+      )}
 
       {/* Page Navigation */}
       {showPageNav && (

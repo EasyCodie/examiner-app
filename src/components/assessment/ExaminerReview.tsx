@@ -62,9 +62,10 @@ export const ExaminerReview: React.FC<ExaminerReviewProps> = ({
   ) || evaluations[activeIndex];
 
   return (
-    <div className="bg-[#efe9de] border border-[#e6dfd8] rounded-2xl overflow-hidden shadow-xl">
-      {/* Top Question Selector Bar with Diagnostic Heatmap */}
-      <div className="p-3 bg-[#faf9f5] border-b border-[#e6dfd8] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 overflow-x-auto">
+    <div className="double-bezel-outer-cream">
+      <div className="double-bezel-inner-cream overflow-hidden">
+        {/* Top Question Selector Bar with Diagnostic Heatmap */}
+        <div className="p-3 bg-[#faf9f5] border-b border-[#e6dfd8] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 overflow-x-auto">
         <div className="flex items-center gap-1.5 overflow-x-auto max-w-full pb-1 sm:pb-0">
           {questions.map((q, idx) => {
             const ev = evaluations.find(
@@ -93,8 +94,8 @@ export const ExaminerReview: React.FC<ExaminerReviewProps> = ({
                 type="button"
                 onClick={() => handleSelectIndex(idx)}
                 className={`px-3 py-1.5 rounded-lg text-xs font-mono-code transition-all flex items-center gap-1.5 whitespace-nowrap border ${isSelected
-                    ? 'bg-[#cc785c] text-white font-semibold shadow-sm border-transparent'
-                    : 'bg-[#efe9de] text-[#706e6a] hover:text-[#141413] hover:bg-[#e5ded2] border-[#e6dfd8]'
+                    ? 'bg-[#a94e32] text-white font-semibold shadow-sm border-transparent'
+                    : 'bg-[#efe9de] text-[#54524c] hover:text-[#141413] hover:bg-[#e5ded2] border-[#e6dfd8]'
                   }`}
               >
                 {/* Diagnostic Heatmap Dot or Pending Loader */}
@@ -110,7 +111,7 @@ export const ExaminerReview: React.FC<ExaminerReviewProps> = ({
                       }`}
                   />
                 ) : (
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#cc785c] animate-pulse shrink-0" />
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#a94e32] animate-pulse shrink-0" />
                 )}
                 <span>{q.number.replace(/^Question\s*/i, '')}</span>
                 {ev ? (
@@ -118,16 +119,16 @@ export const ExaminerReview: React.FC<ExaminerReviewProps> = ({
                     className={`text-[10px] font-mono-code px-1.5 py-0.5 rounded ${isSelected
                         ? 'bg-black/20 text-white'
                         : fullMarks
-                          ? 'bg-[#5db8a6]/15 text-[#378575]'
+                          ? 'bg-[#1d6c5f]/15 text-[#1d6c5f]'
                           : isPartial
-                            ? 'bg-[#e8a55a]/15 text-[#b07432]'
-                            : 'bg-[#e6dfd8] text-[#706e6a]'
+                            ? 'bg-[#8f530d]/15 text-[#8f530d]'
+                            : 'bg-[#e6dfd8] text-[#54524c]'
                       }`}
                   >
                     {ev.marksAwarded}/{ev.maxMarks}
                   </span>
                 ) : (
-                  <span className="text-[10px] font-mono-code text-[#a09d96] italic">
+                  <span className="text-[10px] font-mono-code text-[#54524c] italic">
                     Queued
                   </span>
                 )}
@@ -144,7 +145,7 @@ export const ExaminerReview: React.FC<ExaminerReviewProps> = ({
               onClick={() => setFilter('ALL')}
               className={`px-2.5 py-1 rounded-md transition ${filter === 'ALL'
                   ? 'bg-[#faf9f5] text-[#141413] font-semibold shadow-2xs'
-                  : 'text-[#706e6a] hover:text-[#141413]'
+                  : 'text-[#54524c] hover:text-[#141413]'
                 }`}
             >
               All ({questions.length})
@@ -154,7 +155,7 @@ export const ExaminerReview: React.FC<ExaminerReviewProps> = ({
               onClick={() => setFilter('REVIEW')}
               className={`px-2.5 py-1 rounded-md transition ${filter === 'REVIEW'
                   ? 'bg-[#faf9f5] text-[#141413] font-semibold shadow-2xs'
-                  : 'text-[#706e6a] hover:text-[#141413]'
+                  : 'text-[#54524c] hover:text-[#141413]'
                 }`}
             >
               Review Needed
@@ -164,7 +165,7 @@ export const ExaminerReview: React.FC<ExaminerReviewProps> = ({
               onClick={() => setFilter('MASTERED')}
               className={`px-2.5 py-1 rounded-md transition ${filter === 'MASTERED'
                   ? 'bg-[#faf9f5] text-[#141413] font-semibold shadow-2xs'
-                  : 'text-[#706e6a] hover:text-[#141413]'
+                  : 'text-[#54524c] hover:text-[#141413]'
                 }`}
             >
               Full Marks
@@ -172,7 +173,7 @@ export const ExaminerReview: React.FC<ExaminerReviewProps> = ({
           </div>
 
           {/* Chevrons */}
-          <div className="flex items-center gap-1.5 text-[#706e6a] text-xs font-mono-code">
+          <div className="flex items-center gap-1.5 text-[#54524c] text-xs font-mono-code">
             <button
               type="button"
               disabled={activeIndex <= 0}
@@ -207,12 +208,12 @@ export const ExaminerReview: React.FC<ExaminerReviewProps> = ({
               <span className="text-xs font-semibold uppercase tracking-wider text-[#141413] font-mono-code">
                 Your Answer
               </span>
-              <span className="text-[10px] font-mono-code text-[#706e6a]">
+              <span className="text-[10px] font-mono-code text-[#54524c]">
                 ({submission?.timeSpentSeconds ? `${Math.round(submission.timeSpentSeconds / 60)} mins` : 'Timed session'})
               </span>
             </div>
             {evaluation?.ecfApplied && (
-              <span className="text-[11px] font-mono-code text-[#e8a55a] bg-[#e8a55a]/15 border border-[#e8a55a]/30 px-2.5 py-0.5 rounded-full flex items-center gap-1">
+              <span className="text-[11px] font-mono-code text-[#8f530d] bg-[#8f530d]/15 border border-[#8f530d]/30 px-2.5 py-0.5 rounded-full flex items-center gap-1">
                 <Sparkles className="w-3 h-3" /> Method Protected (ECF)
               </span>
             )}
@@ -222,9 +223,9 @@ export const ExaminerReview: React.FC<ExaminerReviewProps> = ({
           <div className="bg-[#efe9de] p-4 rounded-xl border border-[#e6dfd8] mb-4 text-xs text-[#141413] shadow-2xs">
             <div className="font-semibold text-[#141413] mb-1.5 font-mono-code flex items-center justify-between">
               <span>{currentQuestion.number.replace(/^Question\s*/i, '')}</span>
-              <span className="text-[11px] text-[#706e6a]">[{currentQuestion.totalMarks} Marks]</span>
+              <span className="text-[11px] text-[#54524c]">[{currentQuestion.totalMarks} Marks]</span>
             </div>
-            <MathRenderer content={currentQuestion.promptText} />
+            <MathRenderer content={currentQuestion.promptText} lightMode={true} />
 
             {/* Top-Level Mathematical Diagram / SVG Graph */}
             {currentQuestion.diagram?.hasDiagram && currentQuestion.diagram.svgContent && (
@@ -260,20 +261,20 @@ export const ExaminerReview: React.FC<ExaminerReviewProps> = ({
                       <div className="flex items-center justify-between gap-2 font-mono-code text-[11px]">
                         <div className="flex items-center gap-1.5 font-semibold text-[#141413]">
                           <span>Part {sp.partLetter}</span>
-                          <span className="text-[#706e6a]">[{sp.totalMarks} marks]</span>
+                          <span className="text-[#54524c]">[{sp.totalMarks} marks]</span>
                         </div>
                         {spScore ? (
                           <div className="flex items-center gap-1.5">
                             {spScore.ecfApplied && (
-                              <span className="text-[10px] font-mono-code text-[#e8a55a] bg-[#e8a55a]/15 border border-[#e8a55a]/30 px-1.5 py-0.5 rounded flex items-center gap-0.5">
+                              <span className="text-[10px] font-mono-code text-[#8f530d] bg-[#8f530d]/15 border border-[#8f530d]/30 px-1.5 py-0.5 rounded flex items-center gap-0.5">
                                 <Sparkles className="w-2.5 h-2.5" /> ECF
                               </span>
                             )}
                             <span
                               className={`px-2 py-0.5 rounded text-[10px] font-semibold ${spScore.marksAwarded === sp.totalMarks
-                                  ? 'bg-[#5db8a6]/15 text-[#378575] border border-[#5db8a6]/30'
+                                  ? 'bg-[#1d6c5f]/15 text-[#1d6c5f] border border-[#1d6c5f]/30'
                                   : spScore.marksAwarded > 0
-                                    ? 'bg-[#e8a55a]/15 text-[#b07432] border border-[#e8a55a]/30'
+                                    ? 'bg-[#8f530d]/15 text-[#8f530d] border border-[#8f530d]/30'
                                     : 'bg-[#c64545]/15 text-[#c64545] border border-[#c64545]/30'
                                 }`}
                             >
@@ -282,9 +283,9 @@ export const ExaminerReview: React.FC<ExaminerReviewProps> = ({
                           </div>
                         ) : null}
                       </div>
-                      <MathRenderer content={sp.promptText} />
+                      <MathRenderer content={sp.promptText} lightMode={true} />
                       {spScore?.reason && (
-                        <p className="text-[10px] font-mono-code text-[#706e6a] italic pt-1 border-t border-[#e6dfd8]">
+                        <p className="text-[10px] font-mono-code text-[#54524c] italic pt-1 border-t border-[#e6dfd8]">
                           {spScore.reason}
                         </p>
                       )}
@@ -294,9 +295,9 @@ export const ExaminerReview: React.FC<ExaminerReviewProps> = ({
                             <span
                               key={aIdx}
                               className={`inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded border font-mono-code ${ann.type === 'tick'
-                                  ? 'bg-[#5db8a6]/15 border-[#5db8a6]/35 text-[#378575]'
+                                  ? 'bg-[#1d6c5f]/15 border-[#1d6c5f]/35 text-[#1d6c5f]'
                                   : ann.type === 'ecf'
-                                    ? 'bg-[#e8a55a]/15 border-[#e8a55a]/35 text-[#b07432]'
+                                    ? 'bg-[#8f530d]/15 border-[#8f530d]/35 text-[#8f530d]'
                                     : 'bg-[#c64545]/15 border-[#c64545]/35 text-[#c64545]'
                                 }`}
                             >
@@ -386,17 +387,17 @@ export const ExaminerReview: React.FC<ExaminerReviewProps> = ({
                 {evaluation.marginAnnotations.map((ann, aIdx) => (
                   <div
                     key={aIdx}
-                    className={`inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded-lg border font-mono-code ${ann.type === 'tick'
-                        ? 'bg-[#5db8a6]/15 border-[#5db8a6]/35 text-[#378575]'
+                    className={`inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded-lg border font-mono-code animate-stamp-reveal ${ann.type === 'tick'
+                        ? 'bg-[#1d6c5f]/15 border-[#1d6c5f]/35 text-[#1d6c5f]'
                         : ann.type === 'ecf'
-                          ? 'bg-[#e8a55a]/15 border-[#e8a55a]/35 text-[#b07432]'
+                          ? 'bg-[#8f530d]/15 border-[#8f530d]/35 text-[#8f530d]'
                           : 'bg-[#c64545]/15 border-[#c64545]/35 text-[#c64545]'
                       }`}
                   >
                     {ann.type === 'tick' ? (
-                      <CheckCircle2 className="w-3.5 h-3.5 text-[#5db8a6]" />
+                      <CheckCircle2 className="w-3.5 h-3.5 text-[#1d6c5f]" />
                     ) : ann.type === 'ecf' ? (
-                      <Sparkles className="w-3.5 h-3.5 text-[#e8a55a]" />
+                      <Sparkles className="w-3.5 h-3.5 text-[#8f530d]" />
                     ) : (
                       <XCircle className="w-3.5 h-3.5 text-[#c64545]" />
                     )}
@@ -447,13 +448,16 @@ export const ExaminerReview: React.FC<ExaminerReviewProps> = ({
           )}
 
           {/* Error Carried Forward Explanation Card */}
-          {evaluation?.ecfApplied && evaluation.ecfExplanation && (
-            <div className="p-4 bg-[#e8a55a]/15 border border-[#e8a55a]/30 rounded-xl text-xs text-[#e8a55a]">
-              <div className="font-semibold text-[#e8a55a] flex items-center gap-1.5 mb-1 font-mono-code">
-                <Sparkles className="w-4 h-4 text-[#e8a55a]" />
-                Follow-Through Marks Applied (ECF):
+          {evaluation?.ecfApplied && (
+            <div className="p-4 bg-[#e8a55a]/15 border border-[#e8a55a]/35 rounded-xl text-xs space-y-1 text-[#faf9f5]">
+              <div className="flex items-center gap-1.5 font-semibold text-[#e8a55a] font-mono-code">
+                <Sparkles className="w-3.5 h-3.5" />
+                <span>Follow-Through Applied:</span>
               </div>
-              <MathRenderer content={evaluation.ecfExplanation} className="opacity-95" />
+              <p className="text-[11px] text-[#e8a55a]/90 leading-relaxed font-mono-code">
+                {evaluation.ecfExplanation ||
+                  'Your method was correct based on an earlier calculated value, so you received follow-through marks despite an earlier arithmetic error.'}
+              </p>
             </div>
           )}
 
@@ -467,7 +471,7 @@ export const ExaminerReview: React.FC<ExaminerReviewProps> = ({
                 evaluation.markBreakdown.map((mb, mIdx) => (
                   <div
                     key={mIdx}
-                    className={`p-3.5 rounded-xl border transition-all text-xs ${mb.awarded
+                    className={`p-3.5 rounded-xl border transition-all text-xs animate-message-enter ${mb.awarded
                         ? 'bg-[#252320] border-white/10 text-[#faf9f5]'
                         : 'bg-[#c64545]/15 border-[#c64545]/30 text-[#faf9f5]'
                       }`}
@@ -525,6 +529,7 @@ export const ExaminerReview: React.FC<ExaminerReviewProps> = ({
             </div>
           )}
         </div>
+      </div>
       </div>
     </div>
   );
