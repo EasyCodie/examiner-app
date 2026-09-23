@@ -1,0 +1,683 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-09-23T19:28:09.598Z",
+  "title": "Design System: Criterion",
+  "extensions": {
+    "colorMeta": {
+      "shell": {
+        "role": "neutral",
+        "displayName": "Graphite Desk",
+        "canonical": "#15181c",
+        "oklch": "oklch(20.8% 0.009 255.6)",
+        "tonalRamp": [
+          "#0a0b0d",
+          "#222427",
+          "#3d4045",
+          "#5a5e63",
+          "#7a7e83",
+          "#9b9fa4",
+          "#c0c4ca",
+          "#eceff2"
+        ]
+      },
+      "shell-raised": {
+        "role": "neutral",
+        "displayName": "Raised Graphite",
+        "canonical": "#1c2127",
+        "oklch": "oklch(24.5% 0.014 253.1)",
+        "tonalRamp": [
+          "#090b0f",
+          "#212428",
+          "#3b4047",
+          "#585e65",
+          "#787e85",
+          "#999fa7",
+          "#bec5cd",
+          "#ebeff4"
+        ]
+      },
+      "shell-line": {
+        "role": "neutral",
+        "displayName": "Graphite Hairline",
+        "canonical": "#2e343c",
+        "oklch": "oklch(32.3% 0.016 255.6)",
+        "tonalRamp": [
+          "#080b0f",
+          "#212429",
+          "#3a4049",
+          "#585e67",
+          "#777e87",
+          "#989fa9",
+          "#bdc5cf",
+          "#eaeff5"
+        ]
+      },
+      "shell-ink": {
+        "role": "neutral",
+        "displayName": "Shell Ink",
+        "canonical": "#e9ecef",
+        "oklch": "oklch(94.2% 0.005 247.9)",
+        "tonalRamp": [
+          "#0a0b0c",
+          "#232425",
+          "#3e4042",
+          "#5b5e60",
+          "#7b7e80",
+          "#9c9fa1",
+          "#c1c4c7",
+          "#edeff0"
+        ]
+      },
+      "shell-muted": {
+        "role": "neutral",
+        "displayName": "Shell Muted",
+        "canonical": "#a4adb8",
+        "oklch": "oklch(74.4% 0.019 253.4)",
+        "tonalRamp": [
+          "#080b10",
+          "#202429",
+          "#39404a",
+          "#565e68",
+          "#767e89",
+          "#969faa",
+          "#bcc5d0",
+          "#e9eff6"
+        ]
+      },
+      "paper": {
+        "role": "primary",
+        "displayName": "Script Stock White",
+        "canonical": "#ffffff",
+        "oklch": "oklch(100.0% 0.000 89.9)",
+        "tonalRamp": [
+          "#0b0b0b",
+          "#242424",
+          "#404040",
+          "#5d5d5d",
+          "#7d7d7d",
+          "#9e9e9e",
+          "#c4c4c4",
+          "#eeeeee"
+        ]
+      },
+      "paper-tint": {
+        "role": "neutral",
+        "displayName": "Paper Tint",
+        "canonical": "#f4f6f8",
+        "oklch": "oklch(97.2% 0.003 247.9)",
+        "tonalRamp": [
+          "#0a0b0c",
+          "#232425",
+          "#3e4041",
+          "#5c5e5f",
+          "#7c7d7f",
+          "#9d9fa0",
+          "#c2c4c6",
+          "#edeef0"
+        ]
+      },
+      "paper-rule": {
+        "role": "neutral",
+        "displayName": "Paper Rule",
+        "canonical": "#d9dde2",
+        "oklch": "oklch(89.6% 0.008 253.9)",
+        "tonalRamp": [
+          "#0a0b0d",
+          "#222426",
+          "#3d4044",
+          "#5a5e62",
+          "#7a7e82",
+          "#9b9fa3",
+          "#c1c4c9",
+          "#eceff2"
+        ]
+      },
+      "paper-rule-strong": {
+        "role": "neutral",
+        "displayName": "Strong Paper Rule",
+        "canonical": "#9aa3ae",
+        "oklch": "oklch(71.2% 0.019 253.4)",
+        "tonalRamp": [
+          "#080b10",
+          "#20242a",
+          "#39404a",
+          "#565e68",
+          "#767e89",
+          "#969faa",
+          "#bcc5d1",
+          "#e9eff6"
+        ]
+      },
+      "ruling": {
+        "role": "neutral",
+        "displayName": "Ruling Grey",
+        "canonical": "#e6e9ed",
+        "oklch": "oklch(93.3% 0.006 255.5)",
+        "tonalRamp": [
+          "#0a0b0d",
+          "#232426",
+          "#3e4043",
+          "#5b5e61",
+          "#7b7d81",
+          "#9c9fa2",
+          "#c1c4c8",
+          "#edeff1"
+        ]
+      },
+      "ink": {
+        "role": "primary",
+        "displayName": "Report Black",
+        "canonical": "#111418",
+        "oklch": "oklch(19.0% 0.009 255.6)",
+        "tonalRamp": [
+          "#0a0b0e",
+          "#222427",
+          "#3c4045",
+          "#5a5e63",
+          "#7a7e83",
+          "#9b9fa4",
+          "#c0c4ca",
+          "#eceff2"
+        ]
+      },
+      "ink-muted": {
+        "role": "neutral",
+        "displayName": "Muted Ink",
+        "canonical": "#4b5563",
+        "oklch": "oklch(44.6% 0.026 256.8)",
+        "tonalRamp": [
+          "#070b12",
+          "#1f242c",
+          "#37404e",
+          "#545e6d",
+          "#737e8d",
+          "#949faf",
+          "#b9c5d5",
+          "#e8eff9"
+        ]
+      },
+      "ink-hover": {
+        "role": "primary",
+        "displayName": "Report Black, hover",
+        "canonical": "#2a3038",
+        "oklch": "oklch(30.7% 0.017 255.6)",
+        "tonalRamp": [
+          "#080b0f",
+          "#212429",
+          "#3a4049",
+          "#585e67",
+          "#777e87",
+          "#989fa9",
+          "#bdc5cf",
+          "#eaeff5"
+        ]
+      },
+      "slip-hover": {
+        "role": "primary",
+        "displayName": "Slip Hover Grey",
+        "canonical": "#dfe3e8",
+        "oklch": "oklch(91.4% 0.008 253.9)",
+        "tonalRamp": [
+          "#0a0b0d",
+          "#222426",
+          "#3d4044",
+          "#5a5e62",
+          "#7a7e82",
+          "#9b9fa3",
+          "#c1c4c9",
+          "#eceff2"
+        ]
+      },
+      "student": {
+        "role": "neutral",
+        "displayName": "Blue-Black Ballpoint",
+        "canonical": "#1a2238",
+        "oklch": "oklch(25.6% 0.043 268.1)",
+        "tonalRamp": [
+          "#070b16",
+          "#1f2431",
+          "#363f57",
+          "#535d77",
+          "#727d98",
+          "#939eba",
+          "#b8c4e1",
+          "#e7eeff"
+        ]
+      },
+      "examiner": {
+        "role": "secondary",
+        "displayName": "Examiner Ultramarine",
+        "canonical": "#2743d6",
+        "oklch": "oklch(47.1% 0.225 267.4)",
+        "tonalRamp": [
+          "#040043",
+          "#0a1664",
+          "#161ab3",
+          "#2946d9",
+          "#446cff",
+          "#6190ff",
+          "#84b8ff",
+          "#c7ecff"
+        ]
+      },
+      "examiner-on-shell": {
+        "role": "secondary",
+        "displayName": "Examiner Ultramarine, lifted",
+        "canonical": "#9db0ff",
+        "oklch": "oklch(77.3% 0.115 273.1)",
+        "tonalRamp": [
+          "#050527",
+          "#1a2045",
+          "#2d377b",
+          "#49579e",
+          "#6777c2",
+          "#8799e6",
+          "#abbfff",
+          "#dfecff"
+        ]
+      },
+      "awarded": {
+        "role": "tertiary",
+        "displayName": "Awarded Green",
+        "canonical": "#0e7a4f",
+        "oklch": "oklch(51.3% 0.113 159.4)",
+        "tonalRamp": [
+          "#001302",
+          "#002d18",
+          "#005029",
+          "#007046",
+          "#329165",
+          "#57b485",
+          "#7fdbaa",
+          "#c8fddf"
+        ]
+      },
+      "awarded-on-shell": {
+        "role": "tertiary",
+        "displayName": "Awarded Green, on shell",
+        "canonical": "#5cc99a",
+        "oklch": "oklch(75.9% 0.123 162.8)",
+        "tonalRamp": [
+          "#001303",
+          "#002e19",
+          "#00522c",
+          "#007249",
+          "#169368",
+          "#47b688",
+          "#71ddad",
+          "#c2ffe0"
+        ]
+      },
+      "lost": {
+        "role": "tertiary",
+        "displayName": "Lost Red",
+        "canonical": "#c8321e",
+        "oklch": "oklch(54.9% 0.190 31.0)",
+        "tonalRamp": [
+          "#2c0000",
+          "#4d0000",
+          "#890000",
+          "#af1100",
+          "#d6412c",
+          "#fe664f",
+          "#ff8e74",
+          "#ffd2c0"
+        ]
+      },
+      "lost-deep": {
+        "role": "tertiary",
+        "displayName": "Lost Red, hover",
+        "canonical": "#a8281a",
+        "oklch": "oklch(48.2% 0.167 30.3)",
+        "tonalRamp": [
+          "#290000",
+          "#490501",
+          "#820000",
+          "#a72719",
+          "#cd4d3c",
+          "#f4705c",
+          "#ff9781",
+          "#ffd6c7"
+        ]
+      },
+      "lost-on-shell": {
+        "role": "tertiary",
+        "displayName": "Lost Red, on shell",
+        "canonical": "#ff8a73",
+        "oklch": "oklch(75.7% 0.147 32.3)",
+        "tonalRamp": [
+          "#260000",
+          "#450c04",
+          "#7b0900",
+          "#a03421",
+          "#c55641",
+          "#eb7862",
+          "#ff9e86",
+          "#ffdaca"
+        ]
+      },
+      "ecf": {
+        "role": "tertiary",
+        "displayName": "ECF Ochre",
+        "canonical": "#8a5a00",
+        "oklch": "oklch(50.8% 0.108 73.3)",
+        "tonalRamp": [
+          "#1a0500",
+          "#361e00",
+          "#613300",
+          "#815200",
+          "#a47228",
+          "#c7934c",
+          "#efb972",
+          "#ffe9bf"
+        ]
+      },
+      "ecf-on-shell": {
+        "role": "tertiary",
+        "displayName": "ECF Ochre, on shell",
+        "canonical": "#e8b45a",
+        "oklch": "oklch(80.0% 0.123 79.2)",
+        "tonalRamp": [
+          "#1a0400",
+          "#361e00",
+          "#613400",
+          "#825300",
+          "#a47300",
+          "#c79438",
+          "#efba61",
+          "#ffeab7"
+        ]
+      },
+      "selection": {
+        "role": "neutral",
+        "displayName": "Highlighter Grey",
+        "canonical": "#cdd5e0",
+        "oklch": "oklch(87.0% 0.018 256.3)",
+        "tonalRamp": [
+          "#080b10",
+          "#212429",
+          "#3a4049",
+          "#575e68",
+          "#777e88",
+          "#989fa9",
+          "#bdc5d0",
+          "#eaeff6"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "The home headline only."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "The title of a sheet (results 44px; cover and ingest 40px)."
+      },
+      "section": {
+        "displayName": "Section",
+        "purpose": "Section heads on home and in the report."
+      },
+      "question-number": {
+        "displayName": "Question Number",
+        "purpose": "\"1.\" at the head of each question on the script."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Dialog titles and review heads."
+      },
+      "prompt": {
+        "displayName": "Prompt",
+        "purpose": "Question text on the script."
+      },
+      "script": {
+        "displayName": "Script",
+        "purpose": "The candidate's typed answer on the 28px ruling, in student ink."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Explanatory prose in Public Sans."
+      },
+      "control": {
+        "displayName": "Control",
+        "purpose": "Button labels."
+      },
+      "clock": {
+        "displayName": "Clock",
+        "purpose": "The exam clock in the page head."
+      },
+      "mark-code": {
+        "displayName": "Mark Code",
+        "purpose": "M1 / A1 / R1 codes in examiner ink."
+      },
+      "caption": {
+        "displayName": "Caption",
+        "purpose": "Table captions, save status, word counts."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "The exam phase name only; never a kicker."
+      },
+      "code": {
+        "displayName": "Code",
+        "purpose": "Inline code and machine identifiers only."
+      }
+    },
+    "shadows": [
+      {
+        "name": "sheet",
+        "value": "0 1px 2px rgba(0,0,0,0.35), 0 12px 32px -16px rgba(0,0,0,0.6)",
+        "purpose": "Every script, report, notice and sample sheet resting on the shell."
+      },
+      {
+        "name": "dialog",
+        "value": "0 24px 64px -24px rgba(0,0,0,0.7)",
+        "purpose": "The native report dialog only."
+      },
+      {
+        "name": "dialog-backdrop",
+        "value": "rgba(10, 12, 15, 0.72)",
+        "purpose": "Dims the desk behind a report dialog."
+      }
+    ],
+    "motion": [
+      {
+        "name": "ease-out-expo",
+        "value": "cubic-bezier(0.16, 1, 0.3, 1)",
+        "purpose": "The only easing curve."
+      },
+      {
+        "name": "rule-draw",
+        "value": "520ms scaleX(0 to 1) from left, ease-out-expo",
+        "purpose": "Phase rule in the page head; contents now-marker."
+      },
+      {
+        "name": "ink-in",
+        "value": "420ms clip-path inset(0 100% 0 0) to inset(0), ease-out-expo",
+        "purpose": "Examiner marks writing into the margin, staggered per line."
+      },
+      {
+        "name": "state",
+        "value": "160ms background-color, border-color, color",
+        "purpose": "Button and row state changes."
+      },
+      {
+        "name": "reduced-motion",
+        "value": "animation and transition durations 0.01ms",
+        "purpose": "Instant state change under prefers-reduced-motion."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "sm",
+        "value": "640px",
+        "purpose": "Gutter widens 12px to 20px; sheet padding widens."
+      },
+      {
+        "name": "lg",
+        "value": "1024px",
+        "purpose": "Main nav and paper title appear; review gets its marks-table column."
+      },
+      {
+        "name": "xl",
+        "value": "1280px",
+        "purpose": "Exam room becomes 1fr 816px 1fr with the vertical tool rail; below it the rail docks at the bottom."
+      }
+    ],
+    "platform": "Desktop web only; specified at 1440 wide."
+  },
+  "components": [
+    {
+      "name": "Slip Button",
+      "kind": "button",
+      "refersTo": "button-slip",
+      "description": "Primary action in the shell: a white paper slip.",
+      "html": "<div class=\"ds-shell\"><button class=\"ds-btn ds-btn-slip\">Sit a timed paper</button></div>",
+      "css": ".ds-shell{background:#15181c;padding:24px;display:flex;gap:12px;align-items:center;}.ds-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:0 18px;border:1px solid transparent;border-radius:2px;font-family:var(--font-sans,\"Public Sans\",sans-serif);font-size:15px;font-weight:600;line-height:1;cursor:pointer;transition:background-color 160ms cubic-bezier(0.16,1,0.3,1),border-color 160ms cubic-bezier(0.16,1,0.3,1),color 160ms cubic-bezier(0.16,1,0.3,1);}.ds-btn-slip{background:var(--color-paper,#fff);color:var(--color-ink,#111418);}.ds-btn-slip:hover{background:#dfe3e8;}.ds-btn-slip:focus-visible{outline:2px solid #fff;outline-offset:2px;}"
+    },
+    {
+      "name": "Ink Button",
+      "kind": "button",
+      "refersTo": "button-ink",
+      "description": "Primary action on paper: solid report black.",
+      "html": "<div class=\"ds-paper\"><button class=\"ds-btn ds-btn-ink\">Work on question 6 with the tutor</button></div>",
+      "css": ".ds-paper{background:#ffffff;padding:24px;display:flex;gap:12px;align-items:center;}.ds-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:0 18px;border:1px solid transparent;border-radius:2px;font-family:var(--font-sans,\"Public Sans\",sans-serif);font-size:15px;font-weight:600;line-height:1;cursor:pointer;transition:background-color 160ms cubic-bezier(0.16,1,0.3,1),border-color 160ms cubic-bezier(0.16,1,0.3,1),color 160ms cubic-bezier(0.16,1,0.3,1);}.ds-btn-ink{background:var(--color-ink,#111418);color:#fff;}.ds-btn-ink:hover{background:#2a3038;}.ds-btn-ink:focus-visible{outline:2px solid #111418;outline-offset:2px;}"
+    },
+    {
+      "name": "Quiet Buttons",
+      "kind": "button",
+      "refersTo": "button-quiet-shell",
+      "description": "Secondary actions: hairline on the shell, strong rule on paper.",
+      "html": "<div class=\"ds-shell\"><button class=\"ds-btn ds-btn-qs\">Add your own paper</button></div><div class=\"ds-paper\"><button class=\"ds-btn ds-btn-qp\">Sit this paper again</button></div>",
+      "css": ".ds-shell{background:#15181c;padding:24px;display:flex;gap:12px;align-items:center;}.ds-paper{background:#ffffff;padding:24px;display:flex;gap:12px;align-items:center;}.ds-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:0 18px;border:1px solid transparent;border-radius:2px;font-family:var(--font-sans,\"Public Sans\",sans-serif);font-size:15px;font-weight:600;line-height:1;cursor:pointer;transition:background-color 160ms cubic-bezier(0.16,1,0.3,1),border-color 160ms cubic-bezier(0.16,1,0.3,1),color 160ms cubic-bezier(0.16,1,0.3,1);}.ds-btn-qs{background:transparent;border-color:#2e343c;color:#e9ecef;}.ds-btn-qs:hover{border-color:#a4adb8;}.ds-btn-qs:focus-visible{outline:2px solid #fff;outline-offset:2px;}.ds-btn-qp{background:#fff;border-color:#9aa3ae;color:#111418;}.ds-btn-qp:hover{background:#f4f6f8;}.ds-btn-qp:focus-visible{outline:2px solid #111418;outline-offset:2px;}"
+    },
+    {
+      "name": "Destructive Button",
+      "kind": "button",
+      "refersTo": "button-destructive",
+      "description": "Confirmed destructive actions only.",
+      "html": "<div class=\"ds-paper\"><button class=\"ds-btn ds-btn-del\">Clear working</button></div>",
+      "css": ".ds-paper{background:#ffffff;padding:24px;display:flex;gap:12px;align-items:center;}.ds-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:0 18px;border:1px solid transparent;border-radius:2px;font-family:var(--font-sans,\"Public Sans\",sans-serif);font-size:15px;font-weight:600;line-height:1;cursor:pointer;transition:background-color 160ms cubic-bezier(0.16,1,0.3,1),border-color 160ms cubic-bezier(0.16,1,0.3,1),color 160ms cubic-bezier(0.16,1,0.3,1);}.ds-btn-del{background:#c8321e;color:#fff;}.ds-btn-del:hover{background:#a8281a;}.ds-btn-del:focus-visible{outline:2px solid #111418;outline-offset:2px;}"
+    },
+    {
+      "name": "Exam Page Head",
+      "kind": "nav",
+      "refersTo": "page-head",
+      "description": "48px graphite head with phase glyph, label, tabular clock and a per-phase rule (final five minutes shown).",
+      "html": "<header class=\"ds-head\"><div class=\"ds-head-row\"><span class=\"ds-head-mark\">Criterion</span><span class=\"ds-head-phase\"><svg viewBox=\"0 0 12 12\" width=\"12\" height=\"12\"><rect x=\"1\" y=\"1\" width=\"10\" height=\"10\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\"/><rect x=\"1\" y=\"1\" width=\"5\" height=\"10\" fill=\"currentColor\"/></svg>FINAL FIVE MINUTES</span><span class=\"ds-head-right\"><span class=\"ds-clock\">04:12</span><span class=\"ds-saved\">Saved 22:19</span><button class=\"ds-handin\">Hand in</button></span></div><div class=\"ds-head-rule\"></div></header>",
+      "css": ".ds-head{background:#15181c;color:#e9ecef;font-family:\"Public Sans\",sans-serif;}.ds-head-row{height:48px;padding:0 20px;display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:12px;}.ds-head-mark{font-size:15px;font-weight:600;}.ds-head-phase{justify-self:center;display:flex;gap:8px;align-items:center;font-size:12px;font-weight:600;letter-spacing:0.06em;}.ds-head-right{display:flex;gap:12px;align-items:center;}.ds-clock{font-size:20px;font-weight:600;font-variant-numeric:tabular-nums lining-nums;color:#e8b45a;}.ds-saved{font-size:13px;color:#a4adb8;}.ds-handin{min-height:36px;padding:0 12px;border:0;border-radius:2px;background:#fff;color:#111418;font:600 14px \"Public Sans\",sans-serif;cursor:pointer;}.ds-handin:hover{background:#dfe3e8;}.ds-handin:focus-visible{outline:2px solid #fff;outline-offset:2px;}.ds-head-rule{border-bottom:4px double #e8b45a;transform-origin:left;animation:ds-draw 520ms cubic-bezier(0.16,1,0.3,1) both;}@keyframes ds-draw{from{transform:scaleX(0)}to{transform:scaleX(1)}}@media (prefers-reduced-motion:reduce){.ds-head-rule{animation:none}}"
+    },
+    {
+      "name": "Contents Strip",
+      "kind": "nav",
+      "refersTo": "contents-item",
+      "description": "One unbroken row of questions with marks, a working square and a single now-marker.",
+      "html": "<nav class=\"ds-strip\"><button class=\"ds-q ds-q-cur\"><i class=\"ds-sq ds-sq-on\"></i><b>1</b><span>[6]</span></button><button class=\"ds-q\"><i class=\"ds-sq\"></i><b>2(a)</b><span>[4]</span></button><button class=\"ds-q\"><i class=\"ds-sq\"></i><b>2(b)</b><span>[5]</span></button></nav>",
+      "css": ".ds-strip{display:flex;background:#15181c;border-bottom:1px solid #2e343c;padding:0 20px;font-family:\"Public Sans\",sans-serif;}.ds-q{position:relative;min-height:44px;padding:0 12px;display:flex;align-items:center;gap:8px;background:none;border:0;color:#a4adb8;font-size:14px;font-variant-numeric:tabular-nums;cursor:pointer;}.ds-q:hover{color:#e9ecef;}.ds-q:focus-visible{outline:2px solid #fff;outline-offset:2px;}.ds-q span{font-size:12px;color:#a4adb8;}.ds-q-cur{color:#e9ecef;}.ds-q-cur::after{content:\"\";position:absolute;left:8px;right:8px;bottom:0;height:2px;background:#e9ecef;}.ds-sq{width:8px;height:8px;box-sizing:border-box;border:1.5px solid currentColor;}.ds-sq-on{background:currentColor;}"
+    },
+    {
+      "name": "Script Sheet",
+      "kind": "card",
+      "refersTo": "script-sheet",
+      "description": "White stock with running head, serif question number, margin mark and a ruled working area.",
+      "html": "<div class=\"ds-desk\"><article class=\"ds-sheet\"><div class=\"ds-run\"><span>Mathematics: analysis and approaches HL</span><span>Page 1</span></div><div class=\"ds-qhead\"><span class=\"ds-qn\">1.</span><span class=\"ds-max\">[Maximum mark: 6]</span></div><p class=\"ds-prompt\">Find the exact value of the definite integral.</p><div class=\"ds-ruled\"></div></article></div>",
+      "css": ".ds-desk{background:#15181c;padding:32px;}.ds-sheet{background:#fff;color:#111418;border-radius:2px;box-shadow:0 1px 2px rgba(0,0,0,0.35),0 12px 32px -16px rgba(0,0,0,0.6);padding:40px;max-width:816px;margin:auto;}.ds-run{display:flex;justify-content:space-between;border-bottom:1px solid #111418;padding-bottom:12px;margin-bottom:32px;font:600 16px \"Source Serif 4\",Georgia,serif;}.ds-run span+span{font:400 13px \"Public Sans\",sans-serif;color:#4b5563;}.ds-qhead{display:flex;justify-content:space-between;align-items:baseline;}.ds-qn{font:600 28px/1 \"Source Serif 4\",Georgia,serif;font-variant-numeric:lining-nums;}.ds-max{font:600 15px \"Source Serif 4\",Georgia,serif;}.ds-prompt{font:400 18px/1.65 \"Source Serif 4\",Georgia,serif;max-width:68ch;}.ds-ruled{height:168px;border:1px solid #9aa3ae;background-image:linear-gradient(to bottom,#e6e9ed 1px,transparent 1px);background-size:100% 28px;}"
+    },
+    {
+      "name": "Mark Code Margin",
+      "kind": "custom",
+      "refersTo": "mark-code",
+      "description": "Examiner margin column: code in ultramarine, outcome as glyph plus word, italic serif note.",
+      "html": "<div class=\"ds-paper2\"><ol class=\"ds-margin\"><li><span class=\"ds-code\">M1</span><span class=\"ds-out ds-aw\"><svg viewBox=\"0 0 12 12\" width=\"12\" height=\"12\"><path d=\"M1.5 6.5l3 3 6-7\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\"/></svg>Awarded</span><p class=\"ds-note\">Valid substitution u = 2x&sup2; + 1.</p></li><li><span class=\"ds-code\">A1</span><span class=\"ds-out ds-lo\"><svg viewBox=\"0 0 12 12\" width=\"12\" height=\"12\"><path d=\"M2 2l8 8M10 2l-8 8\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\"/></svg>Not shown</span><p class=\"ds-note\">Upper limit not transformed.</p></li><li><span class=\"ds-code\">A1</span><span class=\"ds-out ds-ecf\"><svg viewBox=\"0 0 12 12\" width=\"12\" height=\"12\"><path d=\"M1 6h7M5.5 3L8.5 6 5.5 9\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\"/></svg>ECF</span><p class=\"ds-note\">Correct on the candidate's own limit.</p></li></ol></div>",
+      "css": ".ds-paper2{background:#fff;padding:24px;}.ds-margin{list-style:none;margin:0;padding:0 0 0 16px;border-left:1px solid rgba(39,67,214,0.4);max-width:17rem;}.ds-margin li{margin-bottom:12px;animation:ds-ink 420ms cubic-bezier(0.16,1,0.3,1) both;}.ds-code{font:700 15px \"Public Sans\",sans-serif;font-variant-numeric:tabular-nums;color:#2743d6;margin-right:8px;}.ds-out{display:inline-flex;gap:4px;align-items:center;font:600 13px \"Public Sans\",sans-serif;}.ds-aw{color:#0e7a4f;}.ds-lo{color:#c8321e;}.ds-ecf{color:#8a5a00;}.ds-note{margin:2px 0 0;font:italic 14px/1.35 \"Source Serif 4\",Georgia,serif;color:#2743d6;}@keyframes ds-ink{from{clip-path:inset(0 100% 0 0)}to{clip-path:inset(0 0 0 0)}}@media (prefers-reduced-motion:reduce){.ds-margin li{animation:none}}"
+    },
+    {
+      "name": "Grade Boundary Table",
+      "kind": "custom",
+      "refersTo": "script-sheet",
+      "description": "Seven grades opened by a 2px ink rule; the predicted grade inverts to report black.",
+      "html": "<div class=\"ds-paper3\"><table class=\"ds-gb\"><thead><tr><th>7</th><th>6</th><th>5</th><th class=\"ds-cur\">4</th><th>3</th><th>2</th><th>1</th></tr></thead><tbody><tr><td>76%</td><td>64%</td><td>52%</td><td class=\"ds-curb\">40%</td><td>28%</td><td>16%</td><td>0%</td></tr></tbody></table></div>",
+      "css": ".ds-paper3{background:#fff;padding:24px;}.ds-gb{width:100%;border-collapse:collapse;text-align:center;font-variant-numeric:tabular-nums lining-nums;}.ds-gb thead tr{border-top:2px solid #111418;border-bottom:1px solid #111418;}.ds-gb tbody tr{border-bottom:1px solid #111418;}.ds-gb th{padding:12px 0;font:600 20px \"Source Serif 4\",Georgia,serif;color:#111418;}.ds-gb th.ds-cur{background:#111418;color:#fff;font-size:34px;}.ds-gb td{padding:8px 0;font:400 14px \"Public Sans\",sans-serif;color:#4b5563;}.ds-gb td.ds-curb{background:#f4f6f8;color:#111418;font-weight:600;}"
+    },
+    {
+      "name": "Scaffold Ladder",
+      "kind": "custom",
+      "refersTo": "button-ink",
+      "description": "Ruled help steps; current step inverts; markscheme locked until step 3.",
+      "html": "<div class=\"ds-paper4\"><ol class=\"ds-ladder\"><li><button><b>1</b><span><strong>Command term</strong><em>What the question is asking you to do</em></span></button></li><li><button class=\"ds-on\"><b>2</b><span><strong>Formula clue</strong><em>The formula or concept that applies</em></span></button></li><li><button disabled><b>4</b><span><strong>Markscheme</strong><em>Unlocks after step 3</em></span></button></li></ol></div>",
+      "css": ".ds-paper4{background:#fff;padding:24px;}.ds-ladder{list-style:none;margin:0;padding:0;border-top:2px solid #111418;}.ds-ladder li{border-bottom:1px solid #d9dde2;}.ds-ladder button{width:100%;min-height:48px;padding:8px 12px;display:grid;grid-template-columns:1.75rem 1fr;gap:8px;align-items:center;text-align:left;background:none;border:0;color:#111418;cursor:pointer;transition:background-color 160ms;}.ds-ladder button:hover:not(:disabled){background:#f4f6f8;}.ds-ladder button:focus-visible{outline:2px solid #111418;outline-offset:2px;}.ds-ladder button:disabled{cursor:not-allowed;}.ds-ladder b{font:600 18px \"Source Serif 4\",Georgia,serif;}.ds-ladder strong{display:block;font:600 14px \"Public Sans\",sans-serif;}.ds-ladder em{display:block;font:normal 13px \"Public Sans\",sans-serif;color:#4b5563;}.ds-ladder .ds-on{background:#111418;color:#fff;}.ds-ladder .ds-on:hover{background:#111418 !important;}.ds-ladder .ds-on em{color:rgba(255,255,255,0.8);}"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Subject Report",
+    "overview": "Criterion is set as the documents an IB examiner actually produces: the candidate's script, the markscheme's margin codes, the subject report and its grade-boundary table. A graphite shell is the desk at night; on it lies bright white script stock printed in report black. Hierarchy comes from scale and hairline rules alone: numbered questions, ruled tables, a right-hand margin column for marks. Nothing floats on a dashboard.\n\nThe system runs on two surfaces and a handful of inks. Paper carries the work (questions, working, the marked report). The shell carries the apparatus around it (page head, contents strip, tool rail, home and navigation). Colour is spent on meaning: blue-black for the candidate's ink, ultramarine for the examiner, and green, red and ochre for awarded, lost and carried-forward marks. Every state also has a glyph or a word, because the colour is never the only signal.\n\nDensity is that of a printed paper: generous sheet margins, a 28px ruling for answers, tabular numerals wherever marks, times or grades appear. Motion is limited to a rule drawing across and examiner ink writing in from the left. Criterion is desktop web only; layouts are specified at 1440 wide and do not target phones.",
+    "keyCharacteristics": [
+      "Graphite shell (desk) holding white script stock (paper); two surfaces, never a stack of cards.",
+      "Hierarchy from Source Serif 4 scale and hairline or 2px rules; boxes are rare.",
+      "Examiner ultramarine is reserved for the examiner and the AI marker.",
+      "Every mark outcome and phase is a glyph plus a word, with colour as a third signal.",
+      "Square 2px report corners; one lifted material (the sheet).",
+      "Rules draw; ink writes in; nothing glows, floats or fades up."
+    ],
+    "rules": [
+      {
+        "name": "The Examiner's Pen Rule",
+        "body": "Ultramarine is reserved for the examiner and the AI marker. It is never a link colour, a focus ring, a selected state or a brand accent. If the examiner did not write it, it is not blue.",
+        "section": "colors"
+      },
+      {
+        "name": "The Two Inks Rule",
+        "body": "Candidates write in blue-black, black or pencil grey (the only pen palette). Red, green, ochre and ultramarine belong to marking and are never offered as pen colours.",
+        "section": "colors"
+      },
+      {
+        "name": "The Surface Variant Rule",
+        "body": "Every role colour that can appear on graphite has an -on-shell variant; use the plain token on paper and the -on-shell token on the shell, never the other way round.",
+        "section": "colors"
+      },
+      {
+        "name": "The Lining Figures Rule",
+        "body": "Every mark, time, grade and percentage uses tabular lining numerals; serif figures are forced to lining so they never bounce as old-style.",
+        "section": "typography"
+      },
+      {
+        "name": "The 12px Floor Rule",
+        "body": "No text is set below 12px.",
+        "section": "typography"
+      },
+      {
+        "name": "The Mono Is Code Rule",
+        "body": "JetBrains Mono appears only for code and machine identifiers (inline code, a paper reference). Prose, labels and headings are never monospace.",
+        "section": "typography"
+      },
+      {
+        "name": "The Paper Only Rule",
+        "body": "Only paper casts a shadow. Controls, rows, rails and the shell are flat; no hover lift, no glow.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Do put the work on white script stock (with the sheet shadow) and the apparatus on the graphite shell.",
+      "Do make the primary action a paper slip in the shell and solid report black on paper.",
+      "Do build hierarchy with Source Serif 4 scale and rules: 2px ink to open a table or section, 1px ink to close it, paper-rule hairlines between rows.",
+      "Do set every mark, time, grade and percentage in tabular lining numerals.",
+      "Do pair every status colour with a glyph and a word (tick Awarded, cross Not shown, arrow ECF, the per-phase rule pattern and glyph).",
+      "Do use the -on-shell variant of any role colour placed on graphite.",
+      "Do give primary actions, nav items, tool rows and question items a 44px minimum target.",
+      "Do focus in report black on paper and in paper-white on the shell (2px outline, 2px offset).",
+      "Do keep the tool rail outside the sheet and dock it below the sheet on narrower windows; never cover a question.",
+      "Do honour reduced motion with instant state changes."
+    ],
+    "donts": [
+      "Don't use examiner ultramarine for anything the examiner or AI marker did not write: not links, focus, selection, brand accents or pen colours.",
+      "Don't use pills or fully rounded shapes; corners are 2px or square.",
+      "Don't add glow, coloured shadows, hover lifts or shadows on anything but paper.",
+      "Don't nest boxed cards inside a sheet; inside paper, structure comes from rules and ruled working areas.",
+      "Don't set prose, labels or headings in monospace.",
+      "Don't set text below 12px.",
+      "Don't use uppercase tracked labels as kickers or eyebrows above headings; the phase label is the only uppercase tracked text.",
+      "Don't signal state by colour alone.",
+      "Don't animate by floating, fading up from below or pulsing; rules draw and ink writes in."
+    ]
+  }
+}
