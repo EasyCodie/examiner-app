@@ -457,12 +457,8 @@ export const MathRenderer: React.FC<MathRendererProps> = React.memo(({
     return text;
   }, [content, lightMode]);
 
-  const hasCustomTextColor = /\btext-/.test(className);
-  const defaultTextColor =
-    lightMode === true
-      ? 'text-ink'
-      : 'text-shell-ink';
-  const baseStyle = `${hasCustomTextColor ? '' : defaultTextColor} leading-relaxed math-content`;
+  // Colour is inherited so each surface's ink role (student, examiner, report black) carries through
+  const baseStyle = 'leading-relaxed math-content';
 
   return (
     <div

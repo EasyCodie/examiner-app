@@ -1,9 +1,10 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { QuestionItem, QuestionSubmission, QuestionEvaluation } from '@/types/exam';
 import { MarkCodeBadge } from './MarkCodeBadge';
+import { MarkCodeKey } from './MarkCodeKey';
 import { MathRenderer } from '@/components/common/MathRenderer';
 
 interface ExaminerReviewProps {
@@ -30,6 +31,63 @@ export const findEvaluation = (
       e.questionNumber === question.number ||
       stripNumber(e.questionNumber ?? '') === stripNumber(question.number)
   ) ?? evaluations[index];
+
+/**
+ * A captured working image cropped to where the ink is, so a short answer in a
+ * tall working box doesn't leave the review mostly blank.
+ */
+const TrimmedWorking: React.FC<{ src: string; alt: string }> = ({ src, alt }) => {
+  const [trimmed, setTrimmed] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    const img = new Image();
+    img.onload = () => {
+      const w = img.naturalWidth;
+      const h = img.naturalHeight;
+      const canvas = document.createElement('canvas');
+      canvas.width = w;
+      canvas.height = h;
+      const ctx = canvas.getContext('2d');
+      if (!ctx || !w || !h) return;
+      ctx.drawImage(img, 0, 0);
+      const { data } = ctx.getImageData(0, 0, w, h);
+      const inset = Math.ceil(Math.max(w, h) * 0.006) + 3; // skip the exported box border
+      let top = h, left = w, right = 0, bottom = 0;
+      for (let y = inset; y < h - inset; y++) {
+        for (let x = inset; x < w - inset; x++) {
+          const i = (y * w + x) * 4;
+          if (data[i + 3] > 40 && data[i] + data[i + 1] + data[i + 2] < 600) {
+            if (y < top) top = y;
+            if (y > bottom) bottom = y;
+            if (x < left) left = x;
+            if (x > right) right = x;
+          }
+        }
+      }
+      if (bottom <= top || right <= left) return;
+      const pad = Math.round(Math.max(w, h) * 0.02);
+      const cx = Math.max(0, left - pad);
+      const cy = Math.max(0, top - pad);
+      const cw = Math.min(w, right + pad) - cx;
+      const ch = Math.min(h, bottom + pad) - cy;
+      const out = document.createElement('canvas');
+      out.width = cw;
+      out.height = ch;
+      out.getContext('2d')?.drawImage(canvas, cx, cy, cw, ch, 0, 0, cw, ch);
+      if (!cancelled) setTrimmed(out.toDataURL('image/png'));
+    };
+    img.src = src;
+    return () => {
+      cancelled = true;
+    };
+  }, [src]);
+
+  return (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img src={trimmed ?? src} alt={alt} className="block max-w-full max-h-[480px] w-auto h-auto" />
+  );
+};
 
 /** Outcome glyph for a question row: full, partial, none, or pending. */
 const OutcomeGlyph: React.FC<{ ev?: QuestionEvaluation }> = ({ ev }) => {
@@ -177,78 +235,71 @@ export const ExaminerReview: React.FC<ExaminerReviewProps> = ({
           </table>
         )}
 
-        {/* The candidate's script */}
-        <section aria-label="Your working" className="space-y-3">
-          <h4 className="text-[15px] font-semibold text-ink">Your working</h4>
-          {submission?.subpartImages && Object.keys(submission.subpartImages).length > 0 ? (
-            <div className="space-y-4">
-              {Object.entries(submission.subpartImages).map(([partId, imgData]) => (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  key={partId}
-                  src={imgData}
-                  alt={`Your handwritten working for ${partId}`}
-                  className="w-full h-auto border border-paper-rule-strong"
-                />
-              ))}
-            </div>
-          ) : submission?.canvasImageBase64 ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={submission.canvasImageBase64}
-              alt={`Your handwritten working for question ${label}`}
-              className="w-full h-auto border border-paper-rule-strong"
-            />
-          ) : submission?.textResponse ? (
-            <div className="space-y-4">
-              <p className="tabular text-[13px] text-ink-muted">
-                {submission.textResponse.trim().split(/\s+/).length} words
-              </p>
-              <div className="whitespace-pre-wrap font-serif text-[17px] leading-[1.7] text-student max-w-[70ch]">
-                {submission.textResponse}
-              </div>
-              {submission.diagramImageBase64 && (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={submission.diagramImageBase64}
-                  alt="Your diagram"
-                  className="max-w-md w-full h-auto border border-paper-rule-strong"
-                />
+        {/* The candidate's script, marked in the right-hand margin in examiner ink */}
+        <section aria-label="Your working, as marked" className="space-y-3">
+          <div className="flex flex-wrap items-baseline justify-between gap-3">
+            <h4 className="text-[15px] font-semibold text-ink">Your working, as marked</h4>
+            <MarkCodeKey variant="compact" />
+          </div>
+
+          <div className="grid gap-0 md:grid-cols-[minmax(0,1fr)_17rem] border-t-2 border-b border-ink">
+            <div className="py-4 pr-5 min-w-0">
+              {submission?.subpartImages && Object.keys(submission.subpartImages).length > 0 ? (
+                <div className="space-y-4">
+                  {Object.entries(submission.subpartImages).map(([partId, imgData]) => (
+                    <TrimmedWorking key={partId} src={imgData} alt={`Your handwritten working for ${partId}`} />
+                  ))}
+                </div>
+              ) : submission?.canvasImageBase64 ? (
+                <TrimmedWorking src={submission.canvasImageBase64} alt={`Your handwritten working for question ${label}`} />
+              ) : submission?.textResponse ? (
+                <div className="space-y-4">
+                  <p className="tabular text-[13px] text-ink-muted">
+                    {submission.textResponse.trim().split(/\s+/).length} words
+                  </p>
+                  <div className="whitespace-pre-wrap font-serif text-[17px] leading-[1.7] text-student max-w-[64ch]">
+                    {submission.textResponse}
+                  </div>
+                  {submission.diagramImageBase64 && (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={submission.diagramImageBase64}
+                      alt="Your diagram"
+                      className="max-w-md w-full h-auto border border-paper-rule-strong"
+                    />
+                  )}
+                </div>
+              ) : (
+                <p className="text-[15px] text-ink-muted">No working was handed in for this question.</p>
               )}
             </div>
-          ) : (
-            <p className="text-[15px] text-ink-muted">No working was handed in for this question.</p>
-          )}
-        </section>
 
-        {/* The examiner's marking, in examiner ink */}
-        <section aria-label="Examiner's marking" className="space-y-5">
-          <h4 className="text-[15px] font-semibold text-ink">Examiner&rsquo;s marks</h4>
-
-          {evaluation?.markBreakdown && evaluation.markBreakdown.length > 0 ? (
-            <table className="w-full border-collapse">
-              <thead>
-                <tr className="border-t-2 border-b border-ink text-left text-[13px] text-ink-muted">
-                  <th scope="col" className="py-2 pr-4 font-semibold w-[11rem]">Mark</th>
-                  <th scope="col" className="py-2 font-semibold">Examiner&rsquo;s reason</th>
-                </tr>
-              </thead>
-              <tbody>
-                {evaluation.markBreakdown.map((mb, mIdx) => (
-                  <tr key={mIdx} className="border-b border-paper-rule align-baseline">
-                    <td className="py-3 pr-4">
+            <aside aria-label="Examiner's marks" className="md:border-l md:border-examiner/40 md:pl-4 py-4 space-y-3">
+              {evaluation?.markBreakdown && evaluation.markBreakdown.length > 0 ? (
+                <ol className="space-y-3">
+                  {evaluation.markBreakdown.map((mb, mIdx) => (
+                    <li key={mIdx} className="space-y-0.5">
                       <MarkCodeBadge code={mb.code} type={mb.type} awarded={mb.awarded} isEcfApplied={mb.isEcfApplied} />
-                    </td>
-                    <td className="py-3 text-[15px] leading-relaxed text-examiner">
-                      <MathRenderer content={mb.reason} lightMode={true} />
-                    </td>
-                  </tr>
+                      <div className="font-serif italic text-[14px] leading-snug text-examiner">
+                        <MathRenderer content={mb.reason} lightMode={true} />
+                      </div>
+                    </li>
+                  ))}
+                </ol>
+              ) : (
+                <p className="text-[15px] text-ink-muted">{pendingLabel}</p>
+              )}
+
+              {evaluation?.marginAnnotations
+                ?.filter((ann) => ann.type === 'comment' || ann.type === 'ecf')
+                .map((ann, aIdx) => (
+                  <p key={aIdx} className="font-serif italic text-[14px] leading-snug text-examiner">
+                    <span className="not-italic font-sans font-bold">{ann.label}: </span>
+                    <MathRenderer content={ann.text} lightMode={true} className="inline" />
+                  </p>
                 ))}
-              </tbody>
-            </table>
-          ) : (
-            <p className="text-[15px] text-ink-muted">{pendingLabel}</p>
-          )}
+            </aside>
+          </div>
 
           {evaluation?.ecfApplied && (
             <div className="border-t border-b border-ecf py-4 space-y-1.5">
@@ -264,33 +315,8 @@ export const ExaminerReview: React.FC<ExaminerReviewProps> = ({
             </div>
           )}
 
-          {evaluation?.marginAnnotations && evaluation.marginAnnotations.length > 0 && (
-            <ul className="space-y-2" aria-label="Margin notes">
-              {evaluation.marginAnnotations.map((ann, aIdx) => (
-                <li key={aIdx} className="grid grid-cols-[minmax(7rem,auto)_1fr] gap-4 text-[15px] leading-relaxed">
-                  <span className="tabular font-bold text-examiner inline-flex items-baseline gap-1.5 whitespace-nowrap">
-                    {(ann.type === 'tick' || ann.type === 'cross') && (
-                      <svg viewBox="0 0 12 12" className="w-3 h-3 self-center" aria-label={ann.type === 'tick' ? 'Tick' : 'Cross'}>
-                        <path
-                          d={ann.type === 'tick' ? 'M1.5 6.5l3 3 6-7' : 'M2 2l8 8M10 2l-8 8'}
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="1.8"
-                        />
-                      </svg>
-                    )}
-                    {ann.label}
-                  </span>
-                  <span className="text-examiner">
-                    <MathRenderer content={ann.text} lightMode={true} className="inline" />
-                  </span>
-                </li>
-              ))}
-            </ul>
-          )}
-
           {evaluation?.examinerNotes && (
-            <div className="space-y-1.5">
+            <div className="space-y-1.5 pt-2">
               <p className="text-[15px] font-semibold text-ink">Examiner&rsquo;s comment</p>
               <div className="font-serif italic text-[17px] leading-relaxed text-examiner max-w-[68ch]">
                 <MathRenderer content={evaluation.examinerNotes} lightMode={true} />

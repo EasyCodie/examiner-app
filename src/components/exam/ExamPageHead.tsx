@@ -52,6 +52,15 @@ export const formatClock = (sec: number) => {
   return h > 0 ? `${h}:${mm}:${ss}` : `${mm}:${ss}`;
 };
 
+/** The full-width rule under the page head: one pattern per phase. */
+const PHASE_RULE: Record<ExamPhase, string> = {
+  cover: 'border-b-2 border-dotted border-shell-muted',
+  reading: 'border-b-2 border-dashed border-shell-ink',
+  writing: 'border-b-2 border-solid border-shell-ink',
+  final: 'border-b-[4px] border-double border-ecf-on-shell',
+  'pens-down': 'h-[2px] bg-[repeating-linear-gradient(90deg,var(--color-lost-on-shell)_0_24px,transparent_24px_36px)]',
+};
+
 const formatSavedAt = (d: Date) =>
   d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
@@ -88,8 +97,8 @@ export const ExamPageHead: React.FC<ExamPageHeadProps> = ({
       : 'text-shell-ink';
 
   return (
-    <header className="shell-surface sticky top-0 z-40 bg-shell border-b border-shell-line">
-      <div className="relative mx-auto max-w-[1440px] h-14 px-3 sm:px-5 grid grid-cols-[auto_1fr_auto] items-center gap-3">
+    <header className="shell-surface sticky top-0 z-40 bg-shell">
+      <div className="relative mx-auto max-w-[1440px] h-12 px-3 sm:px-5 grid grid-cols-[auto_1fr_auto] items-center gap-3">
         {/* Left: mark and paper */}
         <div className="flex items-center gap-3 min-w-0">
           <button
@@ -109,14 +118,9 @@ export const ExamPageHead: React.FC<ExamPageHeadProps> = ({
 
         {/* Centre: phase */}
         <div className="flex justify-center min-w-0">
-          <div className="relative flex items-center gap-2 px-1 py-2 text-shell-ink">
+          <div className="flex items-center gap-2 px-1 py-2 text-shell-ink">
             <PhaseGlyph phase={phase} />
             <span className="report-label whitespace-nowrap">{PHASE_LABEL[phase]}</span>
-            <span
-              key={phase}
-              aria-hidden="true"
-              className="animate-rule-draw absolute left-0 right-0 -bottom-px h-px bg-shell-ink"
-            />
           </div>
         </div>
 
@@ -178,6 +182,12 @@ export const ExamPageHead: React.FC<ExamPageHeadProps> = ({
             </button>
           )}
         </div>
+      </div>
+
+      {/* Signature moment: at each phase change one rule draws across the whole head */}
+      <div className="relative h-[4px]" aria-hidden="true">
+        <div className="absolute inset-x-0 bottom-0 border-b border-shell-line" />
+        <div key={phase} className={`animate-rule-draw absolute inset-x-0 bottom-0 ${PHASE_RULE[phase]}`} />
       </div>
 
       <p className="sr-only" role="status" aria-live="polite">

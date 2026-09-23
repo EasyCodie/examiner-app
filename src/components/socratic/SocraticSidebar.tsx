@@ -6,6 +6,7 @@ import { MathRenderer } from '@/components/common/MathRenderer';
 import { BookOpen } from 'lucide-react';
 import { useAppShell } from '@/components/common/AppShell';
 import { ScaffoldLadder } from './ScaffoldLadder';
+import { MarkCodeKey } from '@/components/assessment/MarkCodeKey';
 
 export interface TutorFailure {
   message: string;
@@ -63,11 +64,12 @@ export const SocraticSidebar: React.FC<SocraticSidebarProps> = ({
     <section aria-label="Tutor" className="script-sheet paper-surface flex flex-col h-full min-h-0">
       <div className="px-5 pt-5 pb-4 space-y-4 shrink-0">
         <div className="flex items-baseline justify-between gap-3">
-          <h2 className="font-serif text-[22px] font-semibold text-ink">Tutor</h2>
+          <h2 className="font-serif text-[22px] font-semibold text-examiner">Tutor</h2>
           <p className="text-[14px] text-ink-muted">
             Command term: <span className="font-semibold text-ink">{question.commandTerm}</span>
           </p>
         </div>
+        <MarkCodeKey variant="compact" />
         <ScaffoldLadder
           currentTier={currentTier}
           highestTierReached={highestTierReached}
@@ -83,7 +85,7 @@ export const SocraticSidebar: React.FC<SocraticSidebarProps> = ({
           const isTutor = m.sender === 'tutor';
           return (
             <div key={m.id} className={isTutor ? 'pr-6' : 'pl-10'}>
-              <p className={`text-[12px] font-semibold mb-1 ${isTutor ? 'text-ink-muted' : 'text-ink-muted text-right'}`}>
+              <p className={`text-[12px] font-semibold mb-1 ${isTutor ? 'text-examiner' : 'text-ink-muted text-right'}`}>
                 {isTutor ? `Tutor${m.tierActive ? ` · step ${m.tierActive}` : ''}` : 'You'}
                 {m.unlockedMarkscheme && ' · markscheme'}
               </p>

@@ -394,7 +394,7 @@ export default function MockExamPage() {
     phase === 'reading' ? readingRemainingSeconds : phase === 'cover' ? null : timeRemainingSeconds;
 
   return (
-    <div className="flex-1 flex flex-col select-text">
+    <div className="flex-1 flex flex-col select-text [--strip-top:52px]">
       <ExamPageHead
         paperTitle={`${manifest.title} · ${manifest.subtitle}`}
         phase={displayPhase}
@@ -440,7 +440,7 @@ export default function MockExamPage() {
           ) : (
             <div className="w-full max-w-[1440px] mx-auto px-3 sm:px-5 pt-6 sm:pt-8 pb-32 xl:pb-12 xl:grid xl:grid-cols-[1fr_816px_1fr] xl:gap-8">
               <div className="hidden xl:block">
-                <div className="sticky top-[124px] flex justify-end">
+                <div className="sticky top-[120px] flex justify-end">
                   <CanvasToolbar
                     orientation="vertical"
                     tool={tool}

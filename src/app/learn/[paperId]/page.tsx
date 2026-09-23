@@ -92,7 +92,7 @@ export default function SocraticLearnPage() {
                 {
                   id: `welcome-${targetQ.id}`,
                   sender: 'tutor',
-                  text: `Welcome! Let's work through Question ${targetQ.number.replace(/^Question\s*/i, '')} together step by step.\n\nTo start, take a look at the command term: **"${targetQ.commandTerm}"**. How would you like to set up your first step?`,
+                  text: `Welcome! Let's work through Question ${targetQ.number.replace(/^Question\s*/i, '')} together step by step.\n\nTo start, take a look at the command term: **“${targetQ.commandTerm}”**. How would you like to set up your first step?`,
                   timestamp: new Date().toISOString(),
                   tierActive: 1,
                 },
@@ -122,7 +122,7 @@ export default function SocraticLearnPage() {
             {
               id: `welcome-${q.id}`,
               sender: 'tutor',
-              text: `Welcome! Let's work through Question ${q.number.replace(/^Question\s*/i, '')} together step by step.\n\nTo start, take a look at the command term: **"${q.commandTerm}"**. How would you like to set up your first step?`,
+              text: `Welcome! Let's work through Question ${q.number.replace(/^Question\s*/i, '')} together step by step.\n\nTo start, take a look at the command term: **“${q.commandTerm}”**. How would you like to set up your first step?`,
               timestamp: new Date().toISOString(),
               tierActive: 1,
             },
@@ -254,7 +254,7 @@ export default function SocraticLearnPage() {
   };
 
   const TIER_PROMPTS: Record<1 | 2 | 3, (q: QuestionItem) => string> = {
-    1: (q) => `What does the command term "${q.commandTerm}" mean for this question?`,
+    1: (q) => `What does the command term “${q.commandTerm}” mean for this question?`,
     2: () => 'Which formula or concept applies to this step?',
     3: () => 'Can you check my current step and see if my working is on the right track?',
   };
@@ -322,10 +322,48 @@ export default function SocraticLearnPage() {
         onSelect={(key) => handleSelectQuestion(manifest.questions.findIndex((q) => q.id === key))}
       />
 
-      <div className="w-full max-w-[1440px] mx-auto px-3 sm:px-5 py-6 sm:py-8 grid gap-6 lg:grid-cols-[minmax(0,1fr)_420px] items-start">
+      <div
+        className={`w-full max-w-[1440px] mx-auto px-3 sm:px-5 py-6 sm:py-8 grid gap-6 items-start ${
+          isStem ? 'lg:grid-cols-[minmax(0,1fr)_400px] xl:grid-cols-[152px_minmax(0,1fr)_400px]' : 'lg:grid-cols-[minmax(0,1fr)_420px]'
+        }`}
+      >
+        {isStem && (
+          <div className="hidden xl:block sticky top-[124px]">
+            <CanvasToolbar
+              orientation="vertical"
+              tool={tool}
+              setTool={setTool}
+              color={color}
+              setColor={setColor}
+              width={width}
+              setWidth={setWidth}
+              canUndo={canUndo}
+              canRedo={canRedo}
+              onUndo={() => canvasRef.current?.undo()}
+              onRedo={() => canvasRef.current?.redo()}
+              onClear={() => canvasRef.current?.clear()}
+            />
+          </div>
+        )}
         <div className="min-w-0 flex flex-col">
           {isStem ? (
             <>
+              {/* Below xl the tools sit above the sheet, never over the paper */}
+              <div className="xl:hidden mb-4 border border-shell-line">
+                <CanvasToolbar
+                  tool={tool}
+                  setTool={setTool}
+                  color={color}
+                  setColor={setColor}
+                  width={width}
+                  setWidth={setWidth}
+                  canUndo={canUndo}
+                  canRedo={canRedo}
+                  onUndo={() => canvasRef.current?.undo()}
+                  onRedo={() => canvasRef.current?.redo()}
+                  onClear={() => canvasRef.current?.clear()}
+                />
+              </div>
               <DrawingCanvas
                 key={`learn-canvas-${currentQuestion.id}`}
                 ref={canvasRef}
@@ -349,21 +387,6 @@ export default function SocraticLearnPage() {
                 }}
                 compact={true}
               />
-              <div className="sticky bottom-0 z-20 mt-4 bg-shell border-t border-shell-line">
-                <CanvasToolbar
-                  tool={tool}
-                  setTool={setTool}
-                  color={color}
-                  setColor={setColor}
-                  width={width}
-                  setWidth={setWidth}
-                  canUndo={canUndo}
-                  canRedo={canRedo}
-                  onUndo={() => canvasRef.current?.undo()}
-                  onRedo={() => canvasRef.current?.redo()}
-                  onClear={() => canvasRef.current?.clear()}
-                />
-              </div>
             </>
           ) : (
             <article className="script-sheet paper-surface px-6 sm:px-10 py-8 sm:py-10 space-y-6">

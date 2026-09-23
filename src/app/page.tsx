@@ -15,6 +15,7 @@ import { MathRenderer } from '@/components/common/MathRenderer';
 import { ReportDialog } from '@/components/common/ReportDialog';
 import { CriterionMark } from '@/components/common/CriterionMark';
 import { formatClock } from '@/components/exam/ExamPageHead';
+import { MarkCodeKey } from '@/components/assessment/MarkCodeKey';
 
 /** Sample marking for the first viewport: one slip, carried forward. */
 const SAMPLE_LINES: { working: string; code: string; outcome: 'tick' | 'cross'; note: string }[] = [
@@ -22,14 +23,6 @@ const SAMPLE_LINES: { working: string; code: string; outcome: 'tick' | 'cross'; 
   { working: '$= \\tfrac14\\int_1^{8} \\sqrt{u}\\,du$', code: 'A1', outcome: 'cross', note: 'upper limit is 9' },
   { working: '$= \\tfrac14 \\cdot \\tfrac23 \\left[u^{3/2}\\right]_1^{8}$', code: 'M1', outcome: 'tick', note: 'integrates' },
   { working: '$= \\tfrac16\\left(16\\sqrt2 - 1\\right)$', code: 'A1FT', outcome: 'tick', note: 'from their 8' },
-];
-
-const MARK_KEY: [string, string][] = [
-  ['M', 'Method mark: a valid method, attempted. It can be earned even if the answer is wrong.'],
-  ['A', 'Accuracy mark: a correct value or statement. Usually depends on the method mark before it.'],
-  ['R', 'Reasoning mark: a clear justification, often for a command term such as Show that or Justify.'],
-  ['AG', 'Answer given: the result is printed in the question, so no mark is given for writing it down.'],
-  ['FT', 'Follow through: error carried forward. A wrong value used correctly later keeps the later marks, so one slip is only penalised once.'],
 ];
 
 const Tick: React.FC<{ outcome: 'tick' | 'cross' }> = ({ outcome }) => (
@@ -290,14 +283,7 @@ export default function HomePage() {
             Every question is marked against its markscheme with the same codes an IB examiner writes in the margin.
           </p>
         </div>
-        <dl className="border-t-2 border-shell-ink">
-          {MARK_KEY.map(([code, meaning]) => (
-            <div key={code} className="grid grid-cols-[4rem_1fr] gap-4 py-3.5 border-b border-shell-line">
-              <dt className="tabular font-sans text-[17px] font-bold text-examiner-on-shell">{code}</dt>
-              <dd className="text-[16px] leading-relaxed text-shell-ink max-w-[70ch]">{meaning}</dd>
-            </div>
-          ))}
-        </dl>
+        <MarkCodeKey variant="full" />
       </section>
 
       <footer className="border-t border-shell-line">

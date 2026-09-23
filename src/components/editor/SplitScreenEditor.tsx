@@ -55,7 +55,7 @@ export const SplitScreenEditor: React.FC<SplitScreenEditorProps> = ({
   return (
     <div className="grid gap-5 lg:grid-cols-[5fr_7fr] items-start select-text">
       {/* Question sheet */}
-      <article className="script-sheet paper-surface px-6 sm:px-10 py-8 sm:py-10 lg:sticky lg:top-[124px]">
+      <article className="script-sheet paper-surface px-6 sm:px-10 py-8 sm:py-10 lg:sticky lg:top-[120px]">
         <div className="grid grid-cols-[auto_1fr_auto] gap-x-4 items-baseline border-b border-ink pb-3">
           <h2 className="font-serif text-[28px] font-semibold leading-none text-ink tabular">
             {currentQuestion.number}

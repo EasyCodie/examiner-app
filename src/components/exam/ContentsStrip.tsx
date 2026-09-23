@@ -29,7 +29,7 @@ export const ContentsStrip: React.FC<ContentsStripProps> = ({ items, onSelect })
   }, [currentKey]);
 
   return (
-  <nav aria-label="Questions" className="shell-surface sticky top-14 z-30 bg-shell border-b border-shell-line">
+  <nav aria-label="Questions" className="shell-surface sticky top-[var(--strip-top,56px)] z-30 bg-shell border-b border-shell-line">
     <ol className="mx-auto max-w-[1440px] px-3 sm:px-5 flex items-stretch overflow-x-auto">
       {items.map((item) => (
         <li key={item.key} className="shrink-0">
