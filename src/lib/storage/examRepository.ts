@@ -1,13 +1,14 @@
 'use client';
 
 import { get, set, keys, del } from 'idb-keyval';
-import { ExamManifest, ExamSession, PageStrokes, AiStudioConfig } from '@/types/exam';
+import { ExamManifest, ExamSession, InProgressExamSession, PageStrokes, AiStudioConfig } from '@/types/exam';
 import { ALL_BUNDLED_PAPERS } from '../samplePapers';
 
 export const MANIFESTS_PREFIX = 'manifest:';
 export const PDF_BLOB_PREFIX = 'pdf:';
 export const STROKES_PREFIX = 'strokes:';
 export const SESSIONS_PREFIX = 'session:';
+export const IN_PROGRESS_PREFIX = 'session-in-progress:';
 export const CONFIG_KEY = 'examiner:aistudio:config';
 
 export const DEFAULT_AI_CONFIG: AiStudioConfig = {
@@ -35,6 +36,9 @@ export interface ExamSessionFacet {
   save(session: ExamSession): Promise<void>;
   delete(id: string): Promise<void>;
   clearAll(): Promise<void>;
+  getInProgress(paperId: string): Promise<InProgressExamSession | null>;
+  saveInProgress(session: InProgressExamSession): Promise<void>;
+  clearInProgress(paperId: string): Promise<void>;
 }
 
 export interface ExamStrokesFacet {
@@ -155,6 +159,20 @@ export const examRepo: ExamRepository = {
       } catch (err) {
         console.error('Error clearing all exam sessions from IDB', err);
       }
+    },
+
+    async getInProgress(paperId: string): Promise<InProgressExamSession | null> {
+      if (typeof window === 'undefined') return null;
+      return (await get<InProgressExamSession>(`${IN_PROGRESS_PREFIX}${paperId}`)) || null;
+    },
+
+    async saveInProgress(session: InProgressExamSession): Promise<void> {
+      await set(`${IN_PROGRESS_PREFIX}${session.paperId}`, session);
+    },
+
+    async clearInProgress(paperId: string): Promise<void> {
+      if (typeof window === 'undefined') return;
+      await del(`${IN_PROGRESS_PREFIX}${paperId}`);
     },
   },
 

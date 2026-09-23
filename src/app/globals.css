@@ -1,13 +1,187 @@
-/* Cormorant Garamond (Serif Display), Inter (Humanist Sans), JetBrains Mono (Code/Math) */
-@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+/* Public Sans (documentation sans: UI, labels, numerals), Source Serif 4 (question text & prose), JetBrains Mono (code views only) */
+@import url('https://fonts.googleapis.com/css2?family=Public+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,400&family=JetBrains+Mono:wght@400;500&display=swap');
 
 @import "tailwindcss";
 @import "katex/dist/katex.min.css";
 
+/* ============================================================ */
+/* CRITERION: SUBJECT REPORT SYSTEM                             */
+/* Graphite shell, white script stock, report-black print.      */
+/* Examiner ultramarine is reserved for the examiner / AI only. */
+/* ============================================================ */
 @theme {
-  --font-serif: 'Cormorant Garamond', 'Tiempos Headline', Garamond, 'Times New Roman', serif;
-  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  --font-mono: 'JetBrains Mono', monospace;
+  --font-serif: 'Source Serif 4', 'Source Serif Pro', Georgia, 'Times New Roman', serif;
+  --font-sans: 'Public Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+
+  /* Shell (dark desk) */
+  --color-shell: #15181c;
+  --color-shell-raised: #1c2127;
+  --color-shell-line: #2e343c;
+  --color-shell-ink: #e9ecef;
+  --color-shell-muted: #a4adb8;
+
+  /* Paper (script stock) */
+  --color-paper: #ffffff;
+  --color-paper-tint: #f4f6f8;
+  --color-paper-rule: #d9dde2;
+  --color-paper-rule-strong: #9aa3ae;
+  --color-ink: #111418;
+  --color-ink-muted: #4b5563;
+
+  /* Ink roles */
+  --color-student: #1a2238;
+  --color-examiner: #2743d6;
+  --color-examiner-on-shell: #9db0ff;
+  --color-awarded: #0e7a4f;
+  --color-awarded-on-shell: #5cc99a;
+  --color-lost: #c8321e;
+  --color-lost-on-shell: #ff8a73;
+  --color-ecf: #8a5a00;
+  --color-ecf-on-shell: #e8b45a;
+
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@layer components {
+  /* Buttons: square-cornered report controls, 44px targets, no glow */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 44px;
+    padding: 0 18px;
+    border: 1px solid transparent;
+    border-radius: 2px;
+    font-family: var(--font-sans);
+    font-size: 15px;
+    font-weight: 600;
+    line-height: 1;
+    white-space: nowrap;
+    cursor: pointer;
+    text-decoration: none;
+    transition: background-color 160ms var(--ease-out-expo), border-color 160ms var(--ease-out-expo), color 160ms var(--ease-out-expo);
+  }
+  .btn:disabled {
+    cursor: not-allowed;
+    opacity: 0.45;
+  }
+  .btn-sm {
+    min-height: 36px;
+    padding: 0 12px;
+    font-size: 14px;
+  }
+  /* Primary in the shell: a paper slip */
+  .btn-slip {
+    background-color: var(--color-paper);
+    color: var(--color-ink);
+  }
+  .btn-slip:hover:not(:disabled) {
+    background-color: #dfe3e8;
+  }
+  /* Primary on paper: solid report black */
+  .btn-ink {
+    background-color: var(--color-ink);
+    color: var(--color-paper);
+  }
+  .btn-ink:hover:not(:disabled) {
+    background-color: #2a3038;
+  }
+  .btn-quiet-shell {
+    background-color: transparent;
+    border-color: var(--color-shell-line);
+    color: var(--color-shell-ink);
+  }
+  .btn-quiet-shell:hover:not(:disabled) {
+    border-color: var(--color-shell-muted);
+  }
+  .btn-quiet-paper {
+    background-color: var(--color-paper);
+    border-color: var(--color-paper-rule-strong);
+    color: var(--color-ink);
+  }
+  .btn-quiet-paper:hover:not(:disabled) {
+    background-color: var(--color-paper-tint);
+  }
+  .btn-destructive {
+    background-color: var(--color-lost);
+    color: var(--color-paper);
+  }
+  .btn-destructive:hover:not(:disabled) {
+    background-color: #a8281a;
+  }
+
+  /* Focus: ink on paper, paper on shell. Never examiner blue. */
+  .shell-surface :focus-visible,
+  .btn-slip:focus-visible,
+  .btn-quiet-shell:focus-visible {
+    outline: 2px solid var(--color-paper);
+    outline-offset: 2px;
+  }
+  .paper-surface :focus-visible,
+  .btn-ink:focus-visible,
+  .btn-quiet-paper:focus-visible {
+    outline: 2px solid var(--color-ink);
+    outline-offset: 2px;
+  }
+
+  /* The script sheet */
+  .script-sheet {
+    background-color: var(--color-paper);
+    color: var(--color-ink);
+    border-radius: 2px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.35), 0 12px 32px -16px rgba(0, 0, 0, 0.6);
+  }
+
+  /* Ruled working area: 28px ruling */
+  .ruled {
+    background-image: linear-gradient(to bottom, #e6e9ed 1px, transparent 1px);
+    background-size: 100% 28px;
+  }
+
+  /* Report label: small sans, tracked, never below 12px */
+  .report-label {
+    font-family: var(--font-sans);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  .tabular {
+    font-variant-numeric: tabular-nums lining-nums;
+  }
+
+  /* Native dialog primitive */
+  .report-dialog {
+    margin: auto;
+    padding: 0;
+    border: 0;
+    border-radius: 2px;
+    background: var(--color-paper);
+    color: var(--color-ink);
+    max-width: min(480px, calc(100vw - 32px));
+    width: 100%;
+    box-shadow: 0 24px 64px -24px rgba(0, 0, 0, 0.7);
+  }
+  .report-dialog::backdrop {
+    background: rgba(10, 12, 15, 0.72);
+  }
+}
+
+/* Signature motion: a rule draws across; numbers tick. */
+@keyframes rule-draw {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+.animate-rule-draw {
+  transform-origin: left center;
+  animation: rule-draw 520ms var(--ease-out-expo) both;
 }
 
 :root {
@@ -74,8 +248,8 @@
 }
 
 body {
-  background-color: var(--canvas);
-  color: var(--ink);
+  background-color: var(--color-shell);
+  color: var(--color-shell-ink);
   font-family: var(--font-sans);
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
@@ -314,34 +488,34 @@ body {
   color: var(--on-primary);
 }
 
-/* Selection */
+/* Selection: highlighter on paper, paper on shell */
 ::selection {
-  background-color: rgba(204, 120, 92, 0.28);
-  color: #faf9f5;
+  background-color: #cdd5e0;
+  color: #111418;
 }
 
-/* Custom Minimal Scrollbar */
+/* Scrollbars: graphite rail */
 * {
   scrollbar-width: thin;
-  scrollbar-color: #3e3b35 #181715;
+  scrollbar-color: #3a414b transparent;
 }
 
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 8px;
+  height: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  background: var(--canvas);
+  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #3e3b35;
-  border-radius: 9999px;
+  background: #3a414b;
+  border-radius: 0;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #4f4b44;
+  background: #4b5563;
 }
 
 /* Focus Ring */
@@ -669,18 +843,6 @@ body {
 
 .animate-pulse-subtle {
   animation: pulseSubtle 2.2s ease-in-out infinite;
-}
-
-/* Subtle Fixed Paper Grain / Texture Overlay */
-body::before {
-  content: "";
-  position: fixed;
-  inset: 0;
-  z-index: 45;
-  pointer-events: none;
-  opacity: 0.025;
-  background-image: radial-gradient(#141413 0.75px, transparent 0.75px);
-  background-size: 16px 16px;
 }
 
 /* Reduced Motion Override (Section 6.B) */

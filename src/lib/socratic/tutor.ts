@@ -188,7 +188,7 @@ export function generateSimulatedSocraticResponse(
 
   // Tier 4: Unlock Markscheme
   return {
-    text: `Here is the official markscheme breakdown for this question:\n\n**Markscheme Criteria:**\n${question.markschemeExcerpt}\n\n**Allocated Mark Codes:**\n${question.markCodes
+    text: `Here is the markscheme breakdown for this question:\n\n**Markscheme Criteria:**\n${question.markschemeExcerpt}\n\n**Allocated Mark Codes:**\n${question.markCodes
       .map((m) => `• **${m.code}** (${m.marks} mark): ${m.description}`)
       .join('\n')}\n\n${question.ecfRules ? `*Follow-Through Rule (ECF):* ${question.ecfRules}` : ''}`,
     tierActive: 4 as const,

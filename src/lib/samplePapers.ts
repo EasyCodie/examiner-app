@@ -4,7 +4,7 @@ import { QUESTION_12_MATPLOTLIB_SVG } from '@/lib/graphRenderer';
 export const BUNDLED_MATH_AA_HL: ExamManifest = {
   id: 'math-aa-hl-specimen',
   title: 'Mathematics: analysis and approaches HL',
-  subtitle: 'Paper 1 (Non-Calculator) - Authentic Examiner Specimen',
+  subtitle: 'Paper 1 (Non-Calculator) · IB-style specimen',
   subjectCode: 'MATH_AA_HL_P1',
   category: 'STEM',
   durationMinutes: 120,
@@ -197,7 +197,7 @@ export const BUNDLED_MATH_AA_HL: ExamManifest = {
 export const BUNDLED_ECONOMICS_HL: ExamManifest = {
   id: 'econ-hl-specimen',
   title: 'Economics Higher Level',
-  subtitle: 'Paper 1 (Extended Response) - Authentic Examiner Specimen',
+  subtitle: 'Paper 1 (Extended Response) · IB-style specimen',
   subjectCode: 'ECON_HL_P1',
   category: 'HUMANITIES',
   durationMinutes: 75,

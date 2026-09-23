@@ -1,6 +1,6 @@
 'use client';
 
-import { ExamManifest, ExamSession, PageStrokes, AiStudioConfig } from '@/types/exam';
+import { ExamManifest, ExamSession, InProgressExamSession, PageStrokes, AiStudioConfig } from '@/types/exam';
 import {
   examRepo,
   DEFAULT_AI_CONFIG,
@@ -50,3 +50,9 @@ export const getExamSession = (id: string): Promise<ExamSession | null> => examR
 export const getAllExamSessions = (): Promise<ExamSession[]> => examRepo.sessions.getAll();
 export const deleteExamSession = (id: string): Promise<void> => examRepo.sessions.delete(id);
 export const clearAllExamSessions = (): Promise<void> => examRepo.sessions.clearAll();
+export const getInProgressSession = (paperId: string): Promise<InProgressExamSession | null> =>
+  examRepo.sessions.getInProgress(paperId);
+export const saveInProgressSession = (session: InProgressExamSession): Promise<void> =>
+  examRepo.sessions.saveInProgress(session);
+export const clearInProgressSession = (paperId: string): Promise<void> =>
+  examRepo.sessions.clearInProgress(paperId);

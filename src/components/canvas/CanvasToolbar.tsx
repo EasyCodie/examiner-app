@@ -1,18 +1,7 @@
 'use client';
 
-import React, { useEffect } from 'react';
-import {
-  Pen,
-  Highlighter,
-  Eraser,
-  RotateCcw,
-  RotateCw,
-  Trash2,
-  ChevronLeft,
-  ChevronRight,
-  BookOpen,
-} from 'lucide-react';
-import { useAppShell } from '@/components/common/AppShell';
+import React, { useEffect, useState } from 'react';
+import { Pen, Highlighter, Eraser, RotateCcw, RotateCw, Hand, Keyboard } from 'lucide-react';
 
 export interface CanvasToolbarProps {
   tool: 'pen' | 'highlighter' | 'eraser';
@@ -26,21 +15,29 @@ export interface CanvasToolbarProps {
   onUndo: () => void;
   onRedo: () => void;
   onClear: () => void;
-  currentPage: number;
-  totalPages: number;
-  onPageChange: (page: number) => void;
-  showPageNav?: boolean;
-  showBooklet?: boolean;
-  showClear?: boolean;
+  /** Vertical: a rail beside the script. Horizontal: a bar docked below it. */
+  orientation?: 'vertical' | 'horizontal';
+  fingerDrawing?: boolean;
+  setFingerDrawing?: (value: boolean) => void;
   className?: string;
 }
 
+/** Candidates write in black or blue-black; red belongs to the examiner. */
 const PALETTE = [
-  { name: 'Deep Ink', value: '#0f172a' },
-  { name: 'Royal Blue', value: '#2563eb' },
-  { name: 'Examiner Red', value: '#dc2626' },
-  { name: 'Graphite Pencil', value: '#475569' },
+  { name: 'Blue-black ink', value: '#1a2238' },
+  { name: 'Black ink', value: '#111418' },
+  { name: 'Pencil', value: '#4b5563' },
 ];
+
+const SHORTCUTS_KEY = 'criterion:single-key-shortcuts';
+
+const readShortcutsPref = () => {
+  try {
+    return window.localStorage.getItem(SHORTCUTS_KEY) !== 'off';
+  } catch {
+    return true;
+  }
+};
 
 export const CanvasToolbar: React.FC<CanvasToolbarProps> = ({
   tool,
@@ -53,27 +50,39 @@ export const CanvasToolbar: React.FC<CanvasToolbarProps> = ({
   canRedo,
   onUndo,
   onRedo,
-  onClear,
-  currentPage,
-  totalPages,
-  onPageChange,
-  showPageNav = false,
-  showBooklet = false,
-  showClear = false,
+  orientation = 'horizontal',
+  fingerDrawing,
+  setFingerDrawing,
   className = '',
 }) => {
-  const { hasFormulaBooklet, toggleFormulaBooklet, isFormulaBookletOpen } = useAppShell();
+  const vertical = orientation === 'vertical';
+  const [shortcutsOn, setShortcutsOn] = useState(true);
+  const [coarsePointer, setCoarsePointer] = useState(false);
 
-  // Active keyboard shortcuts: P (pen), H (highlighter), E (eraser), Ctrl+Z (undo), Ctrl+Y (redo)
+  // Read per-device preferences after mount (browser-only APIs)
+  useEffect(() => {
+    const id = requestAnimationFrame(() => {
+      setShortcutsOn(readShortcutsPref());
+      setCoarsePointer(window.matchMedia('(any-pointer: coarse)').matches);
+    });
+    return () => cancelAnimationFrame(id);
+  }, []);
+
+  const toggleShortcuts = () => {
+    const next = !shortcutsOn;
+    setShortcutsOn(next);
+    try {
+      window.localStorage.setItem(SHORTCUTS_KEY, next ? 'on' : 'off');
+    } catch {
+      // preference simply won't persist
+    }
+  };
+
+  // Keyboard: Ctrl+Z / Ctrl+Y always; single keys P / H / E only when enabled (WCAG 2.1.4)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       const target = e.target as HTMLElement | null;
-      if (
-        target &&
-        (target.tagName === 'INPUT' ||
-          target.tagName === 'TEXTAREA' ||
-          target.isContentEditable)
-      ) {
+      if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable)) {
         return;
       }
 
@@ -81,8 +90,8 @@ export const CanvasToolbar: React.FC<CanvasToolbarProps> = ({
         e.preventDefault();
         if (e.shiftKey) {
           if (canRedo) onRedo();
-        } else {
-          if (canUndo) onUndo();
+        } else if (canUndo) {
+          onUndo();
         }
         return;
       }
@@ -93,210 +102,144 @@ export const CanvasToolbar: React.FC<CanvasToolbarProps> = ({
         return;
       }
 
-      if (!e.ctrlKey && !e.metaKey && !e.altKey) {
-        if (e.key === 'p' || e.key === 'P') {
-          e.preventDefault();
-          setTool('pen');
-        } else if (e.key === 'h' || e.key === 'H') {
-          e.preventDefault();
-          setTool('highlighter');
-        } else if (e.key === 'e' || e.key === 'E') {
-          e.preventDefault();
-          setTool('eraser');
-        }
-      }
+      if (!shortcutsOn || e.ctrlKey || e.metaKey || e.altKey) return;
+      const key = e.key.toLowerCase();
+      if (key === 'p') setTool('pen');
+      else if (key === 'h') setTool('highlighter');
+      else if (key === 'e') setTool('eraser');
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [setTool, onUndo, onRedo, canUndo, canRedo]);
+  }, [setTool, onUndo, onRedo, canUndo, canRedo, shortcutsOn]);
+
+  const tools = [
+    { id: 'pen' as const, label: 'Pen', key: 'P', Icon: Pen },
+    { id: 'highlighter' as const, label: 'Highlighter', key: 'H', Icon: Highlighter },
+    { id: 'eraser' as const, label: 'Eraser', key: 'E', Icon: Eraser },
+  ];
+
+  const group = vertical ? 'flex flex-col items-stretch' : 'flex items-center';
+  const divider = vertical ? 'h-px w-full bg-shell-line my-1' : 'w-px self-stretch bg-shell-line mx-1';
+  const toolButton = (active: boolean) =>
+    `min-h-11 min-w-11 flex items-center justify-center gap-2 px-2.5 text-[14px] font-medium transition-colors ${
+      active ? 'bg-paper text-ink' : 'text-shell-muted hover:text-shell-ink'
+    }`;
 
   return (
-    <aside
-      aria-label="Drawing Tools"
-      className={`bg-[#1f1e1b]/95 backdrop-blur-xl border border-white/10 rounded-full px-3 sm:px-4 py-1.5 flex items-center justify-center gap-1.5 sm:gap-2 w-fit max-w-full mx-auto text-[#faf9f5] shadow-2xl transition-all ${className}`.trim()}
+    <div
+      role="toolbar"
+      aria-label="Writing tools"
+      aria-orientation={vertical ? 'vertical' : 'horizontal'}
+      className={`shell-surface text-shell-ink ${
+        vertical
+          ? 'flex flex-col w-[152px] bg-shell-raised border border-shell-line p-1.5'
+          : 'flex items-center justify-center gap-1 px-2 py-1 overflow-x-auto'
+      } ${className}`.trim()}
     >
-      {/* 1. Primary Tool Selection (Pen, Highlighter, Eraser) */}
-      <div className="flex items-center gap-1 bg-[#252320] p-1 rounded-full border border-white/5 shrink-0">
-        <button
-          type="button"
-          onClick={() => setTool('pen')}
-          aria-label="Fountain Pen tool"
-          className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-mono-code transition focus-ring ${
-            tool === 'pen'
-              ? 'bg-[#cc785c] text-white font-semibold shadow-xs'
-              : 'text-[#a09d96] hover:text-[#faf9f5]'
-          }`}
-          title="Fountain Pen (P)"
-        >
-          <Pen className="w-3.5 h-3.5" />
-          <span className="hidden md:inline">Pen</span>
-        </button>
-
-        <button
-          type="button"
-          onClick={() => setTool('highlighter')}
-          aria-label="Fluorescent Highlighter tool"
-          className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-mono-code transition focus-ring ${
-            tool === 'highlighter'
-              ? 'bg-[#e8a55a] text-black font-semibold shadow-xs'
-              : 'text-[#a09d96] hover:text-[#faf9f5]'
-          }`}
-          title="Highlighter (H)"
-        >
-          <Highlighter className="w-3.5 h-3.5" />
-          <span className="hidden md:inline">Highlight</span>
-        </button>
-
-        <button
-          type="button"
-          onClick={() => setTool('eraser')}
-          aria-label="Precision Eraser tool"
-          className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-mono-code transition focus-ring ${
-            tool === 'eraser'
-              ? 'bg-[#c64545] text-white font-semibold shadow-xs'
-              : 'text-[#a09d96] hover:text-[#faf9f5]'
-          }`}
-          title="Precision Eraser (E)"
-        >
-          <Eraser className="w-3.5 h-3.5" />
-          <span className="hidden md:inline">Eraser</span>
-        </button>
+      <div className={group}>
+        {tools.map(({ id, label, key, Icon }) => (
+          <button
+            key={id}
+            type="button"
+            onClick={() => setTool(id)}
+            aria-pressed={tool === id}
+            title={shortcutsOn ? `${label} (${key})` : label}
+            className={`${toolButton(tool === id)} ${vertical ? 'justify-start' : ''}`}
+          >
+            <Icon className="w-4 h-4 shrink-0" aria-hidden="true" />
+            <span className={vertical ? '' : 'hidden md:inline'}>{label}</span>
+          </button>
+        ))}
       </div>
 
-      {/* 2. Archival Ink Palette */}
-      <div className="flex items-center gap-1 bg-[#252320] px-2 py-1 rounded-full border border-white/5 shrink-0">
+      <span className={divider} aria-hidden="true" />
+
+      <div className={`${group} ${vertical ? '' : 'gap-0'}`} role="group" aria-label="Ink">
         {PALETTE.map((c) => {
-          const isSelected = color === c.value && tool !== 'eraser';
+          const selected = color === c.value && tool !== 'eraser';
           return (
             <button
-              key={c.name}
+              key={c.value}
               type="button"
               onClick={() => {
                 setColor(c.value);
-                if (tool === 'eraser') {
-                  setTool('pen');
-                }
+                if (tool === 'eraser') setTool('pen');
               }}
-              aria-label={`Select ${c.name} ink color`}
-              title={c.name}
-              className={`w-6 h-6 rounded-full flex items-center justify-center transition-all focus-ring ${
-                isSelected ? 'bg-white/10' : 'hover:bg-white/5'
-              }`}
+              aria-pressed={selected}
+              className={`min-h-11 min-w-11 flex items-center gap-2 px-2.5 text-[14px] ${
+                selected ? 'text-shell-ink' : 'text-shell-muted hover:text-shell-ink'
+              } ${vertical ? 'justify-start' : 'justify-center'}`}
             >
               <span
-                className={`w-3 h-3 rounded-full transition-transform border ${
-                  isSelected
-                    ? 'scale-125 ring-2 ring-[#cc785c] ring-offset-1 ring-offset-[#181715] border-white'
-                    : 'border-white/20'
-                }`}
+                className={`w-4 h-4 shrink-0 border ${selected ? 'border-paper outline-2 outline-offset-2 outline-paper' : 'border-shell-muted'}`}
                 style={{ backgroundColor: c.value }}
+                aria-hidden="true"
               />
+              <span className={vertical ? '' : 'sr-only'}>{c.name}</span>
             </button>
           );
         })}
       </div>
 
-      {/* 3. Stroke Width Control */}
-      <div className="hidden sm:flex items-center gap-1.5 bg-[#252320] px-2.5 py-1 rounded-full border border-white/5 shrink-0">
-        <span className="text-[10px] text-[#a09d96] font-mono-code uppercase font-semibold">Size</span>
+      <span className={divider} aria-hidden="true" />
+
+      <label
+        className={`flex items-center gap-2 px-2.5 min-h-11 text-[13px] text-shell-muted ${vertical ? '' : 'hidden sm:flex'}`}
+      >
+        <span>Size</span>
         <input
           type="range"
           min={tool === 'highlighter' ? 10 : 1}
           max={tool === 'highlighter' ? 30 : 8}
           step={tool === 'highlighter' ? 2 : 0.5}
           value={width}
-          aria-label="Stroke width"
           onChange={(e) => setWidth(Number(e.target.value))}
-          className="w-12 accent-[#cc785c] cursor-pointer h-1.5 bg-[#181715] rounded-lg appearance-none focus-ring"
+          className="w-full min-w-14 accent-paper cursor-pointer"
         />
-        <span className="text-[10px] text-[#faf9f5] font-mono-code w-3">{width}</span>
-      </div>
+      </label>
 
-      {/* 4. Stroke History: Undo / Redo */}
-      <div className="flex items-center gap-0.5 bg-[#252320] p-1 rounded-full border border-white/5 shrink-0">
-        <button
-          type="button"
-          onClick={onUndo}
-          disabled={!canUndo}
-          aria-label="Undo canvas stroke"
-          className="p-1.5 rounded-full text-[#a09d96] hover:text-[#faf9f5] hover:bg-white/10 disabled:opacity-30 transition focus-ring"
-          title="Undo (Ctrl+Z)"
-        >
-          <RotateCcw className="w-3.5 h-3.5" />
+      <span className={divider} aria-hidden="true" />
+
+      <div className={vertical ? 'grid grid-cols-2' : 'flex items-center'}>
+        <button type="button" onClick={onUndo} disabled={!canUndo} title="Undo (Ctrl+Z)" className={`${toolButton(false)} disabled:opacity-35`}>
+          <RotateCcw className="w-4 h-4" aria-hidden="true" />
+          <span className="sr-only">Undo</span>
         </button>
-        <button
-          type="button"
-          onClick={onRedo}
-          disabled={!canRedo}
-          aria-label="Redo canvas stroke"
-          className="p-1.5 rounded-full text-[#a09d96] hover:text-[#faf9f5] hover:bg-white/10 disabled:opacity-30 transition focus-ring"
-          title="Redo (Ctrl+Y)"
-        >
-          <RotateCw className="w-3.5 h-3.5" />
+        <button type="button" onClick={onRedo} disabled={!canRedo} title="Redo (Ctrl+Y)" className={`${toolButton(false)} disabled:opacity-35`}>
+          <RotateCw className="w-4 h-4" aria-hidden="true" />
+          <span className="sr-only">Redo</span>
         </button>
       </div>
 
-      {/* 5. Optional Canvas Clear Action (Only rendered if explicitly requested) */}
-      {showClear && (
+      <span className={divider} aria-hidden="true" />
+
+      <div className={group}>
+        {setFingerDrawing && coarsePointer && (
+          <button
+            type="button"
+            onClick={() => setFingerDrawing(!fingerDrawing)}
+            aria-pressed={Boolean(fingerDrawing)}
+            title="When off, a finger scrolls the page and only a stylus writes"
+            className={`${toolButton(Boolean(fingerDrawing))} ${vertical ? 'justify-start' : ''}`}
+          >
+            <Hand className="w-4 h-4 shrink-0" aria-hidden="true" />
+            <span className={vertical ? '' : 'hidden md:inline'}>Draw with finger</span>
+          </button>
+        )}
         <button
           type="button"
-          onClick={onClear}
-          aria-label="Clear canvas working on this question"
-          className="flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-mono-code text-[#c64545] hover:text-[#e05252] bg-[#c64545]/10 hover:bg-[#c64545]/20 border border-[#c64545]/20 transition active:scale-95 focus-ring shrink-0"
-          title="Clear Working"
+          onClick={toggleShortcuts}
+          aria-pressed={shortcutsOn}
+          title="Single-key shortcuts: P pen, H highlighter, E eraser"
+          className={`min-h-11 min-w-11 flex items-center gap-2 px-2.5 text-[13px] ${
+            shortcutsOn ? 'text-shell-ink' : 'text-shell-muted'
+          } hover:text-shell-ink ${vertical ? 'justify-start' : 'justify-center'}`}
         >
-          <Trash2 className="w-3.5 h-3.5" />
-          <span className="hidden md:inline">Clear</span>
+          <Keyboard className="w-4 h-4 shrink-0" aria-hidden="true" />
+          <span className={vertical ? '' : 'sr-only'}>Shortcuts {shortcutsOn ? 'on' : 'off'}</span>
         </button>
-      )}
-
-      {/* 6. Optional Formula Booklet Trigger */}
-      {showBooklet && hasFormulaBooklet && (
-        <div className="flex items-center bg-[#252320] p-1 rounded-full border border-white/5 shrink-0">
-          <button
-            type="button"
-            onClick={() => toggleFormulaBooklet()}
-            aria-label="Toggle official IB Formula Booklet"
-            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-mono-code transition focus-ring ${
-              isFormulaBookletOpen
-                ? 'bg-[#cc785c] text-white font-semibold shadow-xs'
-                : 'text-[#a09d96] hover:text-[#faf9f5]'
-            }`}
-            title="Formula Booklet (Ctrl+B)"
-          >
-            <BookOpen className="w-3.5 h-3.5" />
-            <span className="hidden md:inline">Booklet</span>
-          </button>
-        </div>
-      )}
-
-      {/* 7. Optional Multi-Page Navigation */}
-      {showPageNav && (
-        <div className="flex items-center gap-1 bg-[#252320] px-2 py-0.5 rounded-full border border-white/5 shrink-0">
-          <button
-            type="button"
-            onClick={() => onPageChange(Math.max(1, currentPage - 1))}
-            disabled={currentPage <= 1}
-            aria-label="Previous question page"
-            className="p-1 text-[#a09d96] hover:text-[#faf9f5] disabled:opacity-30 transition focus-ring"
-          >
-            <ChevronLeft className="w-3.5 h-3.5" />
-          </button>
-          <span className="text-[10px] font-mono-code text-[#a09d96] px-1">
-            {currentPage}/{totalPages}
-          </span>
-          <button
-            type="button"
-            onClick={() => onPageChange(Math.min(totalPages, currentPage + 1))}
-            disabled={currentPage >= totalPages}
-            aria-label="Next question page"
-            className="p-1 text-[#a09d96] hover:text-[#faf9f5] disabled:opacity-30 transition focus-ring"
-          >
-            <ChevronRight className="w-3.5 h-3.5" />
-          </button>
-        </div>
-      )}
-    </aside>
+      </div>
+    </div>
   );
 };

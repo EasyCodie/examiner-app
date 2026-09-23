@@ -236,7 +236,7 @@ export default function SocraticLearnPage() {
   const handleUnlockMarkscheme = async () => {
     setCurrentTier(4);
     setIsMarkschemeUnlocked(true);
-    await handleSendMessage('Please reveal the official markscheme breakdown and mark codes.', 4);
+    await handleSendMessage('Please reveal the markscheme breakdown and mark codes.', 4);
   };
 
   if (!manifest || !currentQuestion) {
@@ -363,10 +363,6 @@ export default function SocraticLearnPage() {
                     onUndo={() => canvasRef.current?.undo()}
                     onRedo={() => canvasRef.current?.redo()}
                     onClear={() => canvasRef.current?.clear()}
-                    currentPage={currentQuestion.pageNumber}
-                    totalPages={Math.max(1, ...manifest.questions.map((q) => q.pageNumber))}
-                    onPageChange={() => {}}
-                    showPageNav={false}
                   />
                 </div>
               </div>

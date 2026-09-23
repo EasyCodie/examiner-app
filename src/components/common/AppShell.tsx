@@ -13,6 +13,8 @@ interface HeaderInfo {
   paperId?: string;
   timeRemainingSeconds?: number;
   subjectCode?: string;
+  /** An Exam Session owns the top of the screen: the global header steps aside. */
+  examMode?: boolean;
 }
 
 interface AppShellContextType {
@@ -93,14 +95,16 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) 
         hasFormulaBooklet,
       }}
     >
-      <div className="min-h-[100dvh] flex flex-col bg-[#181715] text-[#faf9f5]">
-        <Header
-          paperTitle={headerInfo.paperTitle}
-          category={headerInfo.category}
-          mode={headerInfo.mode}
-          paperId={headerInfo.paperId}
-          timeRemainingSeconds={headerInfo.timeRemainingSeconds}
-        />
+      <div className="min-h-[100dvh] flex flex-col bg-shell text-shell-ink">
+        {!headerInfo.examMode && (
+          <Header
+            paperTitle={headerInfo.paperTitle}
+            category={headerInfo.category}
+            mode={headerInfo.mode}
+            paperId={headerInfo.paperId}
+            timeRemainingSeconds={headerInfo.timeRemainingSeconds}
+          />
+        )}
         <main className="flex-1 flex flex-col">{children}</main>
 
         {/* Global Formula Booklet Drawer */}

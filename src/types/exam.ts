@@ -168,6 +168,22 @@ export interface ExamSession {
   };
 }
 
+/**
+ * An Exam Session that has started but not been handed in. Autosaved while the
+ * candidate works so a reload or crash resumes the paper instead of losing it.
+ */
+export interface InProgressExamSession {
+  paperId: string;
+  startedAt: string;
+  savedAt: string;
+  phase: 'reading' | 'writing';
+  readingRemainingSeconds: number;
+  timeRemainingSeconds: number;
+  pageStrokes: Record<number, CanvasStroke[]>;
+  pageBoxStrokes: Record<number, Record<string, CanvasStroke[]>>;
+  humanitiesSubmissions: Record<string, QuestionSubmission>;
+}
+
 export type PedagogicalTier = 1 | 2 | 3 | 4;
 
 export interface SocraticMessage {

@@ -50,17 +50,18 @@ interface InlineDiagramCanvasProps {
 }
 
 const TEMPLATE_CONFIGS: Record<AxisTemplate, { label: string }> = {
-  standard: { label: 'Standard L-Axes' },
-  cross: { label: '4-Quadrant' },
-  blank: { label: 'Blank Canvas' },
+  standard: { label: 'L-axes' },
+  cross: { label: 'Four quadrants' },
+  blank: { label: 'Blank' },
 };
 
+/** Plain ink colours: named for the ink, never for an economic meaning (ADR-0002). */
 const COLOR_PALETTE = [
-  { name: 'Initial Curve', hex: '#2563eb' },
-  { name: 'Shifted Curve', hex: '#cc785c' },
-  { name: 'Social Optimum', hex: '#5db8a6' },
-  { name: 'Welfare Loss', hex: '#c64545' },
-  { name: 'Reference Line', hex: '#334155' },
+  { name: 'Blue-black', hex: '#1a2238' },
+  { name: 'Blue', hex: '#1d5bbf' },
+  { name: 'Green', hex: '#2f7d4f' },
+  { name: 'Red', hex: '#b3261e' },
+  { name: 'Grey', hex: '#4b5563' },
 ];
 
 const COMMON_NOTATIONS = [
@@ -362,128 +363,85 @@ export const InlineDiagramCanvas = forwardRef<InlineDiagramCanvasRef, InlineDiag
 
     const currentLabelPreview = customLabelInput.trim() || activeStamp;
 
+    const segment = (active: boolean) =>
+      `min-h-11 px-3 flex items-center gap-1.5 text-[14px] font-medium border-r border-paper-rule last:border-r-0 transition-colors ${
+        active ? 'bg-ink text-paper' : 'bg-paper text-ink hover:bg-paper-tint'
+      }`;
+
     return (
-      <div className="bg-[#181715] border border-white/[0.1] rounded-xl p-3.5 shadow-xl space-y-3">
-        {/* Top Control Bar: Presets, Tools, Swatches, Undo */}
-        <div className="flex flex-wrap items-center justify-between gap-2.5 pb-2 border-b border-white/[0.08]">
-          {/* Axis Template Presets */}
-          <div className="flex items-center gap-1 bg-[#252320] p-1 rounded-lg border border-white/[0.08] text-xs font-mono-code">
-            <span className="text-[10px] text-[#79766e] uppercase font-semibold px-1.5">Axes:</span>
+      <div className="paper-surface space-y-3">
+        <div className="flex flex-wrap items-center gap-2">
+          <div role="group" aria-label="Axes" className="flex border border-paper-rule-strong">
             {(Object.keys(TEMPLATE_CONFIGS) as AxisTemplate[]).map((tmpl) => (
               <button
                 key={tmpl}
                 type="button"
                 onClick={() => setActiveTemplate(tmpl)}
-                className={`px-2 py-0.5 rounded transition ${activeTemplate === tmpl
-                    ? 'bg-[#cc785c] text-white font-semibold shadow-sm'
-                    : 'text-[#a09d96] hover:text-[#faf9f5] hover:bg-white/[0.04]'
-                  }`}
+                aria-pressed={activeTemplate === tmpl}
+                className={segment(activeTemplate === tmpl)}
               >
                 {TEMPLATE_CONFIGS[tmpl].label}
               </button>
             ))}
           </div>
 
-          {/* Tools: Curve vs Straight Line vs Text Label */}
-          <div className="flex items-center gap-1 bg-[#252320] p-1 rounded-lg border border-white/[0.08] text-xs font-mono-code">
-            <button
-              type="button"
-              onClick={() => setActiveTool('curve')}
-              className={`px-2.5 py-1 rounded flex items-center gap-1 transition ${activeTool === 'curve'
-                  ? 'bg-white/[0.12] text-white font-semibold'
-                  : 'text-[#a09d96] hover:text-[#faf9f5]'
-                }`}
-              title="Smooth Curve Tool (for demand, supply, AD, SRAS, LRAS)"
-            >
-              <Pen className="w-3 h-3" />
-              <span>Curve</span>
+          <div role="group" aria-label="Drawing tool" className="flex border border-paper-rule-strong">
+            <button type="button" onClick={() => setActiveTool('curve')} aria-pressed={activeTool === 'curve'} className={segment(activeTool === 'curve')}>
+              <Pen className="w-4 h-4" aria-hidden="true" />
+              Curve
             </button>
-            <button
-              type="button"
-              onClick={() => setActiveTool('line')}
-              className={`px-2.5 py-1 rounded flex items-center gap-1 transition ${activeTool === 'line'
-                  ? 'bg-white/[0.12] text-white font-semibold'
-                  : 'text-[#a09d96] hover:text-[#faf9f5]'
-                }`}
-              title="Straight Line Tool (for linear curves, price controls, guides)"
-            >
-              <Minus className="w-3.5 h-3.5" />
-              <span>Line</span>
+            <button type="button" onClick={() => setActiveTool('line')} aria-pressed={activeTool === 'line'} className={segment(activeTool === 'line')}>
+              <Minus className="w-4 h-4" aria-hidden="true" />
+              Line
             </button>
-            <button
-              type="button"
-              onClick={() => setActiveTool('text')}
-              className={`px-2.5 py-1 rounded flex items-center gap-1 transition ${activeTool === 'text'
-                  ? 'bg-[#cc785c] text-white font-semibold shadow-sm'
-                  : 'text-[#a09d96] hover:text-[#faf9f5]'
-                }`}
-              title="Label Tool (click canvas to place axis or curve labels)"
-            >
-              <Type className="w-3.5 h-3.5" />
-              <span>Label</span>
+            <button type="button" onClick={() => setActiveTool('text')} aria-pressed={activeTool === 'text'} className={segment(activeTool === 'text')}>
+              <Type className="w-4 h-4" aria-hidden="true" />
+              Label
             </button>
           </div>
 
-          {/* Color Palette Swatches */}
-          <div className="flex items-center gap-1.5 bg-[#252320] p-1.5 rounded-lg border border-white/[0.08]">
+          <div role="group" aria-label="Ink colour" className="flex items-center">
             {COLOR_PALETTE.map((c) => (
               <button
                 key={c.hex}
                 type="button"
                 onClick={() => setActiveColor(c.hex)}
-                style={{ backgroundColor: c.hex }}
-                className={`w-4 h-4 rounded-full transition-all ${activeColor === c.hex
-                    ? 'ring-2 ring-white ring-offset-2 ring-offset-[#252320] scale-110'
-                    : 'opacity-70 hover:opacity-100'
-                  }`}
+                aria-pressed={activeColor === c.hex}
+                aria-label={`${c.name} ink`}
                 title={c.name}
-              />
+                className="min-h-11 min-w-11 flex items-center justify-center"
+              >
+                <span
+                  className={`w-5 h-5 border ${activeColor === c.hex ? 'border-ink outline-2 outline-offset-2 outline-ink' : 'border-paper-rule-strong'}`}
+                  style={{ backgroundColor: c.hex }}
+                />
+              </button>
             ))}
           </div>
 
-          {/* Action Buttons: Undo, Redo, Clear */}
-          <div className="flex items-center gap-1 text-xs font-mono-code">
-            <button
-              type="button"
-              onClick={handleUndo}
-              disabled={items.length === 0}
-              className="p-1.5 rounded text-[#a09d96] hover:text-[#faf9f5] hover:bg-white/[0.06] disabled:opacity-30 transition"
-              title="Undo stroke"
-            >
-              <RotateCcw className="w-3.5 h-3.5" />
+          <div className="flex items-center ml-auto">
+            <button type="button" onClick={handleUndo} disabled={items.length === 0} title="Undo" className="min-h-11 min-w-11 flex items-center justify-center text-ink disabled:opacity-35">
+              <RotateCcw className="w-4 h-4" aria-hidden="true" />
+              <span className="sr-only">Undo</span>
             </button>
-            <button
-              type="button"
-              onClick={handleRedo}
-              disabled={undoStack.length === 0}
-              className="p-1.5 rounded text-[#a09d96] hover:text-[#faf9f5] hover:bg-white/[0.06] disabled:opacity-30 transition"
-              title="Redo stroke"
-            >
-              <RotateCw className="w-3.5 h-3.5" />
+            <button type="button" onClick={handleRedo} disabled={undoStack.length === 0} title="Redo" className="min-h-11 min-w-11 flex items-center justify-center text-ink disabled:opacity-35">
+              <RotateCw className="w-4 h-4" aria-hidden="true" />
+              <span className="sr-only">Redo</span>
             </button>
-            <button
-              type="button"
-              onClick={handleClear}
-              disabled={items.length === 0}
-              className="p-1.5 rounded text-[#fca5a5] hover:text-white hover:bg-[#c64545]/30 disabled:opacity-30 transition flex items-center gap-1 ml-1"
-              title="Clear diagram curves"
-            >
-              <Trash2 className="w-3.5 h-3.5" />
-              <span className="text-[10px]">Reset</span>
+            <button type="button" onClick={handleClear} disabled={items.length === 0} className="btn btn-sm btn-quiet-paper ml-1">
+              <Trash2 className="w-4 h-4" aria-hidden="true" />
+              Clear diagram
             </button>
           </div>
         </div>
 
-        {/* Secondary Bar when Text / Label tool is active */}
         {activeTool === 'text' && (
-          <div className="flex flex-wrap items-center gap-2 p-2 bg-[#252320] rounded-lg border border-white/[0.08] text-xs font-mono-code animate-in fade-in duration-150">
-            <div className="flex items-center gap-1 text-[#cc785c]">
-              <Tag className="w-3 h-3" />
-              <span className="text-[10px] font-semibold uppercase">Click canvas to place:</span>
-            </div>
-
-            {/* Quick Economic Chips */}
-            <div className="flex flex-wrap items-center gap-1">
+          <div className="flex flex-wrap items-center gap-2 border-t border-paper-rule pt-3">
+            <span className="flex items-center gap-1.5 text-[14px] text-ink">
+              <Tag className="w-4 h-4" aria-hidden="true" />
+              Label to place:
+            </span>
+            <div className="flex flex-wrap items-center gap-1" role="group" aria-label="Common labels">
               {COMMON_NOTATIONS.map((notation) => (
                 <button
                   key={notation}
@@ -492,57 +450,52 @@ export const InlineDiagramCanvas = forwardRef<InlineDiagramCanvasRef, InlineDiag
                     setActiveStamp(notation);
                     setCustomLabelInput('');
                   }}
-                  className={`px-1.5 py-0.5 rounded text-[11px] font-bold transition ${activeStamp === notation && !customLabelInput
-                      ? 'bg-[#cc785c] text-white shadow-sm'
-                      : 'bg-[#181715] text-[#a09d96] hover:text-[#faf9f5] border border-white/[0.08]'
-                    }`}
+                  aria-pressed={activeStamp === notation && !customLabelInput}
+                  className={`min-h-9 min-w-9 px-2 text-[14px] font-semibold border ${
+                    activeStamp === notation && !customLabelInput
+                      ? 'bg-ink text-paper border-ink'
+                      : 'bg-paper text-ink border-paper-rule-strong hover:bg-paper-tint'
+                  }`}
                 >
                   {notation}
                 </button>
               ))}
             </div>
-
-            {/* Custom Input */}
-            <div className="flex items-center gap-1 ml-auto">
-              <span className="text-[10px] text-[#79766e]">Custom:</span>
+            <label className="flex items-center gap-2 ml-auto text-[14px] text-ink-muted">
+              Custom
               <input
                 type="text"
                 value={customLabelInput}
                 onChange={(e) => setCustomLabelInput(e.target.value)}
                 placeholder="e.g. MSB"
-                className="w-16 bg-[#181715] border border-white/[0.1] rounded px-1.5 py-0.5 text-xs text-[#faf9f5] placeholder:text-[#6b6963] outline-none focus:border-[#cc785c]"
+                className="w-24 min-h-9 bg-paper border border-paper-rule-strong px-2 text-[14px] text-ink placeholder:text-ink-muted"
               />
-            </div>
+            </label>
           </div>
         )}
 
-        {/* Canvas Drawing Surface */}
-        <div className="relative bg-white rounded-lg overflow-hidden border border-slate-300 shadow-inner flex justify-center">
+        <div className="relative bg-paper border border-paper-rule-strong flex justify-center">
           <canvas
             ref={canvasRef}
             width={400}
             height={260}
+            role="img"
+            aria-label="Diagram sketchpad"
             onPointerDown={handlePointerDown}
             onPointerMove={handlePointerMove}
             onPointerUp={handlePointerUp}
             onPointerCancel={handlePointerUp}
-            className={`w-full max-w-[500px] h-auto aspect-[400/260] touch-none select-none ${activeTool === 'text' ? 'cursor-cell' : 'cursor-crosshair'
-              }`}
+            className={`w-full max-w-[560px] h-auto aspect-[400/260] touch-none select-none ${activeTool === 'text' ? 'cursor-cell' : 'cursor-crosshair'}`}
             style={{ touchAction: 'none' }}
           />
         </div>
 
-        {/* Footer Candidate Status */}
-        <div className="flex items-center justify-between text-[11px] text-[#79766e] font-mono-code pt-0.5">
-          <span className="text-[#a09d96]">
-            {activeTool === 'text'
-              ? `Placing label "${currentLabelPreview}" - click on canvas to position`
-              : 'Draw curves and lines; use Label tool to mark axes & equilibria'}
-          </span>
-          <span className="text-[#5db8a6] font-medium">
-            {items.length > 0 ? `Attached (${items.length} items)` : 'Canvas Ready'}
-          </span>
-        </div>
+        <p className="text-[13px] text-ink-muted">
+          {activeTool === 'text'
+            ? `Click the diagram to place "${currentLabelPreview}".`
+            : 'Draw curves and lines; use Label to name your axes and curves.'}
+          {items.length > 0 && <span className="tabular"> {items.length} marks on the diagram.</span>}
+        </p>
       </div>
     );
   }
