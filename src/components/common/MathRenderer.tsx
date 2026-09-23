@@ -212,7 +212,7 @@ function parseLatexArrayToExamTable(arrayTex: string, lightMode = false): string
 
   const cellBorderClass = lightMode
     ? 'border border-slate-800 px-8 py-4 text-slate-950 font-serif'
-    : 'border border-white/10 px-8 py-4 text-[#faf9f5] font-serif';
+    : 'border border-shell-line px-8 py-4 text-shell-ink font-serif';
 
   let html = `<div class="w-full my-6 flex justify-center overflow-x-auto"><table class="${tableClass}"><tbody>`;
 
@@ -227,7 +227,7 @@ function parseLatexArrayToExamTable(arrayTex: string, lightMode = false): string
 
       const bgClass = lightMode
         ? (isHeaderRow ? 'bg-slate-50/60 font-semibold' : 'bg-white')
-        : (isHeaderRow ? 'bg-white/[0.04] font-semibold text-[#faf9f5]' : 'bg-transparent text-[#faf9f5]');
+        : (isHeaderRow ? 'bg-shell-raised font-semibold text-shell-ink' : 'bg-transparent text-shell-ink');
 
       const fontClass = isFirstCol ? 'font-semibold' : 'font-normal';
       const cellContent = cell ? safeRenderKaTeX(cell, false) : '&nbsp;';
@@ -304,8 +304,8 @@ export const MathRenderer: React.FC<MathRendererProps> = React.memo(({
     // PHASE 4: Protect inline code blocks
     text = text.replace(/`([^`\n]+?)`/g, (_, code) => {
       const codeHtml = lightMode
-        ? `<code class="font-mono-code text-[11px] bg-[#efe9de] text-[#cc785c] px-1.5 py-0.5 rounded border border-[#e6dfd8]">${escapeHtml(code)}</code>`
-        : `<code class="font-mono-code text-[11px] bg-[#181715] text-[#cc785c] px-1.5 py-0.5 rounded border border-white/[0.1]">${escapeHtml(code)}</code>`;
+        ? `<code class="font-mono text-[0.9em] bg-paper-tint text-ink px-1.5 py-0.5 border border-paper-rule">${escapeHtml(code)}</code>`
+        : `<code class="font-mono text-[0.9em] bg-shell-raised text-shell-ink px-1.5 py-0.5 border border-shell-line">${escapeHtml(code)}</code>`;
       return saveToken(codeHtml);
     });
 
@@ -340,7 +340,7 @@ export const MathRenderer: React.FC<MathRendererProps> = React.memo(({
           : 'w-full max-w-3xl border-collapse border-2 border-white/20 text-center font-serif my-6 shadow-sm mx-auto';
         const cellClass = lightMode
           ? 'border border-slate-800 px-8 py-4 text-slate-950 font-serif text-[15px]'
-          : 'border border-white/10 px-8 py-4 text-[#faf9f5] font-serif text-[15px]';
+          : 'border border-shell-line px-8 py-4 text-shell-ink font-serif text-[15px]';
 
         let tableHtml = `<div class="w-full overflow-x-auto my-6 flex justify-center"><table class="${tableClass}"><thead><tr>`;
         headers.forEach((h) => {
@@ -431,7 +431,7 @@ export const MathRenderer: React.FC<MathRendererProps> = React.memo(({
     // PHASE 13: Markdown formatting on the remaining prose
     const strongClass = lightMode
       ? 'font-semibold text-slate-950 tracking-normal'
-      : 'font-semibold text-[#faf9f5] tracking-normal';
+      : 'font-semibold text-shell-ink tracking-normal';
 
     // Bold (**word** or __word__)
     text = text.replace(/\*\*(.*?)\*\*/g, (_, bold) => `<strong class="${strongClass}">${bold}</strong>`);
@@ -460,8 +460,8 @@ export const MathRenderer: React.FC<MathRendererProps> = React.memo(({
   const hasCustomTextColor = /\btext-/.test(className);
   const defaultTextColor =
     lightMode === true
-      ? 'text-[#141413]'
-      : 'text-[#faf9f5]';
+      ? 'text-ink'
+      : 'text-shell-ink';
   const baseStyle = `${hasCustomTextColor ? '' : defaultTextColor} leading-relaxed math-content`;
 
   return (

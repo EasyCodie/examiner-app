@@ -194,7 +194,7 @@ export const AiStudioDrawer: React.FC<AiStudioDrawerProps> = ({ isOpen, onClose,
             <div>
               <h2 className="text-base font-serif font-normal text-shell-ink flex items-center gap-2">
                 <span>Examiner Settings &amp; AI Controls</span>
-                <span className="text-[12px] font-mono-code font-normal text-awarded-on-shell bg-shell px-2 py-0.5 rounded border border-shell-line">
+                <span className="text-[12px] font-mono font-normal text-awarded-on-shell bg-shell px-2 py-0.5 rounded border border-shell-line">
                   Gemini 3.8 Flash
                 </span>
               </h2>
@@ -208,7 +208,7 @@ export const AiStudioDrawer: React.FC<AiStudioDrawerProps> = ({ isOpen, onClose,
             type="button"
             onClick={onClose}
             aria-label="Close settings drawer"
-            className="p-1.5 text-shell-muted hover:text-shell-ink rounded-sm hover:bg-shell transition focus-ring"
+            className="p-1.5 text-shell-muted hover:text-shell-ink rounded-sm hover:bg-shell transition"
           >
             <X className="w-5 h-5" />
           </button>
@@ -219,7 +219,7 @@ export const AiStudioDrawer: React.FC<AiStudioDrawerProps> = ({ isOpen, onClose,
           <button
             type="button"
             onClick={() => setActiveTab('reasoning')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-sm transition font-medium focus-ring ${
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-sm transition font-medium ${
               activeTab === 'reasoning'
                 ? 'bg-paper text-ink '
                 : 'text-shell-muted hover:text-shell-ink hover:bg-shell-raised'
@@ -232,7 +232,7 @@ export const AiStudioDrawer: React.FC<AiStudioDrawerProps> = ({ isOpen, onClose,
           <button
             type="button"
             onClick={() => setActiveTab('prompts')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-sm transition font-medium focus-ring ${
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-sm transition font-medium ${
               activeTab === 'prompts'
                 ? 'bg-paper text-ink '
                 : 'text-shell-muted hover:text-shell-ink hover:bg-shell-raised'
@@ -245,7 +245,7 @@ export const AiStudioDrawer: React.FC<AiStudioDrawerProps> = ({ isOpen, onClose,
           <button
             type="button"
             onClick={() => setActiveTab('schemas')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-sm transition font-medium focus-ring ${
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-sm transition font-medium ${
               activeTab === 'schemas'
                 ? 'bg-paper text-ink '
                 : 'text-shell-muted hover:text-shell-ink hover:bg-shell-raised'
@@ -258,7 +258,7 @@ export const AiStudioDrawer: React.FC<AiStudioDrawerProps> = ({ isOpen, onClose,
           <button
             type="button"
             onClick={() => setActiveTab('apiKey')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-sm transition font-medium focus-ring ${
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-sm transition font-medium ${
               activeTab === 'apiKey'
                 ? 'bg-paper text-ink '
                 : 'text-shell-muted hover:text-shell-ink hover:bg-shell-raised'
@@ -274,7 +274,7 @@ export const AiStudioDrawer: React.FC<AiStudioDrawerProps> = ({ isOpen, onClose,
               setActiveTab('graphs');
               if (!renderedSvg) handleRenderGraph();
             }}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-sm transition font-medium focus-ring ${
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-sm transition font-medium ${
               activeTab === 'graphs'
                 ? 'bg-paper text-ink '
                 : 'text-shell-muted hover:text-shell-ink hover:bg-shell-raised'
@@ -291,7 +291,7 @@ export const AiStudioDrawer: React.FC<AiStudioDrawerProps> = ({ isOpen, onClose,
           {activeTab === 'reasoning' && (
             <div className="space-y-6">
               <div className="p-4 bg-shell-raised border border-shell-line rounded-sm text-xs text-shell-muted">
-                <span className="font-semibold text-examiner-on-shell block mb-1 font-mono-code">
+                <span className="font-semibold text-examiner-on-shell block mb-1 font-mono">
                   AI Thinking Budget &amp; Depth:
                 </span>
                 <p className="leading-relaxed">
@@ -303,14 +303,14 @@ export const AiStudioDrawer: React.FC<AiStudioDrawerProps> = ({ isOpen, onClose,
               <div className="p-4 bg-shell-raised border border-shell-line rounded-sm space-y-3">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h3 className="text-xs font-semibold text-shell-ink uppercase tracking-wider font-mono-code">
+                    <h3 className="text-xs font-semibold text-shell-ink uppercase tracking-wider font-mono">
                       Exam Marking Depth
                     </h3>
                     <p className="text-[12px] text-shell-muted">
                       Controls how thoroughly working steps and follow-through marks are checked
                     </p>
                   </div>
-                  <span className="text-xs font-mono-code font-semibold text-examiner-on-shell bg-shell px-2.5 py-1 rounded-sm border border-shell-line">
+                  <span className="text-xs font-mono font-semibold text-examiner-on-shell bg-shell px-2.5 py-1 rounded-sm border border-shell-line">
                     {config?.thinkingBudgetGrading || 8192} tokens
                   </span>
                 </div>
@@ -325,7 +325,7 @@ export const AiStudioDrawer: React.FC<AiStudioDrawerProps> = ({ isOpen, onClose,
                   className="w-full accent-paper cursor-pointer h-2 bg-shell rounded-sm appearance-none"
                 />
 
-                <div className="flex justify-between text-[12px] font-mono-code text-shell-muted">
+                <div className="flex justify-between text-[12px] font-mono text-shell-muted">
                   <span>Standard (1024)</span>
                   <span className="text-examiner-on-shell font-semibold">Recommended (8192)</span>
                   <span>Maximum Depth (16384)</span>
@@ -336,14 +336,14 @@ export const AiStudioDrawer: React.FC<AiStudioDrawerProps> = ({ isOpen, onClose,
               <div className="p-4 bg-shell-raised border border-shell-line rounded-sm space-y-3">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h3 className="text-xs font-semibold text-shell-ink uppercase tracking-wider font-mono-code">
+                    <h3 className="text-xs font-semibold text-shell-ink uppercase tracking-wider font-mono">
                       Tutor Thinking Budget
                     </h3>
                     <p className="text-[12px] text-shell-muted">
                       Helps the tutor review your steps and offer tailored hints
                     </p>
                   </div>
-                  <span className="text-xs font-mono-code font-semibold text-awarded-on-shell bg-shell px-2.5 py-1 rounded-sm border border-shell-line">
+                  <span className="text-xs font-mono font-semibold text-awarded-on-shell bg-shell px-2.5 py-1 rounded-sm border border-shell-line">
                     {config?.thinkingBudgetSocratic === 0 ? 'Zero / Sub-Second' : `${config?.thinkingBudgetSocratic ?? 2048} tokens`}
                   </span>
                 </div>
@@ -358,7 +358,7 @@ export const AiStudioDrawer: React.FC<AiStudioDrawerProps> = ({ isOpen, onClose,
                   className="w-full accent-paper cursor-pointer h-2 bg-shell rounded-sm appearance-none"
                 />
 
-                <div className="flex justify-between text-[12px] font-mono-code text-shell-muted">
+                <div className="flex justify-between text-[12px] font-mono text-shell-muted">
                   <span>Instant / Zero (0)</span>
                   <span className="text-awarded-on-shell font-semibold">Recommended (2048)</span>
                   <span>Deep Proofs (4096)</span>
@@ -371,7 +371,7 @@ export const AiStudioDrawer: React.FC<AiStudioDrawerProps> = ({ isOpen, onClose,
           {activeTab === 'prompts' && (
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-1 bg-shell-raised p-1 rounded-sm border border-shell-line text-xs font-mono-code">
+                <div className="flex items-center gap-1 bg-shell-raised p-1 rounded-sm border border-shell-line text-xs font-mono">
                   <button
                     type="button"
                     onClick={() => setActivePromptTab('grading')}
@@ -404,14 +404,14 @@ export const AiStudioDrawer: React.FC<AiStudioDrawerProps> = ({ isOpen, onClose,
                 <button
                   type="button"
                   onClick={() => copyToClipboard(activePromptText, 'prompt')}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-sm bg-shell-raised hover:bg-shell-line border border-shell-line text-shell-ink text-xs font-mono-code transition"
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-sm bg-shell-raised hover:bg-shell-line border border-shell-line text-shell-ink text-xs font-mono transition"
                 >
                   {copied === 'prompt' ? <Check className="w-3.5 h-3.5 text-awarded-on-shell" /> : <Copy className="w-3.5 h-3.5" />}
                   <span>{copied === 'prompt' ? 'Copied' : 'Copy Prompt'}</span>
                 </button>
               </div>
 
-              <div className="bg-shell border border-shell-line rounded-sm p-4 font-mono-code text-xs text-shell-muted leading-relaxed whitespace-pre-wrap max-h-[480px] overflow-y-auto">
+              <div className="bg-shell border border-shell-line rounded-sm p-4 font-mono text-xs text-shell-muted leading-relaxed whitespace-pre-wrap max-h-[480px] overflow-y-auto">
                 {activePromptText}
               </div>
             </div>
@@ -421,7 +421,7 @@ export const AiStudioDrawer: React.FC<AiStudioDrawerProps> = ({ isOpen, onClose,
           {activeTab === 'schemas' && (
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-1 bg-shell-raised p-1 rounded-sm border border-shell-line text-xs font-mono-code">
+                <div className="flex items-center gap-1 bg-shell-raised p-1 rounded-sm border border-shell-line text-xs font-mono">
                   <button
                     type="button"
                     onClick={() => setActiveSchemaTab('grading')}
@@ -454,14 +454,14 @@ export const AiStudioDrawer: React.FC<AiStudioDrawerProps> = ({ isOpen, onClose,
                 <button
                   type="button"
                   onClick={() => copyToClipboard(activeSchemaJson, 'schema')}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-sm bg-shell-raised hover:bg-shell-line border border-shell-line text-shell-ink text-xs font-mono-code transition"
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-sm bg-shell-raised hover:bg-shell-line border border-shell-line text-shell-ink text-xs font-mono transition"
                 >
                   {copied === 'schema' ? <Check className="w-3.5 h-3.5 text-awarded-on-shell" /> : <Copy className="w-3.5 h-3.5" />}
                   <span>{copied === 'schema' ? 'Copied' : 'Copy Schema'}</span>
                 </button>
               </div>
 
-              <div className="bg-shell border border-shell-line rounded-sm p-4 font-mono-code text-xs text-awarded-on-shell leading-relaxed whitespace-pre-wrap max-h-[480px] overflow-y-auto">
+              <div className="bg-shell border border-shell-line rounded-sm p-4 font-mono text-xs text-awarded-on-shell leading-relaxed whitespace-pre-wrap max-h-[480px] overflow-y-auto">
                 {activeSchemaJson}
               </div>
             </div>
@@ -471,11 +471,11 @@ export const AiStudioDrawer: React.FC<AiStudioDrawerProps> = ({ isOpen, onClose,
           {activeTab === 'apiKey' && (
             <div className="space-y-5">
               <div className="p-4 bg-shell-raised border border-shell-line rounded-sm space-y-3">
-                <label className="text-xs font-semibold text-shell-ink uppercase tracking-wider block font-mono-code">
+                <label className="text-xs font-semibold text-shell-ink uppercase tracking-wider block font-mono">
                   Gemini API Key Override
                 </label>
                 <p className="text-[12px] text-shell-muted">
-                  By default, the application reads <code className="text-examiner-on-shell font-mono-code">GEMINI_API_KEY</code> from your server environment. You can also supply a temporary key below for local browser testing.
+                  By default, the application reads <code className="text-examiner-on-shell font-mono">GEMINI_API_KEY</code> from your server environment. You can also supply a temporary key below for local browser testing.
                 </p>
 
                 <div className="flex gap-2">
@@ -484,13 +484,13 @@ export const AiStudioDrawer: React.FC<AiStudioDrawerProps> = ({ isOpen, onClose,
                     value={tempApiKey}
                     onChange={(e) => setTempApiKey(e.target.value)}
                     placeholder="AIzaSy..."
-                    className="flex-1 bg-shell border border-shell-line rounded-sm px-3.5 py-2 text-xs font-mono-code text-shell-ink placeholder:text-shell-muted outline-none focus:border-examiner-on-shell"
+                    className="flex-1 bg-shell border border-shell-line rounded-sm px-3.5 py-2 text-xs font-mono text-shell-ink placeholder:text-shell-muted outline-none focus:border-examiner-on-shell"
                   />
                   <button
                     type="button"
                     onClick={handleTestKey}
                     disabled={isTesting}
-                    className="flex items-center gap-1.5 px-4 py-2 rounded-sm claude-btn-primary disabled:opacity-40 text-xs font-medium transition"
+                    className="flex items-center gap-1.5 px-4 py-2 rounded-sm btn btn-sm btn-slip disabled:opacity-40 text-xs font-medium transition"
                   >
                     {isTesting ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Key className="w-3.5 h-3.5" />}
                     <span>Test &amp; Save</span>
@@ -499,7 +499,7 @@ export const AiStudioDrawer: React.FC<AiStudioDrawerProps> = ({ isOpen, onClose,
 
                 {testResult && (
                   <div
-                    className={`p-3 rounded-sm border text-xs flex items-center gap-2 font-mono-code ${
+                    className={`p-3 rounded-sm border text-xs flex items-center gap-2 font-mono ${
                       testResult.valid
                         ? 'bg-awarded-on-shell/10 border-awarded-on-shell/30 text-awarded-on-shell'
                         : 'bg-lost-on-shell/10 border-lost-on-shell/30 text-lost-on-shell'
@@ -518,15 +518,15 @@ export const AiStudioDrawer: React.FC<AiStudioDrawerProps> = ({ isOpen, onClose,
               {/* Z.AI / GLM-OCR API KEY */}
               <div className="p-4 bg-shell-raised border border-shell-line rounded-sm space-y-3">
                 <div className="flex items-center justify-between">
-                  <label className="text-xs font-semibold text-shell-ink uppercase tracking-wider block font-mono-code">
+                  <label className="text-xs font-semibold text-shell-ink uppercase tracking-wider block font-mono">
                     Z.AI / GLM-OCR API Key (SOTA Math &amp; Layout OCR)
                   </label>
-                  <span className="text-[12px] font-mono-code text-awarded-on-shell bg-awarded-on-shell/10 px-2 py-0.5 rounded border border-awarded-on-shell/20">
+                  <span className="text-[12px] font-mono text-awarded-on-shell bg-awarded-on-shell/10 px-2 py-0.5 rounded border border-awarded-on-shell/20">
                     GLM-OCR 0.9B
                   </span>
                 </div>
                 <p className="text-[12px] text-shell-muted">
-                  GLM-OCR is the primary OCR engine for dual-PDF ingestion (tables, LaTeX math, diagrams) and student canvas handwriting recognition. Reads <code className="text-examiner-on-shell font-mono-code">ZAI_API_KEY</code> from <code className="text-examiner-on-shell font-mono-code">.env.local</code> or local browser storage.
+                  GLM-OCR is the primary OCR engine for dual-PDF ingestion (tables, LaTeX math, diagrams) and student canvas handwriting recognition. Reads <code className="text-examiner-on-shell font-mono">ZAI_API_KEY</code> from <code className="text-examiner-on-shell font-mono">.env.local</code> or local browser storage.
                 </p>
 
                 <div className="flex gap-2">
@@ -535,13 +535,13 @@ export const AiStudioDrawer: React.FC<AiStudioDrawerProps> = ({ isOpen, onClose,
                     value={tempZaiKey}
                     onChange={(e) => setTempZaiKey(e.target.value)}
                     placeholder="Enter Z.AI API key..."
-                    className="flex-1 bg-shell border border-shell-line rounded-sm px-3.5 py-2 text-xs font-mono-code text-shell-ink placeholder:text-shell-muted outline-none focus:border-examiner-on-shell"
+                    className="flex-1 bg-shell border border-shell-line rounded-sm px-3.5 py-2 text-xs font-mono text-shell-ink placeholder:text-shell-muted outline-none focus:border-examiner-on-shell"
                   />
                   <button
                     type="button"
                     onClick={handleTestZaiKey}
                     disabled={isTestingZai}
-                    className="flex items-center gap-1.5 px-4 py-2 rounded-sm claude-btn-primary disabled:opacity-40 text-xs font-medium transition"
+                    className="flex items-center gap-1.5 px-4 py-2 rounded-sm btn btn-sm btn-slip disabled:opacity-40 text-xs font-medium transition"
                   >
                     {isTestingZai ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Key className="w-3.5 h-3.5" />}
                     <span>Test &amp; Save</span>
@@ -550,7 +550,7 @@ export const AiStudioDrawer: React.FC<AiStudioDrawerProps> = ({ isOpen, onClose,
 
                 {testZaiResult && (
                   <div
-                    className={`p-3 rounded-sm border text-xs flex items-center gap-2 font-mono-code ${
+                    className={`p-3 rounded-sm border text-xs flex items-center gap-2 font-mono ${
                       testZaiResult.valid
                         ? 'bg-awarded-on-shell/10 border-awarded-on-shell/30 text-awarded-on-shell'
                         : 'bg-lost-on-shell/10 border-lost-on-shell/30 text-lost-on-shell'
@@ -573,7 +573,7 @@ export const AiStudioDrawer: React.FC<AiStudioDrawerProps> = ({ isOpen, onClose,
                     href="https://aistudio.google.com"
                     target="_blank"
                     rel="noreferrer"
-                    className="flex items-center gap-1 text-examiner-on-shell hover:text-shell-ink font-mono-code transition"
+                    className="flex items-center gap-1 text-examiner-on-shell hover:text-shell-ink font-mono transition"
                   >
                     <span>aistudio.google.com</span>
                     <ExternalLink className="w-3 h-3" />
@@ -586,7 +586,7 @@ export const AiStudioDrawer: React.FC<AiStudioDrawerProps> = ({ isOpen, onClose,
                     href="https://z.ai/manage-apikey/apikey-list"
                     target="_blank"
                     rel="noreferrer"
-                    className="flex items-center gap-1 text-awarded-on-shell hover:text-shell-ink font-mono-code transition"
+                    className="flex items-center gap-1 text-awarded-on-shell hover:text-shell-ink font-mono transition"
                   >
                     <span>z.ai/manage-apikey</span>
                     <ExternalLink className="w-3 h-3" />
@@ -601,11 +601,11 @@ export const AiStudioDrawer: React.FC<AiStudioDrawerProps> = ({ isOpen, onClose,
             <div className="space-y-5">
               <div className="p-4 bg-shell-raised border border-shell-line rounded-sm text-xs text-shell-muted">
                 <div className="flex items-center justify-between mb-1.5">
-                  <span className="font-semibold text-examiner-on-shell font-mono-code flex items-center gap-1.5">
+                  <span className="font-semibold text-examiner-on-shell font-mono flex items-center gap-1.5">
                     <LineChart className="w-4 h-4" />
                     Python Matplotlib &amp; NumPy Cartesian Pipeline
                   </span>
-                  <span className="text-[12px] font-mono-code text-awarded-on-shell bg-awarded-on-shell/10 border border-awarded-on-shell/20 px-2 py-0.5 rounded-full">
+                  <span className="text-[12px] font-mono text-awarded-on-shell bg-awarded-on-shell/10 border border-awarded-on-shell/20 px-2 py-0.5 rounded-full">
                     Python 3.14 • Matplotlib 3.11
                   </span>
                 </div>
@@ -617,7 +617,7 @@ export const AiStudioDrawer: React.FC<AiStudioDrawerProps> = ({ isOpen, onClose,
 
               {/* Presets & Theme Bar */}
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5">
-                <div className="flex flex-wrap items-center gap-1.5 text-xs font-mono-code">
+                <div className="flex flex-wrap items-center gap-1.5 text-xs font-mono">
                   <button
                     type="button"
                     onClick={() => {
@@ -695,7 +695,7 @@ export const AiStudioDrawer: React.FC<AiStudioDrawerProps> = ({ isOpen, onClose,
                 </div>
 
                 {/* Theme Selector */}
-                <div className="flex items-center gap-1 bg-shell-raised p-1 rounded-sm border border-shell-line text-xs font-mono-code">
+                <div className="flex items-center gap-1 bg-shell-raised p-1 rounded-sm border border-shell-line text-xs font-mono">
                   <button
                     type="button"
                     onClick={() => {
@@ -733,14 +733,14 @@ export const AiStudioDrawer: React.FC<AiStudioDrawerProps> = ({ isOpen, onClose,
 
               {/* Custom Expression Row */}
               <div className="p-4 bg-shell-raised border border-shell-line rounded-sm space-y-3 text-xs">
-                <div className="font-semibold text-shell-ink font-mono-code flex items-center justify-between">
+                <div className="font-semibold text-shell-ink font-mono flex items-center justify-between">
                   <span>Custom Equation Plotter:</span>
                   <span className="text-[12px] text-shell-muted">Supports numpy math (x**2, sin(x), exp(x), log(x))</span>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-12 gap-3">
                   <div className="sm:col-span-8">
-                    <label className="text-[12px] font-mono-code text-shell-muted block mb-1">
+                    <label className="text-[12px] font-mono text-shell-muted block mb-1">
                       Function f(x) =
                     </label>
                     <input
@@ -748,12 +748,12 @@ export const AiStudioDrawer: React.FC<AiStudioDrawerProps> = ({ isOpen, onClose,
                       value={customExpr}
                       onChange={(e) => setCustomExpr(e.target.value)}
                       placeholder="e.g. 6 - 0.5 * (x - 2)**2"
-                      className="w-full bg-shell border border-shell-line rounded-sm px-3 py-1.5 font-mono-code text-shell-ink outline-none focus:border-examiner-on-shell"
+                      className="w-full bg-shell border border-shell-line rounded-sm px-3 py-1.5 font-mono text-shell-ink outline-none focus:border-examiner-on-shell"
                     />
                   </div>
 
                   <div className="sm:col-span-4">
-                    <label className="text-[12px] font-mono-code text-shell-muted block mb-1">
+                    <label className="text-[12px] font-mono text-shell-muted block mb-1">
                       Domain [x_min, x_max]
                     </label>
                     <input
@@ -761,7 +761,7 @@ export const AiStudioDrawer: React.FC<AiStudioDrawerProps> = ({ isOpen, onClose,
                       value={customDomain}
                       onChange={(e) => setCustomDomain(e.target.value)}
                       placeholder="-4, 6"
-                      className="w-full bg-shell border border-shell-line rounded-sm px-3 py-1.5 font-mono-code text-shell-ink outline-none focus:border-examiner-on-shell"
+                      className="w-full bg-shell border border-shell-line rounded-sm px-3 py-1.5 font-mono text-shell-ink outline-none focus:border-examiner-on-shell"
                     />
                   </div>
                 </div>
@@ -795,7 +795,7 @@ export const AiStudioDrawer: React.FC<AiStudioDrawerProps> = ({ isOpen, onClose,
                       setGraphSpec(spec);
                       handleRenderGraph(spec);
                     }}
-                    className="px-4 py-1.5 claude-btn-primary text-xs font-mono-code flex items-center gap-1.5 disabled:opacity-50"
+                    className="px-4 py-1.5 btn btn-sm btn-slip text-xs font-mono flex items-center gap-1.5 disabled:opacity-50"
                   >
                     {isRenderingGraph ? (
                       <>
@@ -814,7 +814,7 @@ export const AiStudioDrawer: React.FC<AiStudioDrawerProps> = ({ isOpen, onClose,
 
               {/* Error Notice */}
               {graphError && (
-                <div className="p-3 bg-lost-on-shell/15 border border-lost-on-shell/40 rounded-sm text-xs text-lost-on-shell flex items-center gap-2 font-mono-code">
+                <div className="p-3 bg-lost-on-shell/15 border border-lost-on-shell/40 rounded-sm text-xs text-lost-on-shell flex items-center gap-2 font-mono">
                   <AlertCircle className="w-4 h-4 text-lost-on-shell shrink-0" />
                   <span>{graphError}</span>
                 </div>
@@ -822,7 +822,7 @@ export const AiStudioDrawer: React.FC<AiStudioDrawerProps> = ({ isOpen, onClose,
 
               {/* Live Preview Canvas */}
               <div className="space-y-2">
-                <div className="flex items-center justify-between text-xs font-mono-code text-shell-muted">
+                <div className="flex items-center justify-between text-xs font-mono text-shell-muted">
                   <span>Live Scalable SVG Preview:</span>
                   {renderedSvg && (
                     <div className="flex items-center gap-2">
@@ -848,7 +848,7 @@ export const AiStudioDrawer: React.FC<AiStudioDrawerProps> = ({ isOpen, onClose,
                   {isRenderingGraph ? (
                     <div className="py-20 text-center space-y-2">
                       <RefreshCw className="w-6 h-6 text-examiner-on-shell animate-spin mx-auto" />
-                      <p className="text-xs font-mono-code text-shell-muted">
+                      <p className="text-xs font-mono text-shell-muted">
                         Executing Python Matplotlib subprocess...
                       </p>
                     </div>
@@ -858,7 +858,7 @@ export const AiStudioDrawer: React.FC<AiStudioDrawerProps> = ({ isOpen, onClose,
                       dangerouslySetInnerHTML={{ __html: renderedSvg }}
                     />
                   ) : (
-                    <div className="py-20 text-center text-xs font-mono-code text-shell-muted">
+                    <div className="py-20 text-center text-xs font-mono text-shell-muted">
                       Click &quot;Plot with Matplotlib&quot; or select a preset above.
                     </div>
                   )}
