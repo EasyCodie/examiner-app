@@ -1,20 +1,8 @@
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
 import Link from 'next/link';
-import { QuestionItem, QuestionEvaluation } from '@/types/exam';
-import { MathRenderer } from '@/components/common/MathRenderer';
-import {
-  Target,
-  AlertCircle,
-  CheckCircle2,
-  BookOpen,
-  ArrowRight,
-  Layers,
-  Sparkles,
-  Clock,
-  ExternalLink,
-} from 'lucide-react';
+import { QuestionItem } from '@/types/exam';
 
 export interface SyllabusBreakdownItem {
   subtopic: string;
@@ -27,330 +15,107 @@ export interface SyllabusBreakdownItem {
 
 interface SyllabusMatrixProps {
   syllabusBreakdown: SyllabusBreakdownItem[];
-  paperId?: string;
-  activeQuestion?: QuestionItem;
-  activeEvaluation?: QuestionEvaluation;
-  activeQuestionIndex?: number;
-  allQuestions?: QuestionItem[];
+  paperId: string;
+  allQuestions: QuestionItem[];
 }
 
-export const SyllabusMatrix: React.FC<SyllabusMatrixProps> = ({
-  syllabusBreakdown,
-  paperId,
-  activeQuestion,
-  activeEvaluation,
-  activeQuestionIndex,
-  allQuestions,
-}) => {
-  const [viewMode, setViewMode] = useState<'focused' | 'all'>('focused');
+const STANDING: Record<SyllabusBreakdownItem['status'], { label: string; tone: string; glyph: React.ReactNode }> = {
+  mastered: {
+    label: 'Secure',
+    tone: 'text-awarded',
+    glyph: <path d="M1.5 6.5l3 3 6-7" fill="none" stroke="currentColor" strokeWidth="1.8" />,
+  },
+  developing: {
+    label: 'Developing',
+    tone: 'text-ink',
+    glyph: (
+      <>
+        <rect x="1" y="1" width="10" height="10" fill="none" stroke="currentColor" strokeWidth="1.4" />
+        <rect x="1" y="1" width="5" height="10" fill="currentColor" />
+      </>
+    ),
+  },
+  critical: {
+    label: 'Needs work',
+    tone: 'text-lost',
+    glyph: <path d="M2 2l8 8M10 2l-8 8" fill="none" stroke="currentColor" strokeWidth="1.8" />,
+  },
+};
 
-  const activeQNum = activeQuestion
-    ? activeQuestion.number.replace(/^Question\s*/i, '').trim()
-    : undefined;
+const ORDER = { critical: 0, developing: 1, mastered: 2 } as const;
 
-  // Find other questions on the paper that share this active subtopic
-  const sharedQuestions =
-    activeQuestion && allQuestions
-      ? allQuestions.filter(
-        (q, idx) =>
-          idx !== activeQuestionIndex &&
-          activeQuestion.syllabusSubtopic &&
-          q.syllabusSubtopic &&
-          (q.syllabusSubtopic.toLowerCase() === activeQuestion.syllabusSubtopic.toLowerCase() ||
-            q.syllabusSubtopic.toLowerCase().includes(activeQuestion.syllabusSubtopic.toLowerCase()) ||
-            activeQuestion.syllabusSubtopic.toLowerCase().includes(q.syllabusSubtopic.toLowerCase()))
-      )
-      : [];
+/**
+ * Syllabus Weakness Matrix: every subtopic on the paper as one ruled table,
+ * weakest first, each with the question to practise it on.
+ */
+export const SyllabusMatrix: React.FC<SyllabusMatrixProps> = ({ syllabusBreakdown, paperId, allQuestions }) => {
+  if (syllabusBreakdown.length === 0) return null;
 
-  // Question-specific derived metrics for focused view
-  const focusedSubtopic =
-    activeEvaluation?.syllabusSubtopic ||
-    activeQuestion?.syllabusSubtopic ||
-    'General IB Syllabus';
+  const rows = [...syllabusBreakdown].sort((a, b) => ORDER[a.status] - ORDER[b.status] || a.percentage - b.percentage);
 
-  const isEvaluated = Boolean(activeEvaluation);
-  const marksAwarded = activeEvaluation?.marksAwarded ?? 0;
-  const totalMarks = activeEvaluation?.maxMarks ?? activeQuestion?.totalMarks ?? 1;
-  const percentage = totalMarks > 0 ? Math.round((marksAwarded / totalMarks) * 100) : 0;
-  const status: 'mastered' | 'developing' | 'critical' =
-    percentage >= 80 ? 'mastered' : percentage >= 50 ? 'developing' : 'critical';
-
-  const targetedDrill =
-    activeEvaluation?.revisionRecommendation ||
-    `Review key syllabus principles and standard question archetypes in ${focusedSubtopic}.`;
-
-  const socraticLink = paperId
-    ? `/learn/${paperId}?question=${activeQuestionIndex ?? 0}`
-    : undefined;
-
-  const getStatusStyles = (itemStatus: 'mastered' | 'developing' | 'critical') => {
-    return {
-      mastered: {
-        badge: 'bg-[#5db8a6]/15 text-[#5db8a6] border-[#5db8a6]/30',
-        bar: 'bg-[#5db8a6]',
-        label: 'Strong (Grade 7 Standard)',
-        icon: CheckCircle2,
-      },
-      developing: {
-        badge: 'bg-[#e8a55a]/15 text-[#e8a55a] border-[#e8a55a]/30',
-        bar: 'bg-[#e8a55a]',
-        label: 'Making Progress (Grade 5-6)',
-        icon: AlertCircle,
-      },
-      critical: {
-        badge: 'bg-[#c64545]/15 text-[#fca5a5] border-[#c64545]/30',
-        bar: 'bg-[#c64545]',
-        label: 'Needs Practice',
-        icon: AlertCircle,
-      },
-    }[itemStatus];
+  const practiceIndex = (subtopic: string) => {
+    const needle = subtopic.toLowerCase();
+    return allQuestions.findIndex((q) => {
+      const hay = (q.syllabusSubtopic || '').toLowerCase();
+      return hay && (hay === needle || hay.includes(needle) || needle.includes(hay));
+    });
   };
 
   return (
-    <div className="double-bezel-outer-dark">
-      <div className="double-bezel-inner-dark p-6 transition-fluid">
-        {/* Dynamic Header with Context & Mode Switcher */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 border-b border-white/10 mb-6">
-          <div>
-            <h3 className="text-base font-normal text-[#faf9f5] flex items-center gap-2">
-              <Target className="w-4 h-4 text-[#cc785c]" />
-              <span className="font-serif text-lg">
-                Topic Strengths &amp; Recommended Practice
-                {viewMode === 'focused' && activeQNum ? ` • Question ${activeQNum}` : ' • All Exam Topics'}
-              </span>
-            </h3>
-            <p className="text-xs text-[#a09d96] mt-0.5 font-mono-code">
-              {viewMode === 'focused' && activeQuestion
-                ? `Topic breakdown and practice tips for Question ${activeQNum} (${activeQuestion.totalMarks} marks)`
-                : 'Summary of marks awarded across each official syllabus topic'}
-            </p>
-          </div>
-
-          {/* View Mode Segmented Pill Control */}
-          <div className="flex items-center gap-1 bg-[#252320] p-1 rounded-xl border border-white/10 text-xs font-mono-code shrink-0 shadow-xs">
-            <button
-              type="button"
-              onClick={() => setViewMode('focused')}
-              className={`px-3 py-1.5 rounded-lg transition-fluid flex items-center gap-1.5 ${viewMode === 'focused'
-                  ? 'bg-[#cc785c] text-white font-medium shadow-xs'
-                  : 'text-[#a09d96] hover:text-[#faf9f5] hover:bg-[#181715]'
-                }`}
-            >
-              <Target className="w-3.5 h-3.5" />
-              <span>Focus: Q{activeQNum ?? '1'}</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setViewMode('all')}
-              className={`px-3 py-1.5 rounded-lg transition-fluid flex items-center gap-1.5 ${viewMode === 'all'
-                  ? 'bg-[#cc785c] text-white font-medium shadow-xs'
-                  : 'text-[#a09d96] hover:text-[#faf9f5] hover:bg-[#181715]'
-                }`}
-            >
-              <Layers className="w-3.5 h-3.5" />
-              <span>All Exam Topics ({syllabusBreakdown.length || '...'})</span>
-            </button>
-          </div>
-        </div>
-
-      {/* 1. FOCUSED VIEW: Question-Specific Diagnosis Card */}
-      {viewMode === 'focused' && (
-        <div>
-          {isEvaluated ? (
-            (() => {
-              const statusStyles = getStatusStyles(status);
-              const Icon = statusStyles.icon;
-
+    <section aria-labelledby="topics-heading" className="space-y-4">
+      <h2 id="topics-heading" className="font-serif text-[24px] font-semibold text-ink">
+        Topics on this paper
+      </h2>
+      <div className="overflow-x-auto">
+        <table className="w-full min-w-[560px] border-collapse">
+          <thead>
+            <tr className="border-t-2 border-b border-ink text-left text-[13px] text-ink-muted">
+              <th scope="col" className="py-2 pr-4 font-semibold">Topic</th>
+              <th scope="col" className="py-2 pr-4 font-semibold text-right">Marks</th>
+              <th scope="col" className="py-2 pr-4 font-semibold">Standing</th>
+              <th scope="col" className="py-2 font-semibold"><span className="sr-only">Practise</span></th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((row) => {
+              const standing = STANDING[row.status];
+              const idx = practiceIndex(row.subtopic);
               return (
-                <div className="bg-[#252320] border border-white/10 rounded-xl p-5 space-y-4 shadow-2xs">
-                  {/* Topic Title & Status Badge */}
-                  <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-2">
-                        <span className="text-[10px] font-mono-code uppercase px-2.5 py-0.5 rounded-full bg-[#cc785c]/15 text-[#cc785c] font-semibold border border-[#cc785c]/30">
-                          Question {activeQNum} Syllabus Focus
-                        </span>
-                        {sharedQuestions.length > 0 && (
-                          <span className="text-[10px] font-mono-code text-[#a09d96] bg-[#181715] px-2 py-0.5 rounded border border-white/10">
-                            Also tested in: {sharedQuestions.map((q) => `Q${q.number.replace(/^Question\s*/i, '')}`).join(', ')}
-                          </span>
-                        )}
-                      </div>
-                      <h4 className="text-sm font-medium text-[#faf9f5] font-mono-code leading-snug">
-                        {focusedSubtopic}
-                      </h4>
-                    </div>
-
-                    <span
-                      className={`text-[11px] font-mono-code px-2.5 py-1 rounded-full border shrink-0 flex items-center gap-1.5 self-start ${statusStyles.badge}`}
-                    >
-                      <Icon className="w-3.5 h-3.5" />
-                      {statusStyles.label}
-                    </span>
-                  </div>
-
-                  {/* Score Breakdown & Progress Bar */}
-                  <div className="space-y-1.5 bg-[#181715] p-3.5 rounded-xl border border-white/10">
-                    <div className="flex justify-between text-xs font-mono-code text-[#a09d96]">
-                      <span>
-                        Question Score: <strong className="text-[#faf9f5]">{marksAwarded}</strong> / {totalMarks} marks
+                <tr key={row.subtopic} className="border-b border-paper-rule align-top">
+                  <th scope="row" className="py-3 pr-4 text-left">
+                    <span className="block text-[15px] font-semibold text-ink">{row.subtopic}</span>
+                    {row.status !== 'mastered' && row.targetedDrillPrompt && (
+                      <span className="mt-1 block text-[14px] font-normal leading-relaxed text-ink-muted max-w-[60ch]">
+                        {row.targetedDrillPrompt}
                       </span>
-                      <span className="font-semibold text-[#faf9f5]">{percentage}% Mastery</span>
-                    </div>
-                    <div className="w-full h-2 bg-white/10 rounded-full overflow-hidden">
-                      <div
-                        className={`h-full ${statusStyles.bar} rounded-full transition-all duration-500`}
-                        style={{ width: `${percentage}%` }}
-                      />
-                    </div>
-                  </div>
-
-                  {/* Targeted Actionable Drill Recommendation */}
-                  <div className="p-4 rounded-xl bg-[#181715] border border-white/10 text-xs text-[#faf9f5] leading-relaxed space-y-2.5">
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="font-semibold text-[#cc785c] flex items-center gap-1.5 font-mono-code">
-                        <BookOpen className="w-4 h-4 text-[#cc785c]" />
-                        Practice Tip for Question {activeQNum}:
-                      </span>
-                      {activeEvaluation?.ecfApplied && (
-                        <span className="text-[10px] font-mono-code text-[#e8a55a] flex items-center gap-1 bg-[#e8a55a]/15 border border-[#e8a55a]/30 px-2 py-0.5 rounded-full">
-                          <Sparkles className="w-3 h-3 text-[#e8a55a]" /> Includes Follow-Through Notes
-                        </span>
-                      )}
-                    </div>
-
-                    <div className="text-[#d6cfc5]">
-                      <MathRenderer content={targetedDrill} />
-                    </div>
-
-                    {socraticLink && status !== 'mastered' && (
-                      <div className="pt-2.5 border-t border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                        <span className="text-[11px] font-mono-code text-[#a09d96]">
-                          Practice this type of question step by step with our tutor
-                        </span>
-                        <Link
-                          href={socraticLink}
-                          className="claude-btn-pill-primary text-xs px-3.5 py-1.5 shrink-0"
-                        >
-                          <span>Practice Question {activeQNum} with Tutor</span>
-                          <span className="btn-icon-bubble">
-                            <ArrowRight className="w-3.5 h-3.5 text-white" />
-                          </span>
-                        </Link>
-                      </div>
                     )}
-                  </div>
-                </div>
+                  </th>
+                  <td className="py-3 pr-4 text-right tabular text-[15px] text-ink whitespace-nowrap">
+                    {row.marksAwarded} / {row.totalMarks}
+                    <span className="block text-[13px] text-ink-muted">{row.percentage}%</span>
+                  </td>
+                  <td className={`py-3 pr-4 text-[14px] font-semibold whitespace-nowrap ${standing.tone}`}>
+                    <span className="inline-flex items-center gap-1.5">
+                      <svg viewBox="0 0 12 12" className="w-3 h-3" aria-hidden="true">
+                        {standing.glyph}
+                      </svg>
+                      {standing.label}
+                    </span>
+                  </td>
+                  <td className="py-2 text-right">
+                    {row.status !== 'mastered' && idx >= 0 && (
+                      <Link href={`/learn/${paperId}?question=${idx}`} className="btn btn-sm btn-quiet-paper">
+                        Practise
+                        <span className="sr-only"> {row.subtopic}</span>
+                      </Link>
+                    )}
+                  </td>
+                </tr>
               );
-            })()
-          ) : (
-            /* In-Flight State for Queued / Streaming Question */
-            <div className="bg-[#252320] border border-white/10 rounded-xl p-5 space-y-3 shadow-2xs">
-              <div className="flex items-center justify-between gap-3">
-                <span className="text-[10px] font-mono-code uppercase px-2.5 py-0.5 rounded-full bg-[#cc785c]/15 text-[#cc785c] font-semibold border border-[#cc785c]/30">
-                  Question {activeQNum} • Topic Outline
-                </span>
-                <span className="text-[10px] font-mono-code px-2.5 py-0.5 rounded-full border border-[#e8a55a]/30 bg-[#e8a55a]/10 text-[#e8a55a] flex items-center gap-1.5">
-                  <Clock className="w-3 h-3 animate-spin" />
-                  Examiner Marking in Progress
-                </span>
-              </div>
-              <h4 className="text-sm font-medium text-[#faf9f5] font-mono-code">
-                {focusedSubtopic}
-              </h4>
-              <p className="text-xs text-[#a09d96] font-mono-code">
-                Your examiner is currently marking this question. Your score and practice tips will appear once it is ready.
-              </p>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* 2. ALL TOPICS VIEW: Complete Exam Paper Matrix */}
-      {viewMode === 'all' && (
-        <div className="space-y-4">
-          <div className="flex items-center justify-between text-xs font-mono-code text-[#a09d96]">
-            <span>Showing all {syllabusBreakdown.length} topics on this exam paper</span>
-            <button
-              type="button"
-              onClick={() => setViewMode('focused')}
-              className="text-[#cc785c] hover:text-[#e88a6d] underline underline-offset-4 flex items-center gap-1"
-            >
-              <span>Return to Question {activeQNum ?? '1'} Focus</span>
-              <ExternalLink className="w-3 h-3" />
-            </button>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {syllabusBreakdown.length > 0 ? (
-              syllabusBreakdown.map((item, idx) => {
-                const statusStyles = getStatusStyles(item.status);
-                const Icon = statusStyles.icon;
-
-                return (
-                  <div
-                    key={idx}
-                    className="bg-[#252320] border border-white/10 rounded-xl p-4 flex flex-col justify-between space-y-3 shadow-2xs"
-                  >
-                    <div>
-                      <div className="flex items-start justify-between gap-3 mb-2">
-                        <h4 className="text-xs font-semibold text-[#faf9f5] font-mono-code leading-snug">
-                          {item.subtopic}
-                        </h4>
-                        <span
-                          className={`text-[10px] font-mono-code px-2.5 py-0.5 rounded-full border shrink-0 flex items-center gap-1 ${statusStyles.badge}`}
-                        >
-                          <Icon className="w-3.5 h-3.5" />
-                          {statusStyles.label}
-                        </span>
-                      </div>
-
-                      {/* Score and Bar */}
-                      <div className="space-y-1.5 mt-2">
-                        <div className="flex justify-between text-[11px] font-mono-code text-[#a09d96]">
-                          <span>
-                            Score: <strong className="text-[#faf9f5]">{item.marksAwarded}</strong> / {item.totalMarks} marks
-                          </span>
-                          <span className="font-semibold text-[#faf9f5]">{item.percentage}%</span>
-                        </div>
-                        <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden">
-                          <div
-                            className={`h-full ${statusStyles.bar} rounded-full transition-all duration-500`}
-                            style={{ width: `${item.percentage}%` }}
-                          />
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Actionable Drill Recommendation */}
-                    <div className="p-3 rounded-lg bg-[#181715] border border-white/10 text-[11px] text-[#faf9f5] leading-relaxed">
-                      <span className="font-semibold text-[#cc785c] block mb-1 flex items-center gap-1 font-mono-code">
-                        <BookOpen className="w-3 h-3" /> Practice Tip:
-                      </span>
-                      <p className="line-clamp-2 text-[#a09d96]">{item.targetedDrillPrompt}</p>
-
-                      {paperId && item.status !== 'mastered' && (
-                        <Link
-                          href={`/learn/${paperId}`}
-                          className="inline-flex items-center gap-1.5 text-[11px] font-mono-code text-[#cc785c] hover:text-[#e88a6d] mt-2 font-medium transition group"
-                        >
-                          <span>Practice with Tutor</span>
-                          <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-spring" />
-                        </Link>
-                      )}
-                    </div>
-                  </div>
-                );
-              })
-            ) : (
-              <div className="col-span-2 p-8 text-center bg-[#252320] rounded-xl border border-white/10 text-xs font-mono-code text-[#a09d96]">
-                Exam topics will appear here as each question is marked.
-              </div>
-            )}
-          </div>
-        </div>
-      )}
+            })}
+          </tbody>
+        </table>
       </div>
-    </div>
+    </section>
   );
 };
