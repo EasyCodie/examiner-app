@@ -35,7 +35,8 @@ Unlike generic AI study chatbots or broad flashcard tools, Criterion anchors eva
 ## Brand Commitments
 - Rigorous, authoritative academic tone: "Oxford Scholar meets modern aerospace precision."
 - Strict adherence to official IB Diploma terminology (Command Terms: *Find, Show that, Calculate, Determine, Justify, Evaluate, Explain*).
-- Visual authority guided by the "Obsidian Scholar" design system: deep obsidian backgrounds, hairline white borders, Metallic Amber for human actions/grades, and Royal Cobalt for AI intelligence.
+- Visual authority guided by the "Subject Report" design system (see DESIGN.md): the script is a numbered examiner's document on white stock inside a graphite shell, with hierarchy from scale and ruled lines, student work in blue-black ink, and examiner ultramarine reserved for the examiner and the AI tutor.
+- Neutral "IB-style" wording: IB command terms and conventions are used, but bundled papers are labelled as specimens and the product never claims to be official, verified, or affiliated with the International Baccalaureate.
 
 ## Evidence on Hand
 - Bundled full specimen paper manifests in `src/lib/samplePapers.ts` (Mathematics AA HL Paper 1 and Economics HL Paper 1).
