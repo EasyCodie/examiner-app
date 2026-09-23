@@ -184,6 +184,19 @@
   animation: rule-draw 520ms var(--ease-out-expo) both;
 }
 
+/* Examiner ink writes in from the left, like a pen stroke */
+@keyframes ink-in {
+  from {
+    clip-path: inset(0 100% 0 0);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+  }
+}
+.animate-ink-in {
+  animation: ink-in 420ms var(--ease-out-expo) both;
+}
+
 :root {
   /* ============================================================ */
   /* CLAUDE.COM DESIGN SYSTEM TOKENS (from DESIGN.md)             */

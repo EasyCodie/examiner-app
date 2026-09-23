@@ -1,547 +1,334 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import Image from 'next/image';
-import { ExamManifest, ExamSession } from '@/types/exam';
+import { ExamManifest, ExamSession, InProgressExamSession } from '@/types/exam';
 import {
-  saveManifest,
+  getAllManifests,
   getAllExamSessions,
+  getInProgressSession,
   deleteExamSession,
   clearAllExamSessions,
 } from '@/lib/storage';
-import { BUNDLED_MATH_AA_HL, BUNDLED_ECONOMICS_HL, MAY_2021_MATH_AA_HL_P1 } from '@/lib/samplePapers';
 import { useAppShell } from '@/components/common/AppShell';
-import { SpikeMark } from '@/components/common/SpikeMark';
-import {
-  ArrowRight,
-  Clock,
-  History,
-  ChevronRight,
-  Trash2,
-  Sparkles,
-  ShieldCheck,
-  FileCode,
-  Compass,
-  FileUp,
-  FileCheck,
-} from 'lucide-react';
+import { MathRenderer } from '@/components/common/MathRenderer';
+import { ReportDialog } from '@/components/common/ReportDialog';
+import { CriterionMark } from '@/components/common/CriterionMark';
+import { formatClock } from '@/components/exam/ExamPageHead';
+
+/** Sample marking for the first viewport: one slip, carried forward. */
+const SAMPLE_LINES: { working: string; code: string; outcome: 'tick' | 'cross'; note: string }[] = [
+  { working: '$u = 2x^2 + 1,\\quad du = 4x\\,dx$', code: 'M1', outcome: 'tick', note: 'substitution' },
+  { working: '$= \\tfrac14\\int_1^{8} \\sqrt{u}\\,du$', code: 'A1', outcome: 'cross', note: 'upper limit is 9' },
+  { working: '$= \\tfrac14 \\cdot \\tfrac23 \\left[u^{3/2}\\right]_1^{8}$', code: 'M1', outcome: 'tick', note: 'integrates' },
+  { working: '$= \\tfrac16\\left(16\\sqrt2 - 1\\right)$', code: 'A1FT', outcome: 'tick', note: 'from their 8' },
+];
+
+const MARK_KEY: [string, string][] = [
+  ['M', 'Method mark: a valid method, attempted. It can be earned even if the answer is wrong.'],
+  ['A', 'Accuracy mark: a correct value or statement. Usually depends on the method mark before it.'],
+  ['R', 'Reasoning mark: a clear justification, often for a command term such as Show that or Justify.'],
+  ['AG', 'Answer given: the result is printed in the question, so no mark is given for writing it down.'],
+  ['FT', 'Follow through: error carried forward. A wrong value used correctly later keeps the later marks, so one slip is only penalised once.'],
+];
+
+const Tick: React.FC<{ outcome: 'tick' | 'cross' }> = ({ outcome }) => (
+  <svg viewBox="0 0 12 12" className="w-3.5 h-3.5 shrink-0" aria-label={outcome === 'tick' ? 'awarded' : 'not awarded'}>
+    <path
+      d={outcome === 'tick' ? 'M1.5 6.5l3 3 6-7' : 'M2 2l8 8M10 2l-8 8'}
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+    />
+  </svg>
+);
 
 export default function HomePage() {
-  const router = useRouter();
   const { setHeaderInfo } = useAppShell();
 
-  // Session History State
+  const [papers, setPapers] = useState<ExamManifest[]>([]);
   const [pastSessions, setPastSessions] = useState<ExamSession[]>([]);
+  const [unfinished, setUnfinished] = useState<{ manifest: ExamManifest; session: InProgressExamSession }[]>([]);
+  const [pendingDelete, setPendingDelete] = useState<ExamSession | 'all' | null>(null);
 
   useEffect(() => {
     setHeaderInfo({});
     getAllExamSessions().then(setPastSessions);
+    getAllManifests().then(async (all) => {
+      setPapers(all);
+      const found = await Promise.all(
+        all.map(async (manifest) => {
+          const session = await getInProgressSession(manifest.id);
+          return session ? { manifest, session } : null;
+        })
+      );
+      setUnfinished(found.filter((x): x is { manifest: ExamManifest; session: InProgressExamSession } => x !== null));
+    });
   }, [setHeaderInfo]);
 
-  const handleLaunchSpecimen = async (specimenManifest: ExamManifest, mode: 'mock' | 'learn' = 'mock') => {
-    await saveManifest(specimenManifest);
-    if (mode === 'learn') {
-      router.push(`/learn/${specimenManifest.id}`);
-    } else {
-      router.push(`/mock/${specimenManifest.id}`);
+  const confirmDelete = async () => {
+    if (pendingDelete === 'all') {
+      await clearAllExamSessions();
+      setPastSessions([]);
+    } else if (pendingDelete) {
+      await deleteExamSession(pendingDelete.id);
+      setPastSessions((prev) => prev.filter((s) => s.id !== pendingDelete.id));
     }
+    setPendingDelete(null);
   };
 
+  const hasSessions = pastSessions.length > 0 || unfinished.length > 0;
+  const firstPaper = papers[0];
+
   return (
-    <div className="flex-1 w-full bg-[#181715] text-[#faf9f5]">
-      {/* ============================================================ */}
-      {/* 1. EDITORIAL HERO SECTION (Claude 6/6 Split + Macro Spacing)  */}
-      {/* ============================================================ */}
-      <section className="py-20 sm:py-28 px-4 sm:px-8 max-w-7xl mx-auto">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-10 items-center">
-          {/* Left Column (Editorial Voice & Restrained Stack) */}
-          <div className="lg:col-span-7 space-y-6">
-            <div className="eyebrow-pill bg-[#252320] border-white/10 text-[#cc785c] animate-hero-eyebrow">
-              <SpikeMark className="w-3 h-3 text-[#cc785c]" />
-              <span>Official IB Exam Standards</span>
-              <span className="text-[#a09d95]">• Step-by-Step Marking</span>
-            </div>
-
-            <h1 className="display-xl font-serif-display font-normal text-[#faf9f5] tracking-[-1.5px] leading-[1.05] animate-hero-headline">
-              Meet your Senior Examiner.
-            </h1>
-
-            <p className="body-md text-[#d6cfc5] max-w-xl text-base sm:text-lg leading-relaxed animate-hero-sub">
-              Practice real International Baccalaureate past papers with step-by-step method marking, follow-through protection, and guided tutor hints.
-            </p>
-
-            <div className="flex flex-wrap items-center gap-4 pt-2 animate-hero-actions">
-              <button
-                type="button"
-                onClick={() => handleLaunchSpecimen(MAY_2021_MATH_AA_HL_P1, 'mock')}
-                className="claude-btn-pill-primary active:scale-[0.98] group"
-              >
-                <span>Start Specimen Exam</span>
-                <span className="btn-icon-bubble">
-                  <ArrowRight className="w-3.5 h-3.5" />
-                </span>
-              </button>
-
-              <Link
-                href="/ingest"
-                className="claude-btn-pill-secondary active:scale-[0.98] group"
-              >
-                <FileUp className="w-4 h-4 text-[#cc785c]" />
-                <span>Add Your Own Past Paper</span>
-                <span className="btn-icon-bubble">
-                  <ArrowRight className="w-3.5 h-3.5" />
-                </span>
+    <div className="flex-1 w-full shell-surface">
+      {/* 1. The mechanism, demonstrated */}
+      <section className="max-w-[1280px] mx-auto px-6 pt-14 pb-20 lg:pt-20 lg:pb-24 grid gap-14 lg:grid-cols-[minmax(0,1fr)_minmax(0,600px)] items-center">
+        <div className="space-y-7">
+          <h1 className="font-serif text-[44px] sm:text-[60px] leading-[1.02] font-semibold text-shell-ink text-balance tracking-[-0.01em]">
+            Every mark, given the way an examiner gives it.
+          </h1>
+          <p className="text-[18px] sm:text-[19px] leading-relaxed text-shell-muted max-w-[52ch]">
+            Sit IB-style papers against the clock. Your working is marked line by line against the markscheme: method
+            marks, accuracy marks, and error carried forward, so one slip costs you once.
+          </p>
+          <div className="flex flex-wrap gap-3 pt-1">
+            {firstPaper ? (
+              <Link href={`/mock/${firstPaper.id}`} className="btn btn-slip">
+                Sit a timed paper
               </Link>
-            </div>
-          </div>
-
-          {/* Right Column (Double-Bezel Hardware Chrome + Real Examination Window) */}
-          <div className="lg:col-span-5 animate-hero-card">
-            <div className="double-bezel-outer-dark">
-              <div className="double-bezel-inner-dark overflow-hidden flex flex-col">
-                {/* Tactile Real Examination Visual Window */}
-                <div className="relative h-48 sm:h-52 w-full overflow-hidden border-b border-white/10 bg-[#1f1e1b]">
-                  <Image
-                    src="/images/ib_exam_hero.jpg"
-                    alt="Authentic International Baccalaureate examination paper booklet with examiner annotations"
-                    fill
-                    priority
-                    className="object-cover object-center transform hover:scale-[1.02] transition duration-700 ease-[cubic-bezier(0.32,0.72,0,1)]"
-                    sizes="(max-width: 768px) 100vw, 500px"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#181715] via-transparent to-transparent opacity-85 pointer-events-none" />
-                  <div className="absolute bottom-3 left-4 right-4 flex items-center justify-between">
-                    <span className="text-[10px] font-mono-code px-2.5 py-0.5 rounded-full bg-[#181715]/90 backdrop-blur-sm text-[#faf9f5] border border-white/15">
-                      Authentic Specimen Booklet
-                    </span>
-                    <span className="text-[10px] font-mono-code px-2.5 py-0.5 rounded-full bg-[#cc785c] text-white font-medium shadow-xs">
-                      Verified Markscheme
-                    </span>
-                  </div>
-                </div>
-
-                {/* Interactive Rubric & Code Inspector */}
-                <div className="p-5 space-y-3 bg-[#181715]">
-                  <div className="flex items-center justify-between border-b border-white/10 pb-2.5">
-                    <div className="flex items-center gap-2">
-                      <div className="w-2.5 h-2.5 rounded-full bg-[#c64545]" />
-                      <div className="w-2.5 h-2.5 rounded-full bg-[#d4a017]" />
-                      <div className="w-2.5 h-2.5 rounded-full bg-[#5db872]" />
-                      <span className="text-xs font-mono-code text-[#a09d96] ml-2 flex items-center gap-1.5">
-                        <FileCode className="w-3.5 h-3.5 text-[#cc785c]" />
-                        math_aa_hl_markscheme.json
-                      </span>
-                    </div>
-                    <span className="text-[10px] font-mono-code uppercase px-2 py-0.5 rounded-full bg-[#252320] text-[#5db8a6] border border-white/10">
-                      Multimodal OCR
-                    </span>
-                  </div>
-
-                  <div className="font-mono-code text-xs space-y-1 text-[#a09d96] leading-relaxed overflow-x-auto bg-[#1f1e1b] p-3 rounded-xl border border-white/5 shadow-inner">
-                    <p className="text-[#a09d96]">{'// Step-by-step method marks & follow-through'}</p>
-                    <p>
-                      <span className="text-[#cc785c]">const</span> <span className="text-[#faf9f5]">evaluation</span> = &#123;
-                    </p>
-                    <p className="pl-4">
-                      <span className="text-[#faf9f5]">question</span>: <span className="text-[#5db8a6]">&quot;Question 12(b)&quot;</span>,
-                    </p>
-                    <p className="pl-4">
-                      <span className="text-[#faf9f5]">markCodes</span>: [
-                    </p>
-                    <p className="pl-8 text-[#faf9f5]">
-                      &#123; <span className="text-[#e8a55a]">code</span>: <span className="text-[#5db8a6]">&quot;M1&quot;</span>, <span className="text-[#e8a55a]">type</span>: <span className="text-[#5db8a6]">&quot;Method&quot;</span>, <span className="text-[#e8a55a]">marks</span>: <span className="text-[#cc785c]">2</span> &#125;,
-                    </p>
-                    <p className="pl-8 text-[#faf9f5]">
-                      &#123; <span className="text-[#e8a55a]">code</span>: <span className="text-[#5db8a6]">&quot;A1&quot;</span>, <span className="text-[#e8a55a]">type</span>: <span className="text-[#5db872]">&quot;Accuracy&quot;</span>, <span className="text-[#e8a55a]">marks</span>: <span className="text-[#cc785c]">1</span> &#125;,
-                    </p>
-                    <p className="pl-4">],</p>
-                    <p className="pl-4">
-                      <span className="text-[#faf9f5]">ecfProtection</span>: <span className="text-[#5db872]">true</span>, <span className="text-[#faf9f5]">predictedGrade</span>: <span className="text-[#cc785c]">7</span>
-                    </p>
-                    <p>&#125;;</p>
-                  </div>
-
-                  <div className="flex items-center justify-between text-[11px] font-mono-code text-[#a09d96] pt-0.5">
-                    <span>Marking Criteria</span>
-                    <span className="text-[#5db8a6] font-semibold flex items-center gap-1.5">
-                      <span className="w-1.5 h-1.5 rounded-full bg-[#5db8a6] animate-pulse" />
-                      Gemini 2.5 Flash
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ============================================================ */}
-      {/* DEDICATED TRUST & ACCREDITATION STRIP                        */}
-      {/* ============================================================ */}
-      <div className="w-full border-y border-white/10 bg-[#1f1e1b] py-5 px-4 sm:px-8">
-        <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-around gap-6 text-xs text-[#a09d95] font-mono-code">
-          <div className="flex items-center gap-2.5">
-            <div className="w-6 h-6 rounded-full bg-[#5db872]/15 flex items-center justify-center">
-              <ShieldCheck className="w-3.5 h-3.5 text-[#5db872] shrink-0" />
-            </div>
-            <span>Official Markschemes • Exact Criteria</span>
-          </div>
-          <div className="flex items-center gap-2.5">
-            <div className="w-6 h-6 rounded-full bg-[#cc785c]/15 flex items-center justify-center">
-              <Sparkles className="w-3.5 h-3.5 text-[#cc785c] shrink-0" />
-            </div>
-            <span>Method Marks • Follow-Through Protection</span>
-          </div>
-          <div className="flex items-center gap-2.5">
-            <div className="w-6 h-6 rounded-full bg-[#e8a55a]/15 flex items-center justify-center">
-              <Clock className="w-3.5 h-3.5 text-[#e8a55a] shrink-0" />
-            </div>
-            <span>Timed Exam Mode • Built-in Canvas</span>
-          </div>
-        </div>
-      </div>
-
-      {/* ============================================================ */}
-      {/* 2. DUAL-DOCUMENT INGESTION STUDIO TEASER                      */}
-      {/* ============================================================ */}
-      <section className="py-20 px-4 sm:px-8 max-w-5xl mx-auto">
-        <div className="double-bezel-outer-cream">
-          <div className="double-bezel-inner-cream p-7 sm:p-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
-            <div className="space-y-2 max-w-xl">
-              <div className="eyebrow-pill bg-[#cc785c]/10 text-[#cc785c] border-[#cc785c]/20">
-                <FileCheck className="w-3 h-3 text-[#cc785c]" />
-                <span>Add Past Papers</span>
-              </div>
-              <h2 className="display-sm font-serif-display font-normal text-[#faf9f5]">
-                Have past exam papers you want to practice?
-              </h2>
-              <p className="body-md text-[#d6cfc5] text-xs sm:text-sm leading-relaxed">
-                Upload any IB Question Paper and Markscheme PDF. We will turn them into an interactive exam with full method marks and helpful tutor hints.
-              </p>
-            </div>
-
-            <Link
-              href="/ingest"
-              className="claude-btn-pill-primary shrink-0 group"
-            >
-              <span>Add Past Papers</span>
-              <span className="btn-icon-bubble">
-                <ArrowRight className="w-3.5 h-3.5" />
-              </span>
+            ) : (
+              <Link href="#papers" className="btn btn-slip">
+                Sit a timed paper
+              </Link>
+            )}
+            <Link href="/ingest" className="btn btn-quiet-shell">
+              Add your own paper
             </Link>
           </div>
         </div>
-      </section>
 
-      {/* ============================================================ */}
-      {/* 3. AUTHENTIC SPECIMEN PAPERS (Surface Mode: Claude Dark)     */}
-      {/* ============================================================ */}
-      <section id="specimens-section" className="py-20 sm:py-28 px-4 sm:px-8 max-w-5xl mx-auto space-y-8">
-        <div className="space-y-2 text-center sm:text-left">
-          <div className="eyebrow-pill bg-[#252320] border-white/10 text-[#cc785c]">
-            <SpikeMark className="w-3 h-3 text-[#cc785c]" />
-            <span>Exam Catalog</span>
-          </div>
-          <h2 className="display-md font-serif-display font-normal text-[#faf9f5]">
-            Practice Past Papers
-          </h2>
-          <p className="body-md text-[#a09d95] text-sm sm:text-base max-w-xl leading-relaxed">
-            Ready-to-practice past papers with complete markschemes, diagrams, and formulas.
-          </p>
-        </div>
-
-        {/* Featured May 2021 Math AA HL P1 in Dark Double-Bezel Tray */}
-        <div className="double-bezel-outer-dark transition-spring hover:-translate-y-0.5">
-          <div className="double-bezel-inner-dark p-6 sm:p-9 space-y-5">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-              <span className="text-[11px] font-mono-code uppercase font-semibold text-[#cc785c] bg-[#cc785c]/15 px-3 py-1 rounded-full border border-[#cc785c]/30 flex items-center gap-1.5">
-                <SpikeMark className="w-3 h-3 text-[#cc785c]" />
-                Official Past Paper • 12 Questions (Section A &amp; B)
-              </span>
-              <span className="text-xs font-mono-code text-[#a09d96]">
-                120 mins • 110 marks • Higher Level
-              </span>
+        <figure className="space-y-3">
+          <div className="script-sheet paper-surface px-6 sm:px-9 py-7 sm:py-8">
+            <div className="flex items-baseline justify-between border-b border-ink pb-2.5">
+              <p className="font-serif text-[18px] font-semibold text-ink tabular">1.</p>
+              <p className="font-serif text-[14px] font-semibold text-ink">[Maximum mark: 6]</p>
+            </div>
+            <div className="mt-3 font-serif text-[16px] leading-relaxed text-ink">
+              <MathRenderer content={'Find the exact value of $\\displaystyle\\int_0^2 x\\sqrt{2x^2+1}\\,dx$.'} lightMode={true} />
             </div>
 
-            <div className="space-y-2">
-              <h3 className="font-serif-display text-2xl sm:text-3xl font-normal text-[#faf9f5]">
-                Mathematics: Analysis &amp; Approaches HL (May 2021 TZ1)
-              </h3>
-              <p className="text-xs sm:text-sm text-[#a09d96] max-w-2xl leading-relaxed">
-                Complete 12-question exam covering rational curves, piecewise functions, integration, Maclaurin expansions, complex numbers, and proof by induction.
-              </p>
-            </div>
-
-            <div className="flex items-center gap-4 pt-3 border-t border-white/10 text-xs font-mono-code text-[#a09d96]">
-              <span>M1/A1/R1 Mark Codes</span>
-              <span>•</span>
-              <span>Cartesian Graph Integration</span>
-              <span>•</span>
-              <span className="text-[#5db872]">Follow-Through Protected</span>
-            </div>
-
-            <div className="flex flex-wrap items-center gap-4 pt-2">
-              <button
-                type="button"
-                onClick={() => handleLaunchSpecimen(MAY_2021_MATH_AA_HL_P1, 'mock')}
-                className="claude-btn-pill-primary text-xs active:scale-[0.98] group"
-              >
-                <span>Start Timed Exam</span>
-                <span className="btn-icon-bubble">
-                  <ArrowRight className="w-3.5 h-3.5" />
-                </span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => handleLaunchSpecimen(MAY_2021_MATH_AA_HL_P1, 'learn')}
-                className="claude-btn-pill-dark text-xs active:scale-[0.98] group"
-              >
-                <Compass className="w-3.5 h-3.5 text-[#cc785c]" />
-                <span>Step-by-Step Practice</span>
-                <span className="btn-icon-bubble">
-                  <ArrowRight className="w-3.5 h-3.5" />
-                </span>
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* 2-up Grid of Secondary Bundles in Double-Bezel Trays */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-          <div className="double-bezel-outer-cream transition-spring hover:-translate-y-0.5">
-            <div className="double-bezel-inner-cream p-6 flex flex-col justify-between space-y-5 h-full">
-              <div className="space-y-2">
-                <div className="flex items-center justify-between text-xs font-mono-code text-[#a09d95]">
-                  <span className="text-[#5db8a6] font-semibold">STEM Track</span>
-                  <span>120m • 50 marks</span>
-                </div>
-                <h4 className="font-serif-display text-xl text-[#faf9f5] font-normal">
-                  Mathematics: Analysis &amp; Approaches HL
-                </h4>
-                <p className="text-xs text-[#a09d95] leading-relaxed">
-                  Paper 1 • Calculus, Vectors, Complex Roots &amp; Mathematical Induction.
-                </p>
-              </div>
-
-              <div className="flex items-center gap-3 pt-3 border-t border-white/10">
-                <button
-                  type="button"
-                  onClick={() => handleLaunchSpecimen(BUNDLED_MATH_AA_HL, 'mock')}
-                  className="claude-btn-pill-primary text-xs h-9 pl-4 pr-1.5 py-0 gap-2 group"
-                >
-                  <span>Timed Exam</span>
-                  <span className="btn-icon-bubble w-6 h-6">
-                    <ArrowRight className="w-3 h-3 text-white" />
-                  </span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleLaunchSpecimen(BUNDLED_MATH_AA_HL, 'learn')}
-                  className="claude-btn-pill-secondary text-xs h-9 pl-4 pr-1.5 py-0 gap-2 group"
-                >
-                  <span>Guided Practice</span>
-                  <span className="btn-icon-bubble w-6 h-6">
-                    <ArrowRight className="w-3 h-3 text-white" />
-                  </span>
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <div className="double-bezel-outer-cream transition-spring hover:-translate-y-0.5">
-            <div className="double-bezel-inner-cream p-6 flex flex-col justify-between space-y-5 h-full">
-              <div className="space-y-2">
-                <div className="flex items-center justify-between text-xs font-mono-code text-[#a09d95]">
-                  <span className="text-[#e8a55a] font-semibold">Humanities Track</span>
-                  <span>75m • 50 marks</span>
-                </div>
-                <h4 className="font-serif-display text-xl text-[#faf9f5] font-normal">
-                  Economics Higher Level (HL)
-                </h4>
-                <p className="text-xs text-[#a09d95] leading-relaxed">
-                  Paper 1 • Extended response essay with an interactive diagram sketchpad.
-                </p>
-              </div>
-
-              <div className="flex items-center gap-3 pt-3 border-t border-white/10">
-                <button
-                  type="button"
-                  onClick={() => handleLaunchSpecimen(BUNDLED_ECONOMICS_HL, 'mock')}
-                  className="claude-btn-pill-primary text-xs h-9 pl-4 pr-1.5 py-0 gap-2 group"
-                >
-                  <span>Timed Exam</span>
-                  <span className="btn-icon-bubble w-6 h-6">
-                    <ArrowRight className="w-3 h-3 text-white" />
-                  </span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleLaunchSpecimen(BUNDLED_ECONOMICS_HL, 'learn')}
-                  className="claude-btn-pill-secondary text-xs h-9 pl-4 pr-1.5 py-0 gap-2 group"
-                >
-                  <span>Guided Practice</span>
-                  <span className="btn-icon-bubble w-6 h-6">
-                    <ArrowRight className="w-3 h-3 text-white" />
-                  </span>
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ============================================================ */}
-      {/* 4. PAST SESSIONS TABLE                                        */}
-      {/* ============================================================ */}
-      {pastSessions.length > 0 && (
-        <section id="history-section" className="py-20 px-4 sm:px-8 max-w-5xl mx-auto">
-          <div className="flex items-center justify-between mb-5">
-            <div className="flex items-center gap-2.5">
-              <div className="w-7 h-7 rounded-full bg-[#252320] border border-white/10 flex items-center justify-center text-[#a09d95]">
-                <History className="w-3.5 h-3.5" />
-              </div>
-              <h3 className="font-serif-display text-xl font-normal text-[#faf9f5]">
-                Past Exam Attempts ({pastSessions.length})
-              </h3>
-            </div>
-
-            <button
-              type="button"
-              onClick={async () => {
-                await clearAllExamSessions();
-                setPastSessions([]);
-              }}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-mono-code text-[#a09d95] hover:text-[#c64545] hover:bg-[#c64545]/10 transition-spring active:scale-[0.98]"
+            <ol className="mt-5 border-t border-paper-rule">
+              {SAMPLE_LINES.map((line, i) => (
+                <li key={i} className="grid grid-cols-[minmax(0,1fr)_9.5rem] border-b border-paper-rule">
+                  <div className="py-2.5 pr-4 text-student text-[16px] overflow-x-auto">
+                    <MathRenderer content={line.working} lightMode={true} />
+                  </div>
+                  <div
+                    className="animate-ink-in border-l border-examiner/40 pl-3 py-2.5 flex items-center gap-2 text-examiner"
+                    style={{ animationDelay: `${400 + i * 260}ms` }}
+                  >
+                    <span className="tabular font-sans text-[14px] font-bold">{line.code}</span>
+                    <Tick outcome={line.outcome} />
+                    <span className="font-serif italic text-[13px] leading-tight">{line.note}</span>
+                  </div>
+                </li>
+              ))}
+            </ol>
+            <p
+              className="animate-ink-in mt-3 text-right font-sans text-[15px] font-bold text-examiner tabular"
+              style={{ animationDelay: `${400 + SAMPLE_LINES.length * 260}ms` }}
             >
-              <Trash2 className="w-3.5 h-3.5" />
-              <span>Clear History</span>
-            </button>
+              3 / 4
+            </p>
+          </div>
+          <figcaption className="text-[14px] leading-relaxed text-shell-muted max-w-[60ch]">
+            Sample marking. The wrong limit costs one accuracy mark; the method after it still scores, because the error is
+            carried forward.
+          </figcaption>
+        </figure>
+      </section>
+
+      {/* 2. Returning students: sessions first */}
+      {hasSessions && (
+        <section id="sessions" aria-labelledby="sessions-heading" className="max-w-[1280px] mx-auto px-6 py-16 border-t border-shell-line scroll-mt-16">
+          <div className="flex flex-wrap items-baseline justify-between gap-4">
+            <h2 id="sessions-heading" className="font-serif text-[32px] font-semibold text-shell-ink">
+              Your sessions
+            </h2>
+            {pastSessions.length > 0 && (
+              <button type="button" onClick={() => setPendingDelete('all')} className="btn btn-sm btn-quiet-shell">
+                Clear history
+              </button>
+            )}
           </div>
 
-          <div className="double-bezel-outer-cream">
-            <div className="double-bezel-inner-cream overflow-hidden divide-y divide-white/10">
+          <table className="mt-6 w-full border-collapse">
+            <thead>
+              <tr className="border-t-2 border-b border-shell-ink text-left text-[13px] text-shell-muted">
+                <th scope="col" className="py-2 pr-4 font-semibold">Paper</th>
+                <th scope="col" className="py-2 pr-4 font-semibold">Date</th>
+                <th scope="col" className="py-2 pr-4 font-semibold">Result</th>
+                <th scope="col" className="py-2 font-semibold"><span className="sr-only">Actions</span></th>
+              </tr>
+            </thead>
+            <tbody>
+              {unfinished.map(({ manifest, session }) => (
+                <tr key={`unfinished-${manifest.id}`} className="border-b border-shell-line align-middle">
+                  <th scope="row" className="py-3 pr-4 text-left">
+                    <span className="block text-[15px] font-semibold text-shell-ink">{manifest.title}</span>
+                    <span className="block text-[13px] text-shell-muted">{manifest.subtitle}</span>
+                  </th>
+                  <td className="py-3 pr-4 tabular text-[14px] text-shell-muted whitespace-nowrap">
+                    {new Date(session.savedAt).toLocaleDateString([], { day: 'numeric', month: 'short' })}
+                  </td>
+                  <td className="py-3 pr-4 tabular text-[14px] text-shell-ink whitespace-nowrap">
+                    Unfinished, {formatClock(session.timeRemainingSeconds)} left
+                  </td>
+                  <td className="py-2 text-right">
+                    <Link href={`/mock/${manifest.id}`} className="btn btn-sm btn-slip">
+                      Resume
+                    </Link>
+                  </td>
+                </tr>
+              ))}
               {pastSessions.map((sess) => {
                 const res = sess.gradingResults;
                 return (
-                  <div
-                    key={sess.id}
-                    className="p-4 sm:p-5 flex items-center justify-between gap-4 hover:bg-[#2c2a26] transition-fluid group"
-                  >
-                    <div className="space-y-1 min-w-0 flex-1">
-                      <span className="text-[10px] font-mono-code text-[#a09d95]">
-                        {new Date(sess.startedAt).toLocaleDateString()}
-                      </span>
-                      <h4 className="text-xs font-medium text-[#faf9f5] line-clamp-1">
-                        {sess.paperTitle}
-                      </h4>
-                    </div>
-
-                    <div className="flex items-center gap-4 shrink-0">
+                  <tr key={sess.id} className="border-b border-shell-line align-middle">
+                    <th scope="row" className="py-3 pr-4 text-left">
+                      <span className="block text-[15px] font-semibold text-shell-ink">{sess.paperTitle}</span>
+                    </th>
+                    <td className="py-3 pr-4 tabular text-[14px] text-shell-muted whitespace-nowrap">
+                      {new Date(sess.submittedAt || sess.startedAt).toLocaleDateString([], { day: 'numeric', month: 'short' })}
+                    </td>
+                    <td className="py-3 pr-4 tabular text-[14px] whitespace-nowrap">
                       {res ? (
-                        <div className="text-right">
-                          <span className="text-xs font-mono-code font-bold text-[#cc785c] block">
-                            Grade {res.predictedGrade}
-                          </span>
-                          <span className="text-[10px] font-mono-code text-[#a09d95]">
-                            {res.totalMarksAwarded}/{res.totalPossibleMarks} ({res.percentage}%)
-                          </span>
-                        </div>
-                      ) : (
-                        <span className="text-[10px] font-mono-code text-[#e8a55a]">
-                          In Progress
+                        <span className="text-shell-ink">
+                          <span className="font-semibold">Grade {res.predictedGrade}</span>
+                          <span className="text-shell-muted"> · {res.totalMarksAwarded}/{res.totalPossibleMarks}</span>
                         </span>
+                      ) : (
+                        <span className="text-shell-muted">Not yet marked</span>
                       )}
-
-                      <div className="flex items-center gap-1.5">
-                        <button
-                          type="button"
-                          onClick={async (e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            await deleteExamSession(sess.id);
-                            setPastSessions((prev) => prev.filter((s) => s.id !== sess.id));
-                          }}
-                          className="p-1.5 rounded-full text-[#a09d95] hover:text-[#c64545] hover:bg-[#c64545]/10 transition-spring active:scale-[0.95]"
-                          title="Delete session"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
-
-                        <Link
-                          href={res ? `/results/${sess.id}` : `/mock/${sess.paperId}`}
-                          className="w-8 h-8 rounded-full bg-[#252320] border border-white/10 flex items-center justify-center text-[#faf9f5] hover:text-[#cc785c] hover:border-[#cc785c]/40 transition-spring active:scale-[0.95] shadow-2xs"
-                          title="View session results"
-                        >
-                          <ChevronRight className="w-4 h-4" />
-                        </Link>
-                      </div>
-                    </div>
-                  </div>
+                    </td>
+                    <td className="py-2 text-right whitespace-nowrap">
+                      <Link href={`/results/${sess.id}`} className="btn btn-sm btn-quiet-shell">
+                        {res ? 'Open report' : 'Mark it'}
+                      </Link>
+                      <button
+                        type="button"
+                        onClick={() => setPendingDelete(sess)}
+                        className="ml-2 min-h-9 px-2 text-[14px] text-shell-muted hover:text-shell-ink underline underline-offset-4 decoration-shell-line"
+                      >
+                        Delete
+                        <span className="sr-only"> session for {sess.paperTitle}</span>
+                      </button>
+                    </td>
+                  </tr>
                 );
               })}
-            </div>
-          </div>
+            </tbody>
+          </table>
         </section>
       )}
 
-      {/* ============================================================ */}
-      {/* 5. PRE-FOOTER FULL-BLEED CORAL CALLOUT CARD (Claude Signature)*/}
-      {/* ============================================================ */}
-      <section className="py-20 sm:py-24 px-4 sm:px-8 max-w-5xl mx-auto">
-        <div className="p-1.5 rounded-[2.25rem] bg-[#cc785c]/15 border border-[#cc785c]/25 shadow-2xl">
-          <div className="claude-card-coral rounded-[calc(2.25rem-6px)] p-8 sm:p-12 flex flex-col sm:flex-row items-center justify-between gap-8 shadow-inner">
-            <div className="space-y-2.5 text-center sm:text-left">
-              <div className="eyebrow-pill bg-white/20 text-white border-white/25">
-                <Sparkles className="w-3 h-3 text-white" />
-                <span>Official Standards</span>
-              </div>
-              <h2 className="display-md font-serif-display font-normal text-white">
-                Prepare for your IB exams with confidence.
-              </h2>
-              <p className="text-sm text-white/90 max-w-lg leading-relaxed">
-                Practise with official markscheme standards, receive full credit for your working steps, and get step-by-step guidance whenever you need it.
-              </p>
-            </div>
-
-            <div className="shrink-0">
-              <button
-                type="button"
-                onClick={() => handleLaunchSpecimen(MAY_2021_MATH_AA_HL_P1, 'mock')}
-                className="claude-btn-pill-secondary font-semibold active:scale-[0.98] group"
-              >
-                <span>Start Practice Exam</span>
-                <span className="btn-icon-bubble">
-                  <ArrowRight className="w-3.5 h-3.5 text-[#181715]" />
-                </span>
-              </button>
-            </div>
-          </div>
+      {/* 3. The papers */}
+      <section id="papers" aria-labelledby="papers-heading" className="max-w-[1280px] mx-auto px-6 py-16 border-t border-shell-line scroll-mt-16">
+        <div className="flex flex-wrap items-baseline justify-between gap-4">
+          <h2 id="papers-heading" className="font-serif text-[32px] font-semibold text-shell-ink">
+            Papers
+          </h2>
+          <Link href="/ingest" className="text-[15px] font-medium text-shell-ink underline underline-offset-4 decoration-shell-line hover:decoration-shell-ink">
+            Add a paper and its markscheme
+          </Link>
         </div>
+
+        <table className="mt-6 w-full border-collapse">
+          <thead>
+            <tr className="border-t-2 border-b border-shell-ink text-left text-[13px] text-shell-muted">
+              <th scope="col" className="py-2 pr-4 font-semibold">Paper</th>
+              <th scope="col" className="py-2 pr-4 font-semibold text-right">Time</th>
+              <th scope="col" className="py-2 pr-4 font-semibold text-right">Marks</th>
+              <th scope="col" className="py-2 pr-4 font-semibold text-right">Questions</th>
+              <th scope="col" className="py-2 font-semibold"><span className="sr-only">Start</span></th>
+            </tr>
+          </thead>
+          <tbody>
+            {papers.map((p) => (
+              <tr key={p.id} className="border-b border-shell-line align-middle">
+                <th scope="row" className="py-4 pr-4 text-left">
+                  <span className="block font-serif text-[18px] font-semibold text-shell-ink">{p.title}</span>
+                  <span className="block text-[14px] text-shell-muted">{p.subtitle}</span>
+                </th>
+                <td className="py-4 pr-4 text-right tabular text-[15px] text-shell-ink whitespace-nowrap">{p.durationMinutes} min</td>
+                <td className="py-4 pr-4 text-right tabular text-[15px] text-shell-ink">{p.totalMarks}</td>
+                <td className="py-4 pr-4 text-right tabular text-[15px] text-shell-ink">{p.questions.length}</td>
+                <td className="py-3 text-right whitespace-nowrap">
+                  <Link href={`/mock/${p.id}`} className="btn btn-sm btn-slip">
+                    Timed exam
+                    <span className="sr-only">: {p.title}, {p.subtitle}</span>
+                  </Link>
+                  <Link href={`/learn/${p.id}`} className="ml-2 btn btn-sm btn-quiet-shell">
+                    Guided practice
+                    <span className="sr-only">: {p.title}, {p.subtitle}</span>
+                  </Link>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </section>
 
-      {/* ============================================================ */}
-      {/* 6. DARK NAVY FOOTER (Claude Footer Standard)                 */}
-      {/* ============================================================ */}
-      <footer className="bg-[#181715] text-[#a09d96] border-t border-white/10 py-12 px-4 sm:px-8">
-        <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-6">
-          <div className="flex items-center gap-2.5">
-            <SpikeMark className="w-4 h-4 text-[#cc785c]" />
-            <span className="font-serif-display text-base text-[#faf9f5] font-normal">
-              Criterion
-            </span>
-            <span className="text-xs text-[#a09d96]">
-              • Interactive Past Paper Practice
-            </span>
-          </div>
-
-          <p className="text-xs text-[#a09d96] font-mono-code text-center sm:text-right">
-            Built for International Baccalaureate Diploma students.
+      {/* 4. The key to the marks */}
+      <section aria-labelledby="key-heading" className="max-w-[1280px] mx-auto px-6 py-16 border-t border-shell-line grid gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]">
+        <div className="space-y-3">
+          <h2 id="key-heading" className="font-serif text-[32px] font-semibold text-shell-ink">
+            How your script is marked
+          </h2>
+          <p className="text-[16px] leading-relaxed text-shell-muted max-w-[42ch]">
+            Every question is marked against its markscheme with the same codes an IB examiner writes in the margin.
           </p>
         </div>
+        <dl className="border-t-2 border-shell-ink">
+          {MARK_KEY.map(([code, meaning]) => (
+            <div key={code} className="grid grid-cols-[4rem_1fr] gap-4 py-3.5 border-b border-shell-line">
+              <dt className="tabular font-sans text-[17px] font-bold text-examiner-on-shell">{code}</dt>
+              <dd className="text-[16px] leading-relaxed text-shell-ink max-w-[70ch]">{meaning}</dd>
+            </div>
+          ))}
+        </dl>
+      </section>
+
+      <footer className="border-t border-shell-line">
+        <div className="max-w-[1280px] mx-auto px-6 py-8 flex flex-wrap items-center justify-between gap-4 text-[14px] text-shell-muted">
+          <span className="flex items-center gap-2 text-shell-ink">
+            <CriterionMark className="w-4 h-4" />
+            Criterion
+          </span>
+          <span>IB-style practice papers and marking. Not affiliated with or endorsed by the International Baccalaureate.</span>
+        </div>
       </footer>
+
+      <ReportDialog
+        open={pendingDelete !== null}
+        onClose={() => setPendingDelete(null)}
+        title={pendingDelete === 'all' ? 'Clear all session history?' : 'Delete this session?'}
+      >
+        <p className="text-[16px] leading-relaxed text-ink">
+          {pendingDelete === 'all'
+            ? `This deletes ${pastSessions.length} ${pastSessions.length === 1 ? 'session' : 'sessions'} and their reports from this device. It cannot be undone.`
+            : 'This deletes the session and its report from this device. It cannot be undone.'}
+        </p>
+        <div className="flex flex-wrap justify-end gap-3 pt-1">
+          <button type="button" onClick={() => setPendingDelete(null)} className="btn btn-quiet-paper" autoFocus>
+            Keep
+          </button>
+          <button type="button" onClick={confirmDelete} className="btn btn-destructive">
+            {pendingDelete === 'all' ? 'Clear history' : 'Delete session'}
+          </button>
+        </div>
+      </ReportDialog>
     </div>
   );
 }
