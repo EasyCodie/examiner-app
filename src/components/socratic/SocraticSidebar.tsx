@@ -139,7 +139,7 @@ export const SocraticSidebar: React.FC<SocraticSidebarProps> = ({
             </p>
             <div className="flex flex-wrap gap-2">
               {failure.needsKey && (
-                <button type="button" onClick={openAiStudio} className="btn btn-sm btn-ink">
+                <button type="button" onClick={() => openAiStudio('apiKey')} className="btn btn-sm btn-ink">
                   Add an API key
                 </button>
               )}

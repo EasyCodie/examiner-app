@@ -1,156 +1,54 @@
 'use client';
 
-import React, { useState, useRef } from 'react';
-import { useRouter } from 'next/navigation';
+import React, { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { ExamManifest } from '@/types/exam';
-import {
-  saveManifest,
-  savePdfBlob,
-  getAiConfig,
-} from '@/lib/storage';
-import { SpikeMark } from '@/components/common/SpikeMark';
-import {
-  FileUp,
-  FileCheck,
-  ArrowRight,
-  Clock,
-  AlertCircle,
-  Check,
-  Compass,
-  ArrowLeft,
-  FileCode,
-  RotateCcw,
-} from 'lucide-react';
-
-interface CompilationStep {
-  stage: 'THINKING' | 'READING' | 'INDEXING' | 'CODES' | 'DONE';
-  pillLabel: string;
-  pastelBg: string;
-  pastelText: string;
-  substeps: string[];
-}
-
-const COMPILATION_PIPELINE: CompilationStep[] = [
-  {
-    stage: 'THINKING',
-    pillLabel: 'Reading Files',
-    pastelBg: '#252320',
-    pastelText: '#faf9f5',
-    substeps: [
-      'Reading PDF files...',
-      'Checking page numbers and layout...',
-      'Preparing questions...',
-    ],
-  },
-  {
-    stage: 'READING',
-    pillLabel: 'Scanning Questions',
-    pastelBg: '#5db8a6',
-    pastelText: '#141413',
-    substeps: [
-      'Reading question prompts and markscheme...',
-      'Recognizing formulas and diagrams...',
-      'Organizing question parts...',
-    ],
-  },
-  {
-    stage: 'INDEXING',
-    pillLabel: 'Matching Markscheme',
-    pastelBg: '#e8a55a',
-    pastelText: '#141413',
-    substeps: [
-      'Linking questions to their marks...',
-      'Identifying command terms and point totals...',
-      'Skipping cover and formula pages...',
-    ],
-  },
-  {
-    stage: 'CODES',
-    pillLabel: 'Setting Up Rules',
-    pastelBg: '#7c6fcd',
-    pastelText: '#faf9f5',
-    substeps: [
-      'Reading method, accuracy, and reasoning criteria...',
-      'Configuring follow-through mark protection...',
-      'Setting up step-by-step tutor hints...',
-    ],
-  },
-  {
-    stage: 'DONE',
-    pillLabel: 'Ready',
-    pastelBg: '#cc785c',
-    pastelText: '#ffffff',
-    substeps: [
-      'Assembling your practice exam...',
-      'Saving to your browser...',
-      'Your exam is ready!',
-    ],
-  },
-];
+import { saveManifest, savePdfBlob, getAiConfig } from '@/lib/storage';
+import { useAppShell } from '@/components/common/AppShell';
+import { PdfField } from '@/components/ingest/PdfField';
 
 type FlowStep = 'UPLOAD' | 'COMPILING' | 'READY';
 
+const looksLikeMissingKey = (msg: string) => /api[\s_-]?key|GEMINI|unauthori[sz]ed|401|403/i.test(msg);
+
+const formatElapsed = (sec: number) => `${Math.floor(sec / 60)}:${(sec % 60).toString().padStart(2, '0')}`;
+
 export default function IngestPage() {
-  const router = useRouter();
+  const { setHeaderInfo, openAiStudio } = useAppShell();
 
   const [step, setStep] = useState<FlowStep>('UPLOAD');
-
-  // Dual Dropzone State
   const [paperFile, setPaperFile] = useState<File | null>(null);
   const [markschemeFile, setMarkschemeFile] = useState<File | null>(null);
   const [error, setError] = useState<string | null>(null);
-
-  const paperInputRef = useRef<HTMLInputElement>(null);
-  const markschemeInputRef = useRef<HTMLInputElement>(null);
-
-  // Compilation Pipeline State
-  const [timelineStage, setTimelineStage] = useState<CompilationStep['stage']>('THINKING');
-  const [compilingLog, setCompilingLog] = useState<string>(COMPILATION_PIPELINE[0].substeps[0]);
-
-  // Ready State
+  const [hasClientKey, setHasClientKey] = useState<boolean | null>(null);
+  const [elapsed, setElapsed] = useState(0);
   const [activeManifest, setActiveManifest] = useState<ExamManifest | null>(null);
+  const abortRef = useRef<AbortController | null>(null);
+
+  useEffect(() => {
+    setHeaderInfo({});
+    getAiConfig().then((cfg) => setHasClientKey(Boolean(cfg.apiKey)));
+  }, [setHeaderInfo]);
+
+  // Honest progress: how long the examiner has been reading, not scripted stages
+  useEffect(() => {
+    if (step !== 'COMPILING') return;
+    const started = Date.now();
+    const interval = setInterval(() => setElapsed(Math.round((Date.now() - started) / 1000)), 1000);
+    return () => clearInterval(interval);
+  }, [step]);
 
   const handleStartIngest = async () => {
     if (!paperFile || !markschemeFile) {
-      setError('Please provide both the Question Paper PDF and the matching Markscheme PDF.');
+      setError('Add both PDFs: the question paper and its markscheme.');
       return;
     }
 
     setError(null);
+    setElapsed(0);
     setStep('COMPILING');
-    setTimelineStage('THINKING');
-    setCompilingLog(COMPILATION_PIPELINE[0].substeps[0]);
-
-    let stageIdx = 0;
-    let substepIdx = 0;
-    let isFinished = false;
-
-    const progressTimer = setInterval(() => {
-      if (isFinished) return;
-      substepIdx++;
-      const currentPhase = COMPILATION_PIPELINE[stageIdx];
-
-      if (currentPhase && substepIdx < currentPhase.substeps.length) {
-        setCompilingLog(currentPhase.substeps[substepIdx]);
-      } else {
-        substepIdx = 0;
-        stageIdx++;
-        if (stageIdx < COMPILATION_PIPELINE.length - 1) {
-          const nextPhase = COMPILATION_PIPELINE[stageIdx];
-          setTimelineStage(nextPhase.stage);
-          setCompilingLog(nextPhase.substeps[0]);
-        } else {
-          const waitingTelemetry = [
-            'Assembling questions and mark schemes...',
-            'Connecting follow-through rules...',
-            'Preparing hints and tutor guidance...',
-            'Polishing math formulas...',
-          ];
-          setCompilingLog(waitingTelemetry[substepIdx % waitingTelemetry.length]);
-        }
-      }
-    }, 1500);
+    const controller = new AbortController();
+    abortRef.current = controller;
 
     try {
       const formData = new FormData();
@@ -160,6 +58,7 @@ export default function IngestPage() {
       const cfg = await getAiConfig();
       const response = await fetch('/api/ingest', {
         method: 'POST',
+        signal: controller.signal,
         headers: {
           ...(cfg.apiKey ? { 'x-gemini-key': cfg.apiKey } : {}),
           ...(cfg.zaiApiKey ? { 'x-zai-key': cfg.zaiApiKey } : {}),
@@ -167,21 +66,12 @@ export default function IngestPage() {
         body: formData,
       });
 
-      const data = await response.json();
-
+      const data = await response.json().catch(() => ({}));
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to ingest documents.');
+        throw new Error(data.error || `The server returned ${response.status}.`);
       }
 
-      isFinished = true;
-      clearInterval(progressTimer);
-
       const manifest: ExamManifest = data.manifest;
-
-      setTimelineStage('DONE');
-      setCompilingLog('Assembling your practice exam...');
-      await new Promise((r) => setTimeout(r, 450));
-
       await saveManifest(manifest);
       try {
         await savePdfBlob(manifest.id, 'paper', paperFile);
@@ -190,16 +80,14 @@ export default function IngestPage() {
         console.warn('Non-fatal warning: failed to store raw PDF blobs in IndexedDB:', blobErr);
       }
 
-      setCompilingLog('Your exam is ready!');
       setActiveManifest(manifest);
-
-      await new Promise((r) => setTimeout(r, 500));
       setStep('READY');
     } catch (err: unknown) {
-      isFinished = true;
-      clearInterval(progressTimer);
-      const msg = err instanceof Error ? err.message : 'Error processing documents.';
-      setError(msg);
+      if (controller.signal.aborted) {
+        setStep('UPLOAD');
+        return;
+      }
+      setError(err instanceof Error ? err.message : 'The PDFs could not be read.');
       setStep('UPLOAD');
     }
   };
@@ -212,353 +100,141 @@ export default function IngestPage() {
     setStep('UPLOAD');
   };
 
+  const needsKey = error ? looksLikeMissingKey(error) : false;
+
   return (
-    <div className="flex-1 w-full bg-[#181715] text-[#faf9f5] py-10 px-4 sm:px-8">
-      <div className="max-w-4xl mx-auto space-y-8">
-        {/* Navigation Breadcrumb */}
-        <div className="flex items-center justify-between">
-          <Link
-            href="/"
-            className="inline-flex items-center gap-2 text-xs font-medium text-[#a09d95] hover:text-[#faf9f5] transition active:scale-[0.98]"
-          >
-            <ArrowLeft className="w-3.5 h-3.5" />
-            <span>Return to Exam Catalog</span>
-          </Link>
-
-          <div className="eyebrow-pill bg-[#252320] border border-white/10 text-[#faf9f5] gap-2 px-3.5 py-1">
-            <SpikeMark className="w-3.5 h-3.5 text-[#cc785c]" />
-            <span className="font-semibold text-[#cc785c]">Add Past Paper</span>
-            <span className="text-[#a09d95]">• Question Paper + Markscheme</span>
-          </div>
-        </div>
-
-        {/* Page Header */}
-        <div className="space-y-2 text-center sm:text-left">
-          <h1 className="display-lg font-serif-display font-normal text-[#faf9f5] tracking-[-1.5px]">
-            Add Past Exam Papers
-          </h1>
-          <p className="body-md text-[#d6cfc5] text-sm sm:text-base max-w-2xl leading-relaxed">
-            Upload an official IB Question Paper and its matching Markscheme PDF. We will turn them into an interactive exam with step-by-step method marking and follow-through protection.
+    <div className="flex-1 w-full px-3 sm:px-5 py-10 sm:py-14">
+      <article className="script-sheet paper-surface mx-auto max-w-[816px] px-6 sm:px-14 py-10 sm:py-12 space-y-10">
+        <header className="space-y-3">
+          <h1 className="font-serif text-[36px] sm:text-[40px] leading-[1.1] font-semibold text-ink">Add a paper</h1>
+          <p className="text-[17px] leading-relaxed text-ink max-w-[60ch]">
+            Upload a question paper and its markscheme as PDFs. Gemini reads both and turns them into a timed exam and a
+            guided practice session. The finished paper is saved in this browser.
           </p>
-        </div>
+        </header>
 
-        {/* ============================================================ */}
-        {/* STEP 1: UPLOAD STATE                                         */}
-        {/* ============================================================ */}
         {step === 'UPLOAD' && (
-          <div className="double-bezel-outer-cream">
-            <div className="double-bezel-inner-cream p-6 sm:p-10 space-y-6">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {/* 1. Question Paper Dropzone */}
-                <div className="p-1 rounded-2xl bg-white/5 transition-fluid group/drop">
-                  <div
-                    onClick={() => paperInputRef.current?.click()}
-                    className={`p-6 rounded-[calc(1rem+4px)] border text-center cursor-pointer transition-all duration-200 flex flex-col items-center justify-center min-h-[190px] ${
-                      paperFile
-                        ? 'bg-[#1f1e1b] border-[#cc785c] text-[#faf9f5] shadow-xs'
-                        : 'bg-[#181715] border-white/10 hover:border-[#cc785c]/60 text-[#a09d95] hover:text-[#faf9f5]'
-                    }`}
-                  >
-                    <input
-                      ref={paperInputRef}
-                      type="file"
-                      accept=".pdf,application/pdf"
-                      className="hidden"
-                      onChange={(e) => {
-                        if (e.target.files?.[0]) setPaperFile(e.target.files[0]);
-                      }}
-                    />
-                    {paperFile ? (
-                      <div className="flex flex-col items-center space-y-1.5 animate-attach-settle">
-                        <div className="w-10 h-10 rounded-xl bg-[#cc785c]/10 border border-[#cc785c]/30 flex items-center justify-center text-[#cc785c] mb-1">
-                          <FileCheck className="w-5 h-5 text-[#cc785c]" />
-                        </div>
-                        <span className="text-xs font-mono-code font-semibold text-[#faf9f5] truncate max-w-[240px]">
-                          {paperFile.name}
-                        </span>
-                        <span className="text-[11px] text-[#a09d95] font-mono-code">
-                          Question Paper • {(paperFile.size / 1024 / 1024).toFixed(2)} MB
-                        </span>
-                        <span className="text-[10px] text-[#5db872] font-mono-code font-semibold pt-1">
-                          ✓ Document Attached
-                        </span>
-                      </div>
-                    ) : (
-                      <>
-                        <div className="w-12 h-12 rounded-xl bg-[#252320] border border-white/10 flex items-center justify-center text-[#cc785c] mb-3 group-hover/drop:scale-105 transition-spring">
-                          <FileUp className="w-6 h-6" />
-                        </div>
-                        <span className="text-sm font-medium text-[#faf9f5]">1. Question Paper PDF</span>
-                        <span className="text-xs text-[#a09d95] mt-1">Click to select or drag booklet</span>
-                        <span className="text-[10px] text-[#a09d95] font-mono-code mt-2">
-                          The questions and diagrams for students
-                        </span>
-                      </>
-                    )}
-                  </div>
-                </div>
-
-                {/* 2. Markscheme Dropzone */}
-                <div className="p-1 rounded-2xl bg-white/5 transition-fluid group/drop">
-                  <div
-                    onClick={() => markschemeInputRef.current?.click()}
-                    className={`p-6 rounded-[calc(1rem+4px)] border text-center cursor-pointer transition-all duration-200 flex flex-col items-center justify-center min-h-[190px] ${
-                      markschemeFile
-                        ? 'bg-[#1f1e1b] border-[#cc785c] text-[#faf9f5] shadow-xs'
-                        : 'bg-[#181715] border-white/10 hover:border-[#cc785c]/60 text-[#a09d95] hover:text-[#faf9f5]'
-                    }`}
-                  >
-                    <input
-                      ref={markschemeInputRef}
-                      type="file"
-                      accept=".pdf,application/pdf"
-                      className="hidden"
-                      onChange={(e) => {
-                        if (e.target.files?.[0]) setMarkschemeFile(e.target.files[0]);
-                      }}
-                    />
-                    {markschemeFile ? (
-                      <div className="flex flex-col items-center space-y-1.5 animate-attach-settle">
-                        <div className="w-10 h-10 rounded-xl bg-[#cc785c]/10 border border-[#cc785c]/30 flex items-center justify-center text-[#cc785c] mb-1">
-                          <FileCheck className="w-5 h-5 text-[#cc785c]" />
-                        </div>
-                        <span className="text-xs font-mono-code font-semibold text-[#faf9f5] truncate max-w-[240px]">
-                          {markschemeFile.name}
-                        </span>
-                        <span className="text-[11px] text-[#a09d95] font-mono-code">
-                          Markscheme • {(markschemeFile.size / 1024 / 1024).toFixed(2)} MB
-                        </span>
-                        <span className="text-[10px] text-[#5db872] font-mono-code font-semibold pt-1">
-                          ✓ Document Attached
-                        </span>
-                      </div>
-                    ) : (
-                      <>
-                        <div className="w-12 h-12 rounded-xl bg-[#252320] border border-white/10 flex items-center justify-center text-[#cc785c] mb-3 group-hover/drop:scale-105 transition-spring">
-                          <FileUp className="w-6 h-6" />
-                        </div>
-                        <span className="text-sm font-medium text-[#faf9f5]">2. Official Markscheme PDF</span>
-                        <span className="text-xs text-[#a09d95] mt-1">Click to select or drag booklet</span>
-                        <span className="text-[10px] text-[#a09d95] font-mono-code mt-2">
-                          The official scoring rubric with mark codes
-                        </span>
-                      </>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              {error && (
-                <div className="p-4 rounded-xl bg-[#c64545]/10 border border-[#c64545]/25 text-[#c64545] text-xs flex items-center gap-2.5 font-mono-code animate-message-enter">
-                  <AlertCircle className="w-4 h-4 text-[#c64545] shrink-0" />
-                  <span>{error}</span>
-                </div>
-              )}
-
-              <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t border-white/10">
-                <div className="text-xs text-[#a09d95] font-mono-code">
-                  Ready to read questions, formulas, and mark codes
-                </div>
-
-                <button
-                  type="button"
-                  disabled={!paperFile || !markschemeFile}
-                  onClick={handleStartIngest}
-                  className="claude-btn-pill-primary w-full sm:w-auto px-6 py-2.5 disabled:opacity-40 disabled:pointer-events-none"
-                >
-                  <span>Create Practice Exam</span>
-                  <span className="btn-icon-bubble">
-                    <ArrowRight className="w-3.5 h-3.5 text-white" />
-                  </span>
+          <>
+            {hasClientKey === false && (
+              <div className="border-t border-b border-ink py-4 flex flex-wrap items-center justify-between gap-3">
+                <p className="text-[15px] leading-relaxed text-ink max-w-[52ch]">
+                  Reading PDFs needs a Gemini API key. None is saved in this browser yet; skip this only if your server has
+                  one configured.
+                </p>
+                <button type="button" onClick={() => openAiStudio('apiKey')} className="btn btn-sm btn-quiet-paper">
+                  Add an API key
                 </button>
               </div>
+            )}
+
+            <div className="grid gap-6 sm:grid-cols-2">
+              <PdfField
+                label="Question paper"
+                hint="The paper students sit, with its diagrams."
+                file={paperFile}
+                onChange={(f) => {
+                  setPaperFile(f);
+                  setError(null);
+                }}
+                onReject={setError}
+              />
+              <PdfField
+                label="Markscheme"
+                hint="The matching markscheme, with its mark codes."
+                file={markschemeFile}
+                onChange={(f) => {
+                  setMarkschemeFile(f);
+                  setError(null);
+                }}
+                onReject={setError}
+              />
             </div>
-          </div>
+
+            {error && (
+              <div role="alert" className="border border-lost px-5 py-4 space-y-3">
+                <p className="text-[15px] leading-relaxed text-ink">
+                  {needsKey ? 'Gemini rejected the request: an API key is missing or not valid.' : error}
+                </p>
+                {needsKey && (
+                  <button type="button" onClick={() => openAiStudio('apiKey')} className="btn btn-sm btn-ink">
+                    Add an API key
+                  </button>
+                )}
+              </div>
+            )}
+
+            <div className="flex flex-wrap items-center justify-between gap-4 border-t border-paper-rule pt-6">
+              <p className="text-[14px] text-ink-muted">
+                {paperFile && markschemeFile ? 'Both files are ready.' : 'Add both files to continue.'}
+              </p>
+              <button type="button" disabled={!paperFile || !markschemeFile} onClick={handleStartIngest} className="btn btn-ink">
+                Build the paper
+              </button>
+            </div>
+          </>
         )}
 
-        {/* ============================================================ */}
-        {/* STEP 2: COMPILATION PIPELINE TELEMETRY                       */}
-        {/* ============================================================ */}
         {step === 'COMPILING' && (
-          <div className="double-bezel-outer-dark animate-message-enter">
-            <div className="double-bezel-inner-dark p-6 sm:p-10 space-y-6">
-              <div className="flex items-center justify-between border-b border-white/10 pb-4">
-                <div className="space-y-1">
-                  <h2 className="font-serif-display text-2xl font-normal text-[#faf9f5]">
-                    Preparing Your Exam Paper
-                  </h2>
-                  <p className="text-xs text-[#a09d96]">
-                    Reading formulas, question parts, and marking rules.
-                  </p>
-                </div>
-
-                <div className="eyebrow-pill bg-white/5 border border-white/10 text-[#cc785c] px-3 py-1">
-                  <span>Phase {Math.min(5, COMPILATION_PIPELINE.findIndex((s) => s.stage === timelineStage) + 1)}/5</span>
-                </div>
-              </div>
-
-              {/* 5 Phase Pills */}
-              <div className="flex flex-wrap items-center gap-2">
-                {COMPILATION_PIPELINE.map((p, idx) => {
-                  const currentIdx = COMPILATION_PIPELINE.findIndex((s) => s.stage === timelineStage);
-                  const isCompleted = idx < currentIdx;
-                  const isActive = idx === currentIdx;
-
-                  return (
-                    <div
-                      key={p.stage}
-                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-mono-code transition-fluid ${
-                        isActive
-                          ? 'bg-[#cc785c] text-white font-bold shadow-md ring-2 ring-[#cc785c]/30'
-                          : isCompleted
-                          ? 'bg-[#252320] text-[#5db872] border border-white/10'
-                          : 'bg-[#1f1e1b] text-[#6c6a64]'
-                      }`}
-                    >
-                      {isCompleted && <Check className="w-3 h-3 text-[#5db872] animate-stamp-reveal" />}
-                      {isActive && <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping" />}
-                      <span>{p.pillLabel}</span>
-                    </div>
-                  );
-                })}
-              </div>
-
-              {/* Glowing Progress Track */}
-              <div className="w-full h-2 bg-[#1f1e1b] rounded-full overflow-hidden border border-white/5 p-0.5 relative">
-                <div
-                  className="h-full bg-linear-to-r from-[#cc785c] to-[#e8a55a] transition-fluid duration-500 rounded-full shadow-[0_0_12px_rgba(204,120,92,0.4)] relative overflow-hidden"
-                  style={{
-                    width: `${Math.min(100, ((COMPILATION_PIPELINE.findIndex((s) => s.stage === timelineStage) + 1) / 5) * 100)}%`,
-                  }}
-                >
-                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent animate-beam-scan pointer-events-none" />
-                </div>
-              </div>
-
-              {/* Live Telemetry Log Card */}
-              <div className="p-4 rounded-xl bg-[#141413] border border-white/10 space-y-2 font-mono-code text-xs shadow-inner">
-                <div className="flex items-center justify-between text-[#8e8b82] border-b border-white/5 pb-2">
-                  <span className="flex items-center gap-2">
-                    <FileCode className="w-3.5 h-3.5 text-[#cc785c]" />
-                    <span>Exam Preparation Progress</span>
-                  </span>
-                  <span className="text-[#5db8a6]">AI Examiner</span>
-                </div>
-                <div className="flex items-center gap-2.5 text-[#faf9f5] pt-1">
-                  <span className="w-2 h-2 rounded-full bg-[#cc785c] animate-pulse shrink-0" />
-                  <span>{compilingLog}</span>
-                </div>
-              </div>
-            </div>
-          </div>
+          <section role="status" aria-live="polite" className="space-y-5">
+            <h2 className="font-serif text-[24px] font-semibold text-ink">Reading your paper</h2>
+            <p className="text-[16px] leading-relaxed text-ink max-w-[60ch]">
+              Gemini is reading <span className="font-semibold">{paperFile?.name}</span> and{' '}
+              <span className="font-semibold">{markschemeFile?.name}</span>: the questions, their parts and marks, and every
+              mark code in the markscheme. A long paper can take a few minutes.
+            </p>
+            <p className="tabular text-[15px] text-ink-muted">
+              <span aria-hidden="true">Elapsed </span>
+              <span className="sr-only">Time elapsed: </span>
+              {formatElapsed(elapsed)}
+            </p>
+            <button type="button" onClick={() => abortRef.current?.abort()} className="btn btn-quiet-paper">
+              Cancel
+            </button>
+          </section>
         )}
 
-        {/* ============================================================ */}
-        {/* STEP 3: READY STATE & MODE SELECTION                         */}
-        {/* ============================================================ */}
         {step === 'READY' && activeManifest && (
-          <div className="space-y-6">
-            {/* Manifest Summary Bar */}
-            <div className="double-bezel-outer-cream">
-              <div className="double-bezel-inner-cream p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                <div className="space-y-1.5">
-                  <div className="flex items-center gap-2 text-xs font-mono-code text-[#a09d95]">
-                    <span className="text-[#cc785c] font-semibold">{activeManifest.category}</span>
-                    <span>•</span>
-                    <span>{activeManifest.durationMinutes} mins</span>
-                    <span>•</span>
-                    <span>{activeManifest.totalMarks} marks</span>
-                    <span>•</span>
-                    <span>{activeManifest.questions.length} questions</span>
-                  </div>
-                  <h2 className="font-serif-display text-2xl font-normal text-[#faf9f5]">
-                    {activeManifest.title}
-                  </h2>
-                  <p className="text-xs text-[#a09d95] font-mono-code">
-                    {activeManifest.subtitle}
-                  </p>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={resetForm}
-                  className="claude-btn-pill-secondary text-xs flex items-center gap-1.5 active:scale-[0.98]"
-                >
-                  <RotateCcw className="w-3.5 h-3.5 text-[#a09d95]" />
-                  <span>Add Another Paper</span>
-                </button>
-              </div>
+          <section className="space-y-8" aria-labelledby="ready-heading">
+            <div className="space-y-2">
+              <h2 id="ready-heading" className="font-serif text-[28px] font-semibold text-ink">
+                {activeManifest.title}
+              </h2>
+              <p className="text-[16px] text-ink-muted">{activeManifest.subtitle}</p>
             </div>
-
-            {/* Mode Selection Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-              {/* Option 1: Timed Mock Examination */}
-              <div className="double-bezel-outer-cream">
-                <div className="double-bezel-inner-cream p-7 flex flex-col justify-between space-y-6 h-full">
-                  <div className="space-y-2.5">
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="eyebrow-pill bg-[#cc785c]/10 text-[#cc785c] border border-[#cc785c]/20 px-2.5 py-0.5">
-                        Exam Simulation
-                      </span>
-                      <span className="text-[#a09d95] font-mono-code flex items-center gap-1">
-                        <Clock className="w-3 h-3" /> {activeManifest.durationMinutes}m
-                      </span>
-                    </div>
-                    <h3 className="font-serif-display text-2xl font-normal text-[#faf9f5]">
-                      Timed Mock Exam
-                    </h3>
-                    <p className="body-md text-[#d6cfc5] text-xs leading-relaxed">
-                      Practice under real exam conditions with a built-in notepad and canvas. Your working is marked step-by-step with follow-through protection.
-                    </p>
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={() => router.push(`/mock/${activeManifest.id}`)}
-                    className="claude-btn-pill-primary w-full justify-between"
-                  >
-                    <span>Begin Mock Exam</span>
-                    <span className="btn-icon-bubble">
-                      <ArrowRight className="w-3.5 h-3.5 text-white" />
-                    </span>
-                  </button>
+            <dl className="grid grid-cols-3 gap-px bg-paper-rule border-t border-b border-ink tabular">
+              {[
+                ['Writing time', `${activeManifest.durationMinutes} min`],
+                ['Total marks', String(activeManifest.totalMarks)],
+                ['Questions', String(activeManifest.questions.length)],
+              ].map(([term, value]) => (
+                <div key={term} className="bg-paper p-4">
+                  <dt className="text-[13px] text-ink-muted">{term}</dt>
+                  <dd className="mt-1 text-[22px] font-semibold text-ink">{value}</dd>
                 </div>
-              </div>
-
-              {/* Option 2: Socratic Learn Mode */}
-              <div className="double-bezel-outer-cream">
-                <div className="double-bezel-inner-cream p-7 flex flex-col justify-between space-y-6 h-full">
-                  <div className="space-y-2.5">
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="eyebrow-pill bg-[#5db8a6]/15 text-[#5db8a6] border border-[#5db8a6]/30 px-2.5 py-0.5">
-                        Collaborative Tutor
-                      </span>
-                      <span className="text-[#a09d95] font-mono-code">Step-by-Step Guidance</span>
-                    </div>
-                    <h3 className="font-serif-display text-2xl font-normal text-[#faf9f5]">
-                      Socratic Learn Mode
-                    </h3>
-                    <p className="body-md text-[#d6cfc5] text-xs leading-relaxed">
-                      Work through problems step by step with targeted hints, formula booklet reminders, and guided feedback.
-                    </p>
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={() => router.push(`/learn/${activeManifest.id}`)}
-                    className="claude-btn-pill-secondary w-full justify-between"
-                  >
-                    <span>Start Socratic Tutor</span>
-                    <span className="btn-icon-bubble bg-[#252320] text-[#cc785c]">
-                      <Compass className="w-3.5 h-3.5 text-[#cc785c]" />
-                    </span>
-                  </button>
-                </div>
-              </div>
+              ))}
+            </dl>
+            <p className="text-[15px] leading-relaxed text-ink-muted max-w-[60ch]">
+              Check the first question against your PDF before relying on the marking; automatic reading can misplace a mark
+              or a diagram.
+            </p>
+            <div className="flex flex-wrap gap-3">
+              <Link href={`/mock/${activeManifest.id}`} className="btn btn-ink">
+                Sit it as a timed exam
+              </Link>
+              <Link href={`/learn/${activeManifest.id}`} className="btn btn-quiet-paper">
+                Practise with the tutor
+              </Link>
+              <button
+                type="button"
+                onClick={resetForm}
+                className="min-h-11 px-2 text-[15px] text-ink underline underline-offset-4"
+              >
+                Add another paper
+              </button>
             </div>
-          </div>
+          </section>
         )}
-      </div>
+      </article>
     </div>
   );
 }

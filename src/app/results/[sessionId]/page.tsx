@@ -234,7 +234,7 @@ export default function ResultsPage() {
             )}
             <div className="flex flex-wrap gap-3">
               {looksLikeMissingKey(streamError) && (
-                <button type="button" onClick={openAiStudio} className="btn btn-ink">
+                <button type="button" onClick={() => openAiStudio('apiKey')} className="btn btn-ink">
                   Add an API key
                 </button>
               )}

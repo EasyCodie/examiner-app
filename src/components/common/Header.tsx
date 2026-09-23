@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { BookOpen, Menu, X } from 'lucide-react';
+import { BookOpen, Menu, Settings, X } from 'lucide-react';
 import { CriterionMark } from './CriterionMark';
 import { useAppShell } from './AppShell';
 
@@ -22,7 +22,7 @@ const NAV = [
 ];
 
 export const Header: React.FC<HeaderProps> = ({ paperTitle, mode, paperId }) => {
-  const { hasFormulaBooklet, toggleFormulaBooklet, isFormulaBookletOpen } = useAppShell();
+  const { hasFormulaBooklet, toggleFormulaBooklet, isFormulaBookletOpen, openAiStudio } = useAppShell();
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -98,6 +98,16 @@ export const Header: React.FC<HeaderProps> = ({ paperTitle, mode, paperId }) => 
               <span className="sr-only xl:hidden">Formula booklet</span>
             </button>
           )}
+
+          <button
+            type="button"
+            onClick={() => openAiStudio()}
+            title="Settings: API keys, marking depth, prompts"
+            className="min-h-11 min-w-11 flex items-center justify-center text-shell-muted hover:text-shell-ink"
+          >
+            <Settings className="w-5 h-5" aria-hidden="true" />
+            <span className="sr-only">Settings</span>
+          </button>
 
           {!paperId && pathname !== '/ingest' && (
             <Link href="/#papers" className="hidden sm:inline-flex btn btn-sm btn-slip">

@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, createContext, useContext, useMemo } from 'react';
 import { Header } from './Header';
-import { AiStudioDrawer } from '@/components/workbench/AiStudioDrawer';
+import { AiStudioDrawer, AiStudioTab } from '@/components/workbench/AiStudioDrawer';
 import { FormulaBookletDrawer } from '@/components/formula/FormulaBookletDrawer';
 import { getFormulaBooklet } from '@/lib/data/formulaBooklets';
 
@@ -19,7 +19,7 @@ interface HeaderInfo {
 
 interface AppShellContextType {
   setHeaderInfo: (info: HeaderInfo) => void;
-  openAiStudio: () => void;
+  openAiStudio: (tab?: AiStudioTab) => void;
   closeAiStudio: () => void;
   openFormulaBooklet: (anchor?: string) => void;
   closeFormulaBooklet: () => void;
@@ -40,6 +40,7 @@ export const useAppShell = () => {
 
 export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [isAiStudioOpen, setIsAiStudioOpen] = useState(false);
+  const [aiStudio, setAiStudio] = useState<{ tab: AiStudioTab; opens: number }>({ tab: 'reasoning', opens: 0 });
   const [isFormulaBookletOpen, setIsFormulaBookletOpen] = useState(false);
   const [formulaBookletAnchor, setFormulaBookletAnchor] = useState<string | null>(null);
 
@@ -86,7 +87,10 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) 
     <AppShellContext.Provider
       value={{
         setHeaderInfo,
-        openAiStudio: () => setIsAiStudioOpen(true),
+        openAiStudio: (tab: AiStudioTab = 'reasoning') => {
+          setAiStudio((prev) => ({ tab, opens: prev.opens + 1 }));
+          setIsAiStudioOpen(true);
+        },
         closeAiStudio: () => setIsAiStudioOpen(false),
         openFormulaBooklet,
         closeFormulaBooklet,
@@ -118,7 +122,12 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) 
         />
 
         {/* Global Workbench / Telemetry Drawer */}
-        <AiStudioDrawer isOpen={isAiStudioOpen} onClose={() => setIsAiStudioOpen(false)} />
+        <AiStudioDrawer
+          key={aiStudio.opens}
+          initialTab={aiStudio.tab}
+          isOpen={isAiStudioOpen}
+          onClose={() => setIsAiStudioOpen(false)}
+        />
       </div>
     </AppShellContext.Provider>
   );

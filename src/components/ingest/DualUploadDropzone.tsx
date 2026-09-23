@@ -11,7 +11,7 @@ import {
   Layers,
   Loader2,
 } from 'lucide-react';
-import { SpikeMark } from '@/components/common/SpikeMark';
+import { CriterionMark as SpikeMark } from '@/components/common/CriterionMark';
 
 interface DualUploadDropzoneProps {
   onManifestLoaded?: (manifest: ExamManifest) => void;
