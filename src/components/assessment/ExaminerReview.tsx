@@ -293,10 +293,10 @@ export const ExaminerReview: React.FC<ExaminerReviewProps> = ({
               {evaluation?.marginAnnotations
                 ?.filter((ann) => ann.type === 'comment' || ann.type === 'ecf')
                 .map((ann, aIdx) => (
-                  <p key={aIdx} className="font-serif italic text-[14px] leading-snug text-examiner">
+                  <div key={aIdx} className="font-serif italic text-[14px] leading-snug text-examiner">
                     <span className="not-italic font-sans font-bold">{ann.label}: </span>
                     <MathRenderer content={ann.text} lightMode={true} className="inline" />
-                  </p>
+                  </div>
                 ))}
             </aside>
           </div>

@@ -78,6 +78,7 @@ export const SocraticSidebar: React.FC<SocraticSidebarProps> = ({
           currentTier={currentTier}
           highestTierReached={highestTierReached}
           isMarkschemeUnlocked={isMarkschemeUnlocked}
+          hasFormulaBooklet={hasFormulaBooklet}
           disabled={isLoading}
           onAskTier={onAskTier}
           onRequestReveal={onRequestReveal}
@@ -103,7 +104,7 @@ export const SocraticSidebar: React.FC<SocraticSidebarProps> = ({
 
               {m.formulaQuote && (
                 <div className="mt-3 border border-paper-rule-strong px-3 py-2.5 space-y-1">
-                  <p className="text-[13px] font-semibold text-ink">Formula clue</p>
+                  <p className="text-[13px] font-semibold text-ink">{hasFormulaBooklet ? 'Formula clue' : 'Concept clue'}</p>
                   <div className="text-[14px] text-examiner">
                     <MathRenderer content={m.formulaQuote} lightMode={true} />
                   </div>

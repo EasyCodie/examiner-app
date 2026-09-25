@@ -34,7 +34,7 @@ const KeyTestNotice: React.FC<{ result: KeyTestResult }> = ({ result }) => {
     error: { label: 'Not saved', Icon: AlertCircle, className: 'border-lost-on-shell/40 text-lost-on-shell' },
   }[result.tone];
   return (
-    <div role="status" className={`p-3 rounded-sm border text-[14px] leading-relaxed flex items-start gap-2 ${look.className}`}>
+    <div role="status" className={`p-3 border text-[14px] leading-relaxed flex items-start gap-2 ${look.className}`}>
       <look.Icon className="w-4 h-4 mt-0.5 shrink-0" aria-hidden="true" />
       <p>
         <span className="font-semibold">{look.label}.</span> {result.message}
@@ -164,16 +164,12 @@ export const AiStudioDrawer: React.FC<AiStudioDrawerProps> = ({ isOpen, onClose,
         {/* Drawer Header */}
         <div className="p-4 bg-shell-raised border-b border-shell-line flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-sm bg-shell border border-shell-line flex items-center justify-center text-examiner-on-shell">
+            <div className="w-9 h-9 bg-shell border border-shell-line flex items-center justify-center text-shell-ink">
               <CriterionMark className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-base font-serif font-normal text-shell-ink flex items-center gap-2">
-                <span>Examiner Settings &amp; AI Controls</span>
-              </h2>
-              <p className="text-xs text-shell-muted">
-                Configure marking depth and manage API keys
-              </p>
+              <h2 className="text-[18px] font-serif font-semibold text-shell-ink">Settings</h2>
+              <p className="text-[13px] text-shell-muted">Your API key and how deeply the examiner and tutor think</p>
             </div>
           </div>
 
@@ -181,117 +177,112 @@ export const AiStudioDrawer: React.FC<AiStudioDrawerProps> = ({ isOpen, onClose,
             type="button"
             onClick={onClose}
             aria-label="Close settings drawer"
-            className="p-1.5 text-shell-muted hover:text-shell-ink rounded-sm hover:bg-shell transition"
+            className="min-h-11 min-w-11 flex items-center justify-center text-shell-muted hover:text-shell-ink transition"
           >
-            <X className="w-5 h-5" />
+            <X className="w-5 h-5" aria-hidden="true" />
           </button>
         </div>
 
         {/* Tab Navigation */}
-        <div className="flex items-center gap-1 px-4 py-2.5 bg-shell border-b border-shell-line text-xs">
-          <button
-            type="button"
-            onClick={() => setActiveTab('reasoning')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-sm transition font-medium ${
-              activeTab === 'reasoning'
-                ? 'bg-paper text-ink '
-                : 'text-shell-muted hover:text-shell-ink hover:bg-shell-raised'
-            }`}
-          >
-            <Sliders className="w-3.5 h-3.5" />
-            <span>Marking Depth</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setActiveTab('apiKey')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-sm transition font-medium ${
-              activeTab === 'apiKey'
-                ? 'bg-paper text-ink '
-                : 'text-shell-muted hover:text-shell-ink hover:bg-shell-raised'
-            }`}
-          >
-            <Key className="w-3.5 h-3.5" />
-            <span>API key</span>
-          </button>
+        <div role="tablist" aria-label="Settings sections" className="flex items-center px-4 py-2.5 bg-shell border-b border-shell-line">
+          {(
+            [
+              { tab: 'reasoning', label: 'Marking depth', Icon: Sliders },
+              { tab: 'apiKey', label: 'API key', Icon: Key },
+            ] as const
+          ).map(({ tab, label, Icon }) => (
+            <button
+              key={tab}
+              type="button"
+              role="tab"
+              aria-selected={activeTab === tab}
+              onClick={() => setActiveTab(tab)}
+              className={`min-h-11 flex items-center gap-1.5 px-3 text-[14px] font-medium border border-shell-line -ml-px first:ml-0 transition ${
+                activeTab === tab ? 'bg-paper text-ink' : 'text-shell-muted hover:text-shell-ink'
+              }`}
+            >
+              <Icon className="w-3.5 h-3.5" aria-hidden="true" />
+              <span>{label}</span>
+            </button>
+          ))}
         </div>
 
         {/* Tab Content */}
-        <div className="flex-1 p-6 overflow-y-auto space-y-6 select-text">
+        <div role="tabpanel" className="flex-1 p-6 overflow-y-auto space-y-6 select-text">
           {/* 1. REASONING MODULATION */}
           {activeTab === 'reasoning' && (
             <div className="space-y-6">
-              <div className="p-4 bg-shell-raised border border-shell-line rounded-sm text-xs text-shell-muted">
-                <span className="font-semibold text-examiner-on-shell block mb-1 font-mono">
-                  AI Thinking Budget &amp; Depth:
-                </span>
-                <p className="leading-relaxed">
-                  The examiner dynamically adjusts how deeply it thinks depending on the task. A higher thinking budget is used when marking complete exam papers (checking multi-step algebra and calculating follow-through marks), while a balanced budget helps the tutor provide step-by-step guidance.
-                </p>
-              </div>
+              <p className="text-[14px] leading-relaxed text-shell-muted">
+                The thinking budget is how much the model may reason before it answers. More thinking checks multi-step
+                working and follow-through marks more carefully, but takes longer.
+              </p>
 
               {/* Grading Reasoning Slider */}
-              <div className="p-4 bg-shell-raised border border-shell-line rounded-sm space-y-3">
-                <div className="flex items-center justify-between">
+              <div className="p-4 bg-shell-raised border border-shell-line space-y-3">
+                <div className="flex items-center justify-between gap-4">
                   <div>
-                    <h3 className="text-xs font-semibold text-shell-ink uppercase tracking-wider font-mono">
-                      Exam Marking Depth
-                    </h3>
-                    <p className="text-[12px] text-shell-muted">
-                      Controls how thoroughly working steps and follow-through marks are checked
+                    <label htmlFor="grading-budget" className="text-[15px] font-semibold text-shell-ink block">
+                      Marking depth
+                    </label>
+                    <p id="grading-budget-hint" className="text-[13px] text-shell-muted">
+                      How thoroughly working steps and follow-through marks are checked
                     </p>
                   </div>
-                  <span className="text-xs font-mono font-semibold text-examiner-on-shell bg-shell px-2.5 py-1 rounded-sm border border-shell-line">
-                    {config?.thinkingBudgetGrading || 8192} tokens
+                  <span className="text-[14px] tabular font-semibold text-shell-ink whitespace-nowrap">
+                    {Math.min(config?.thinkingBudgetGrading || 8192, 8192)} tokens
                   </span>
                 </div>
 
                 <input
+                  id="grading-budget"
+                  aria-describedby="grading-budget-hint"
                   type="range"
                   min={1024}
                   max={8192}
                   step={1024}
-                  value={config?.thinkingBudgetGrading || 8192}
+                  value={Math.min(config?.thinkingBudgetGrading || 8192, 8192)}
                   onChange={(e) => handleSaveBudget('thinkingBudgetGrading', Number(e.target.value))}
-                  className="w-full accent-paper cursor-pointer h-2 bg-shell rounded-sm appearance-none"
+                  className="w-full accent-paper cursor-pointer"
                 />
 
-                <div className="flex justify-between text-[12px] font-mono text-shell-muted">
-                  <span>Standard (1024)</span>
-                  <span className="text-examiner-on-shell font-semibold">Maximum, recommended (8192)</span>
+                <div className="flex justify-between text-[13px] tabular text-shell-muted">
+                  <span>Quicker (1024)</span>
+                  <span>Most thorough, recommended (8192)</span>
                 </div>
               </div>
 
               {/* Socratic Dialogue Reasoning Slider */}
-              <div className="p-4 bg-shell-raised border border-shell-line rounded-sm space-y-3">
-                <div className="flex items-center justify-between">
+              <div className="p-4 bg-shell-raised border border-shell-line space-y-3">
+                <div className="flex items-center justify-between gap-4">
                   <div>
-                    <h3 className="text-xs font-semibold text-shell-ink uppercase tracking-wider font-mono">
-                      Tutor Thinking Budget
-                    </h3>
-                    <p className="text-[12px] text-shell-muted">
-                      Helps the tutor review your steps and offer tailored hints
+                    <label htmlFor="tutor-budget" className="text-[15px] font-semibold text-shell-ink block">
+                      Tutor thinking
+                    </label>
+                    <p id="tutor-budget-hint" className="text-[13px] text-shell-muted">
+                      How carefully the tutor reviews your steps before it hints
                     </p>
                   </div>
-                  <span className="text-xs font-mono font-semibold text-awarded-on-shell bg-shell px-2.5 py-1 rounded-sm border border-shell-line">
-                    {config?.thinkingBudgetSocratic === 0 ? 'Zero / Sub-Second' : `${config?.thinkingBudgetSocratic ?? 2048} tokens`}
+                  <span className="text-[14px] tabular font-semibold text-shell-ink whitespace-nowrap">
+                    {config?.thinkingBudgetSocratic === 0 ? 'None' : `${config?.thinkingBudgetSocratic ?? 2048} tokens`}
                   </span>
                 </div>
 
                 <input
+                  id="tutor-budget"
+                  aria-describedby="tutor-budget-hint"
                   type="range"
                   min={0}
                   max={4096}
                   step={256}
                   value={config?.thinkingBudgetSocratic ?? 2048}
                   onChange={(e) => handleSaveBudget('thinkingBudgetSocratic', Number(e.target.value))}
-                  className="w-full accent-paper cursor-pointer h-2 bg-shell rounded-sm appearance-none"
+                  className="w-full accent-paper cursor-pointer"
                 />
 
-                <div className="flex justify-between text-[12px] font-mono text-shell-muted">
-                  <span>Instant / Zero (0)</span>
-                  <span className="text-awarded-on-shell font-semibold">Recommended (2048)</span>
-                  <span>Deep Proofs (4096)</span>
+                <div className="flex justify-between text-[13px] tabular text-shell-muted">
+                  <span>Fastest (0)</span>
+                  <span>Recommended (2048)</span>
+                  <span>Most careful (4096)</span>
                 </div>
               </div>
             </div>
@@ -300,7 +291,7 @@ export const AiStudioDrawer: React.FC<AiStudioDrawerProps> = ({ isOpen, onClose,
           {/* 2. API KEYS */}
           {activeTab === 'apiKey' && (
             <div className="space-y-5">
-              <div className="p-4 bg-shell-raised border border-shell-line rounded-sm space-y-3">
+              <div className="p-4 bg-shell-raised border border-shell-line space-y-3">
                 <label htmlFor="gemini-key" className="text-[15px] font-semibold text-shell-ink block">
                   Your Gemini API key
                 </label>
@@ -336,13 +327,13 @@ export const AiStudioDrawer: React.FC<AiStudioDrawerProps> = ({ isOpen, onClose,
                     value={tempApiKey}
                     onChange={(e) => setTempApiKey(e.target.value)}
                     placeholder="Paste your key"
-                    className="flex-1 bg-shell border border-shell-line rounded-sm px-3.5 py-2 text-[14px] text-shell-ink placeholder:text-shell-muted outline-none focus:border-shell-ink"
+                    className="flex-1 min-h-11 bg-shell border border-shell-line px-3.5 text-[14px] text-shell-ink placeholder:text-shell-muted"
                   />
                   <button
                     type="button"
                     onClick={handleTestKey}
                     disabled={isTesting || !tempApiKey.trim()}
-                    className="flex items-center gap-1.5 px-4 py-2 rounded-sm btn btn-sm btn-slip disabled:opacity-40 text-xs font-medium transition"
+                    className="btn btn-sm btn-slip"
                   >
                     {isTesting ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Key className="w-3.5 h-3.5" />}
                     <span>{isTesting ? 'Testing…' : 'Test and save'}</span>
@@ -353,7 +344,7 @@ export const AiStudioDrawer: React.FC<AiStudioDrawerProps> = ({ isOpen, onClose,
               </div>
 
               {/* Z.AI / GLM-OCR API KEY */}
-              <div className="p-4 bg-shell-raised border border-shell-line rounded-sm space-y-3">
+              <div className="p-4 bg-shell-raised border border-shell-line space-y-3">
                 <label htmlFor="zai-key" className="text-[15px] font-semibold text-shell-ink block">
                   Z.AI key (optional)
                 </label>
@@ -380,13 +371,13 @@ export const AiStudioDrawer: React.FC<AiStudioDrawerProps> = ({ isOpen, onClose,
                     value={tempZaiKey}
                     onChange={(e) => setTempZaiKey(e.target.value)}
                     placeholder="Paste your Z.AI key"
-                    className="flex-1 bg-shell border border-shell-line rounded-sm px-3.5 py-2 text-[14px] text-shell-ink placeholder:text-shell-muted outline-none focus:border-shell-ink"
+                    className="flex-1 min-h-11 bg-shell border border-shell-line px-3.5 text-[14px] text-shell-ink placeholder:text-shell-muted"
                   />
                   <button
                     type="button"
                     onClick={handleTestZaiKey}
                     disabled={isTestingZai || !tempZaiKey.trim()}
-                    className="flex items-center gap-1.5 px-4 py-2 rounded-sm btn btn-sm btn-slip disabled:opacity-40 text-xs font-medium transition"
+                    className="btn btn-sm btn-slip"
                   >
                     {isTestingZai ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Key className="w-3.5 h-3.5" />}
                     <span>{isTestingZai ? 'Testing…' : 'Test and save'}</span>

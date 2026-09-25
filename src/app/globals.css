@@ -30,6 +30,10 @@
   --color-paper-rule-strong: #9aa3ae;
   --color-ink: #111418;
   --color-ink-muted: #4b5563;
+  --color-ink-hover: #2a3038;
+  --color-slip-hover: #dfe3e8;
+  --color-ruling: #e6e9ed;
+  --color-selection: #cdd5e0;
 
   /* Ink roles */
   --color-student: #1a2238;
@@ -39,6 +43,7 @@
   --color-awarded-on-shell: #5cc99a;
   --color-lost: #c8321e;
   --color-lost-on-shell: #ff8a73;
+  --color-lost-deep: #a8281a;
   --color-ecf: #8a5a00;
   --color-ecf-on-shell: #e8b45a;
 
@@ -80,7 +85,7 @@
     color: var(--color-ink);
   }
   .btn-slip:hover:not(:disabled) {
-    background-color: #dfe3e8;
+    background-color: var(--color-slip-hover);
   }
   /* Primary on paper: solid report black */
   .btn-ink {
@@ -88,7 +93,7 @@
     color: var(--color-paper);
   }
   .btn-ink:hover:not(:disabled) {
-    background-color: #2a3038;
+    background-color: var(--color-ink-hover);
   }
   .btn-quiet-shell {
     background-color: transparent;
@@ -111,7 +116,7 @@
     color: var(--color-paper);
   }
   .btn-destructive:hover:not(:disabled) {
-    background-color: #a8281a;
+    background-color: var(--color-lost-deep);
   }
 
   /* Focus: ink on paper, paper on shell. Never examiner blue. */
@@ -138,7 +143,7 @@
 
   /* Ruled working area: 28px ruling */
   .ruled {
-    background-image: linear-gradient(to bottom, #e6e9ed 1px, transparent 1px);
+    background-image: linear-gradient(to bottom, var(--color-ruling) 1px, transparent 1px);
     background-size: 100% 28px;
   }
 
@@ -203,6 +208,11 @@
   animation: ink-in 420ms var(--ease-out-expo) both;
 }
 
+/* Graphite desk: native controls and scrollbars render dark */
+:root {
+  color-scheme: dark;
+}
+
 body {
   background-color: var(--color-shell);
   color: var(--color-shell-ink);
@@ -213,8 +223,8 @@ body {
 
 /* Selection: highlighter on paper, paper on shell */
 ::selection {
-  background-color: #cdd5e0;
-  color: #111418;
+  background-color: var(--color-selection);
+  color: var(--color-ink);
 }
 
 /* Scrollbars: graphite rail */

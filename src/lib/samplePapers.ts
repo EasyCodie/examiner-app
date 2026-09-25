@@ -300,8 +300,8 @@ export const BUNDLED_ECONOMICS_HL: ExamManifest = {
 
 export const MAY_2021_MATH_AA_HL_P1: ExamManifest = {
   id: 'math-aa-hl-may-2021',
-  title: 'Mathematics: analysis and approaches HL',
-  subtitle: 'Paper 1 (Non-Calculator) - May 2021 (TZ1)',
+  title: 'Mathematics: analysis and approaches HL, May 2021',
+  subtitle: 'Paper 1 (Non-Calculator) · Time zone 1',
   subjectCode: 'MATH_AA_HL_P1',
   category: 'STEM',
   durationMinutes: 120,
@@ -921,7 +921,7 @@ export const MAY_2021_MATH_AA_HL_P1: ExamManifest = {
 };
 
 export const ALL_BUNDLED_PAPERS: ExamManifest[] = [
-  MAY_2021_MATH_AA_HL_P1,
   BUNDLED_MATH_AA_HL,
+  MAY_2021_MATH_AA_HL_P1,
   BUNDLED_ECONOMICS_HL
 ];

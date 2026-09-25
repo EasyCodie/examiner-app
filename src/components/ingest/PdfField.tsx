@@ -61,6 +61,7 @@ export const PdfField: React.FC<PdfFieldProps> = ({ label, hint, file, onChange,
           type="file"
           accept=".pdf,application/pdf"
           disabled={disabled}
+          aria-labelledby={`${id}-label`}
           aria-describedby={`${id}-hint`}
           className="sr-only"
           onChange={(e) => {

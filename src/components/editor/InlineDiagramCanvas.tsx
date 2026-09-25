@@ -55,13 +55,11 @@ const TEMPLATE_CONFIGS: Record<AxisTemplate, { label: string }> = {
   blank: { label: 'Blank' },
 };
 
-/** Plain ink colours: named for the ink, never for an economic meaning (ADR-0002). */
+/** Plain ink colours: named for the ink, never for an economic meaning (ADR-0002). The candidate's pens only; red, green and blue belong to marking. */
 const COLOR_PALETTE = [
   { name: 'Blue-black', hex: '#1a2238' },
-  { name: 'Blue', hex: '#1d5bbf' },
-  { name: 'Green', hex: '#2f7d4f' },
-  { name: 'Red', hex: '#b3261e' },
-  { name: 'Grey', hex: '#4b5563' },
+  { name: 'Black', hex: '#111418' },
+  { name: 'Pencil', hex: '#4b5563' },
 ];
 
 const COMMON_NOTATIONS = [
@@ -74,7 +72,7 @@ export const InlineDiagramCanvas = forwardRef<InlineDiagramCanvasRef, InlineDiag
 
     const [activeTemplate, setActiveTemplate] = useState<AxisTemplate>('standard');
     const [activeTool, setActiveTool] = useState<DiagramTool>('curve');
-    const [activeColor, setActiveColor] = useState<string>('#2563eb');
+    const [activeColor, setActiveColor] = useState<string>('#1a2238');
     const lineWidth = 2.5;
 
     // Active label stamp state for 'text' tool

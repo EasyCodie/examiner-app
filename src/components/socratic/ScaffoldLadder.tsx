@@ -8,6 +8,8 @@ interface ScaffoldLadderProps {
   /** Highest step the student has asked for on this question. */
   highestTierReached: PedagogicalTier | 0;
   isMarkschemeUnlocked: boolean;
+  /** Subjects without a formula booklet (Economics) get a concept clue instead. */
+  hasFormulaBooklet: boolean;
   disabled: boolean;
   onAskTier: (tier: 1 | 2 | 3) => void;
   onRequestReveal: () => void;
@@ -15,7 +17,7 @@ interface ScaffoldLadderProps {
 
 const STEPS: { tier: PedagogicalTier; title: string; detail: string }[] = [
   { tier: 1, title: 'Command term', detail: 'What the question is asking you to do' },
-  { tier: 2, title: 'Formula clue', detail: 'The formula or concept that applies' },
+  { tier: 2, title: 'Formula clue', detail: 'The formula that applies' },
   { tier: 3, title: 'Check my working', detail: 'Where your working goes wrong, if it does' },
   { tier: 4, title: 'Markscheme', detail: 'The full mark breakdown for this question' },
 ];
@@ -28,6 +30,7 @@ export const ScaffoldLadder: React.FC<ScaffoldLadderProps> = ({
   currentTier,
   highestTierReached,
   isMarkschemeUnlocked,
+  hasFormulaBooklet,
   disabled,
   onAskTier,
   onRequestReveal,
@@ -36,7 +39,11 @@ export const ScaffoldLadder: React.FC<ScaffoldLadderProps> = ({
 
   return (
     <ol aria-label="Steps of help" className="border-t-2 border-ink">
-      {STEPS.map(({ tier, title, detail }) => {
+      {STEPS.map((step) => {
+        const { tier, title, detail } =
+          step.tier === 2 && !hasFormulaBooklet
+            ? { ...step, title: 'Concept clue', detail: 'The concept or theory that applies' }
+            : step;
         const reached = highestTierReached >= tier || (tier === 4 && isMarkschemeUnlocked);
         const isCurrent = currentTier === tier && reached;
         const locked = tier === 4 && !isMarkschemeUnlocked && !markschemeReady;

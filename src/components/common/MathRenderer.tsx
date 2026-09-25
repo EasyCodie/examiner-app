@@ -207,11 +207,11 @@ function parseLatexArrayToExamTable(arrayTex: string, lightMode = false): string
   const maxCols = Math.max(...parsedRows.map((r) => r.length));
 
   const tableClass = lightMode
-    ? 'w-full max-w-3xl border-collapse border-2 border-slate-900 text-center font-serif my-6 shadow-sm mx-auto'
-    : 'w-full max-w-3xl border-collapse border-2 border-white/20 text-center font-serif my-6 shadow-sm mx-auto';
+    ? 'w-full max-w-3xl border-collapse border-2 border-ink text-center font-serif my-6 mx-auto'
+    : 'w-full max-w-3xl border-collapse border-2 border-shell-line text-center font-serif my-6 mx-auto';
 
   const cellBorderClass = lightMode
-    ? 'border border-slate-800 px-8 py-4 text-slate-950 font-serif'
+    ? 'border border-paper-rule-strong px-8 py-4 text-ink font-serif'
     : 'border border-shell-line px-8 py-4 text-shell-ink font-serif';
 
   let html = `<div class="w-full my-6 flex justify-center overflow-x-auto"><table class="${tableClass}"><tbody>`;
@@ -226,7 +226,7 @@ function parseLatexArrayToExamTable(arrayTex: string, lightMode = false): string
       const isHeaderRow = rowIdx === 0;
 
       const bgClass = lightMode
-        ? (isHeaderRow ? 'bg-slate-50/60 font-semibold' : 'bg-white')
+        ? (isHeaderRow ? 'bg-paper-tint font-semibold' : 'bg-paper')
         : (isHeaderRow ? 'bg-shell-raised font-semibold text-shell-ink' : 'bg-transparent text-shell-ink');
 
       const fontClass = isFirstCol ? 'font-semibold' : 'font-normal';
@@ -336,15 +336,15 @@ export const MathRenderer: React.FC<MathRendererProps> = React.memo(({
         const rows = lines.slice(2).map(parseRow);
 
         const tableClass = lightMode
-          ? 'w-full max-w-3xl border-collapse border-2 border-slate-900 text-center font-serif my-6 shadow-sm mx-auto'
-          : 'w-full max-w-3xl border-collapse border-2 border-white/20 text-center font-serif my-6 shadow-sm mx-auto';
+          ? 'w-full max-w-3xl border-collapse border-2 border-ink text-center font-serif my-6 mx-auto'
+          : 'w-full max-w-3xl border-collapse border-2 border-shell-line text-center font-serif my-6 mx-auto';
         const cellClass = lightMode
-          ? 'border border-slate-800 px-8 py-4 text-slate-950 font-serif text-[15px]'
+          ? 'border border-paper-rule-strong px-8 py-4 text-ink font-serif text-[15px]'
           : 'border border-shell-line px-8 py-4 text-shell-ink font-serif text-[15px]';
 
         let tableHtml = `<div class="w-full overflow-x-auto my-6 flex justify-center"><table class="${tableClass}"><thead><tr>`;
         headers.forEach((h) => {
-          tableHtml += `<th class="${cellClass} bg-slate-50/60 font-semibold">${h}</th>`;
+          tableHtml += `<th class="${cellClass} ${lightMode ? 'bg-paper-tint' : 'bg-shell-raised'} font-semibold">${h}</th>`;
         });
         tableHtml += `</tr></thead><tbody>`;
         rows.forEach((r) => {
@@ -429,9 +429,8 @@ export const MathRenderer: React.FC<MathRendererProps> = React.memo(({
     });
 
     // PHASE 13: Markdown formatting on the remaining prose
-    const strongClass = lightMode
-      ? 'font-semibold text-slate-950 tracking-normal'
-      : 'font-semibold text-shell-ink tracking-normal';
+    // Bold keeps the ink it sits in, so a bold examiner comment stays examiner ink
+    const strongClass = 'font-semibold';
 
     // Bold (**word** or __word__)
     text = text.replace(/\*\*(.*?)\*\*/g, (_, bold) => `<strong class="${strongClass}">${bold}</strong>`);

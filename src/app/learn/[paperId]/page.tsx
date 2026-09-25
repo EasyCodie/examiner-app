@@ -476,10 +476,10 @@ export default function SocraticLearnPage() {
               <div className="flex flex-wrap items-center gap-2" role="group" aria-label="Paragraph starters">
                 <span className="text-[14px] text-ink-muted mr-1">Paragraph starters:</span>
                 {[
-                  ['Definition', '**Definition & theoretical context:**\n'],
-                  ['Diagram analysis', '**Diagram analysis & mechanism:**\nAs shown in the diagram, the initial equilibrium...'],
-                  ['Example', '**Real-world example:**\nFor instance, in the case of...'],
-                  ['Evaluation', '**Evaluation & conclusion:**\nIn the short run vs long run, the most critical tradeoff is...'],
+                  ['Definition', 'Definition and theoretical context:\n'],
+                  ['Diagram analysis', 'Diagram analysis and mechanism:\nAs shown in the diagram, the initial equilibrium...'],
+                  ['Example', 'Real-world example:\nFor instance, in the case of...'],
+                  ['Evaluation', 'Evaluation and conclusion:\nIn the short run vs long run, the most critical tradeoff is...'],
                 ].map(([label, snippet]) => (
                   <button key={label} type="button" onClick={() => insertSnippet(snippet)} className="btn btn-sm btn-quiet-paper">
                     {label}

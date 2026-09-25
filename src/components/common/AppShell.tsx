@@ -131,7 +131,7 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) 
           onAnchorHandled={() => setFormulaBookletAnchor(null)}
         />
 
-        {/* Global Workbench / Telemetry Drawer */}
+        {/* Settings drawer */}
         <AiStudioDrawer
           key={aiStudio.opens}
           initialTab={aiStudio.tab}
