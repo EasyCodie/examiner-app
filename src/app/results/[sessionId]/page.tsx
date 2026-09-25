@@ -3,21 +3,25 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { ExamSession, ExamManifest, QuestionEvaluation } from '@/types/exam';
+import { ExamSession, ExamManifest, QuestionEvaluation, QuestionItem } from '@/types/exam';
 import { getExamSession, getManifestById, saveExamSession, getAiConfig } from '@/lib/storage';
 import { useAppShell } from '@/components/common/AppShell';
 import { StorageErrorNotice } from '@/components/common/StorageErrorNotice';
 import { GradeBoundaryCard } from '@/components/assessment/GradeBoundaryCard';
 import { ExaminerReview, findEvaluation } from '@/components/assessment/ExaminerReview';
 import { SyllabusMatrix } from '@/components/assessment/SyllabusMatrix';
-import { synthesizeSyllabusBreakdown } from '@/lib/assessment/aggregate';
+import { gradePaper } from '@/lib/assessment/aggregate';
+import { markScript } from '@/lib/assessment/markScript';
 import { MissingKeyError, NO_KEY } from '@/lib/aiKey';
 
-type StreamEvent =
-  | { type: 'question_evaluated'; evaluation: QuestionEvaluation }
-  | { type: 'session_complete'; session: ExamSession }
-  | { type: 'error'; message?: string }
-  | { type: string };
+const questionLabel = (q: QuestionItem) => q.number.replace(/^Question\s*/i, '').replace(/\.$/, '');
+
+interface MarkingError {
+  /** The question marking stopped at, when a question failed. */
+  question?: QuestionItem;
+  message: string;
+  needsKey: boolean;
+}
 
 export default function ResultsPage() {
   const params = useParams();
@@ -32,99 +36,77 @@ export default function ResultsPage() {
   const [storageError, setStorageError] = useState(false);
   const [selectedQuestionIndex, setSelectedQuestionIndex] = useState(0);
 
-  // Live streaming evaluation state
-  const [isStreaming, setIsStreaming] = useState(false);
-  const [liveEvaluations, setLiveEvaluations] = useState<QuestionEvaluation[]>([]);
-  const [streamError, setStreamError] = useState<string | null>(null);
-  const [streamNeedsKey, setStreamNeedsKey] = useState(false);
+  const [isMarking, setIsMarking] = useState(false);
+  const [markingError, setMarkingError] = useState<MarkingError | null>(null);
 
-  const streamInitiatedRef = useRef(false);
+  const markingStartedRef = useRef(false);
   const abortControllerRef = useRef<AbortController | null>(null);
 
-  const startEvaluationStream = useCallback(async (m: ExamManifest, s: ExamSession) => {
+  // One question per request, in paper order; each evaluation is saved as it arrives, so a reload resumes
+  const startMarking = useCallback(async (m: ExamManifest, s: ExamSession) => {
     abortControllerRef.current?.abort();
     const controller = new AbortController();
     abortControllerRef.current = controller;
 
-    setIsStreaming(true);
-    setStreamError(null);
-    setStreamNeedsKey(false);
-    setLiveEvaluations([]);
+    setIsMarking(true);
+    setMarkingError(null);
 
     try {
       const cfg = await getAiConfig();
-      if (!cfg.apiKey) throw new MissingKeyError();
-      const res = await fetch('/api/evaluate-session', {
-        method: 'POST',
-        signal: controller.signal,
-        headers: {
-          'Content-Type': 'application/json',
-          ...(cfg.apiKey ? { 'x-gemini-key': cfg.apiKey } : {}),
-          ...(cfg.zaiApiKey ? { 'x-zai-key': cfg.zaiApiKey } : {}),
+      const thinkingBudget = cfg.thinkingBudgetGrading || 8192;
+      let current = s;
+
+      const { evaluations, failure } = await markScript({
+        questions: m.questions,
+        submissions: s.submissions || {},
+        evaluations: s.questionEvaluations ?? [],
+        gradeQuestion: async (question, submission, previousEvaluations) => {
+          if (!cfg.apiKey) throw new MissingKeyError();
+          const res = await fetch('/api/grade', {
+            method: 'POST',
+            signal: controller.signal,
+            headers: {
+              'Content-Type': 'application/json',
+              'x-gemini-key': cfg.apiKey,
+              ...(cfg.zaiApiKey ? { 'x-zai-key': cfg.zaiApiKey } : {}),
+            },
+            body: JSON.stringify({ question, submission, previousEvaluations, thinkingBudget }),
+          });
+          const data = await res.json().catch(() => ({}));
+          if (data.code === NO_KEY) throw new MissingKeyError();
+          if (!res.ok || !data.evaluation) throw new Error(data.error || 'The marking service did not respond.');
+          return data.evaluation as QuestionEvaluation;
         },
-        body: JSON.stringify({
-          manifest: m,
-          submissions: s.submissions || {},
-          sessionId: s.id,
-          timeRemainingSeconds: s.timeRemainingSeconds,
-          thinkingBudget: cfg.thinkingBudgetGrading || 8192,
-        }),
+        onEvaluated: async (all) => {
+          if (controller.signal.aborted) return;
+          current = { ...current, questionEvaluations: all };
+          setSession(current);
+          await saveExamSession(current);
+        },
       });
 
-      if (!res.ok || !res.body) {
-        const data = await res.json().catch(() => ({}));
-        if (data.code === NO_KEY) throw new MissingKeyError();
-        throw new Error(data.error || 'The marking service did not respond.');
-      }
-
-      const reader = res.body.getReader();
-      const decoder = new TextDecoder();
-      let buffer = '';
-
-      while (true) {
-        if (controller.signal.aborted) {
-          await reader.cancel().catch(() => {});
-          break;
-        }
-
-        const { done, value } = await reader.read();
-        if (done) break;
-
-        buffer += decoder.decode(value, { stream: true });
-        const lines = buffer.split('\n');
-        buffer = lines.pop() || '';
-
-        for (const line of lines) {
-          if (!line.trim() || controller.signal.aborted) continue;
-
-          // Parse failures are skipped; event errors must reach the student
-          let event: StreamEvent;
-          try {
-            event = JSON.parse(line);
-          } catch (jsonErr) {
-            console.warn('Skipping unreadable stream line:', line, jsonErr);
-            continue;
-          }
-
-          if (event.type === 'question_evaluated' && 'evaluation' in event) {
-            setLiveEvaluations((prev) => [...prev, event.evaluation]);
-          } else if (event.type === 'session_complete' && 'session' in event) {
-            setSession(event.session);
-            await saveExamSession(event.session);
-            setIsStreaming(false);
-          } else if (event.type === 'error') {
-            throw new Error(('message' in event && event.message) || 'A question could not be marked.');
-          }
-        }
-      }
-    } catch (err: unknown) {
-      if (controller.signal.aborted || (err instanceof Error && err.name === 'AbortError')) {
+      if (controller.signal.aborted) return;
+      if (failure) {
+        const { error } = failure;
+        setMarkingError({
+          question: failure.question,
+          message: error instanceof Error ? error.message : 'Marking stopped unexpectedly.',
+          needsKey: error instanceof MissingKeyError,
+        });
+        setIsMarking(false);
         return;
       }
-      if (!(err instanceof MissingKeyError)) console.error('Streaming assessment error:', err);
-      setStreamError(err instanceof Error ? err.message : 'Marking stopped unexpectedly.');
-      setStreamNeedsKey(err instanceof MissingKeyError);
-      setIsStreaming(false);
+
+      // Every question is marked: only now is there a paper grade and a Syllabus Weakness Matrix
+      const finished: ExamSession = { ...current, gradingResults: gradePaper(m, evaluations, thinkingBudget) };
+      setSession(finished);
+      await saveExamSession(finished);
+      setIsMarking(false);
+    } catch (err: unknown) {
+      if (controller.signal.aborted) return;
+      console.error('Marking error:', err);
+      setMarkingError({ message: err instanceof Error ? err.message : 'Marking stopped unexpectedly.', needsKey: false });
+      setIsMarking(false);
     }
   }, []);
 
@@ -147,16 +129,16 @@ export default function ResultsPage() {
         setLoading(false);
 
         const alreadyMarked = Boolean(s.gradingResults && s.gradingResults.evaluations.length > 0);
-        if (!alreadyMarked && isEvaluatingParam && !streamInitiatedRef.current) {
-          streamInitiatedRef.current = true;
-          startEvaluationStream(m, s);
+        if (!alreadyMarked && isEvaluatingParam && !markingStartedRef.current) {
+          markingStartedRef.current = true;
+          startMarking(m, s);
         }
       });
     }).catch(() => {
       setStorageError(true);
       setLoading(false);
     });
-  }, [sessionId, isEvaluatingParam, setHeaderInfo, startEvaluationStream]);
+  }, [sessionId, isEvaluatingParam, setHeaderInfo, startMarking]);
 
   if (storageError) return <StorageErrorNotice />;
 
@@ -185,11 +167,10 @@ export default function ResultsPage() {
   }
 
   const isFinished = Boolean(session.gradingResults && session.gradingResults.evaluations.length > 0);
-  const evaluations = session.gradingResults?.evaluations || liveEvaluations;
+  const evaluations = session.gradingResults?.evaluations ?? session.questionEvaluations ?? [];
   const ecfCount = evaluations.filter((e) => e.ecfApplied).length;
   const totalQuestions = manifest.questions.length;
   const markedCount = evaluations.length;
-  const syllabusBreakdown = session.gradingResults?.syllabusBreakdown || synthesizeSyllabusBreakdown(evaluations);
 
   // The question that cost the most marks leads the next step
   let costliestIndex = -1;
@@ -202,15 +183,18 @@ export default function ResultsPage() {
       costliestIndex = idx;
     }
   });
-  const costliestLabel =
-    costliestIndex >= 0 ? manifest.questions[costliestIndex].number.replace(/^Question\s*/i, '').replace(/\.$/, '') : '';
+  const costliestLabel = costliestIndex >= 0 ? questionLabel(manifest.questions[costliestIndex]) : '';
 
   const handedIn = new Date(session.submittedAt || session.startedAt);
-  const pendingLabel = streamError
-    ? 'This question was not marked.'
-    : isStreaming
-      ? 'Waiting for the examiner to reach this question.'
-      : 'This question has not been marked.';
+  const failedLabel = markingError?.question ? questionLabel(markingError.question) : '';
+  const pendingLabel =
+    markingError?.question && markingError.question.id === manifest.questions[selectedQuestionIndex]?.id
+      ? `Not marked. Retry question ${failedLabel} from the notice at the top of the report.`
+      : isMarking
+        ? 'Waiting for the examiner to reach this question.'
+        : markingError
+          ? 'Not marked yet. Questions are marked in order, so this one waits for the questions before it.'
+          : 'This question has not been marked.';
 
   return (
     <div className="flex-1 px-3 sm:px-5 py-6 sm:py-12">
@@ -230,42 +214,46 @@ export default function ResultsPage() {
         </header>
 
         {/* Marking progress, error, or the verdict */}
-        {streamError ? (
+        {markingError ? (
           <section role="alert" className="border border-lost p-5 sm:p-6 space-y-4">
-            <h2 className="font-serif text-[22px] font-semibold text-ink">Marking stopped</h2>
+            <h2 className="font-serif text-[22px] font-semibold text-ink">
+              {markingError.question && !markingError.needsKey ? `Question ${failedLabel} was not marked` : 'Marking stopped'}
+            </h2>
             <p className="text-[16px] leading-relaxed text-ink max-w-[65ch]">
-              {streamNeedsKey
+              {markingError.needsKey
                 ? 'The examiner needs a Gemini API key to mark this script. Add one, then try again. Your script is saved.'
-                : `The examiner could not finish marking (${streamError}). Your script is saved, so you can try again.`}
+                : markingError.question
+                  ? `${markingError.message} No marks have been given for question ${failedLabel}, and the questions after it wait until it is marked. Your script is saved.`
+                  : `The examiner could not finish marking (${markingError.message}). Your script is saved, so you can try again.`}
             </p>
             {markedCount > 0 && (
               <p className="text-[15px] text-ink-muted tabular">
-                {markedCount} of {totalQuestions} questions were marked before it stopped.
+                {markedCount} of {totalQuestions} questions marked so far.
               </p>
             )}
             <div className="flex flex-wrap gap-3">
-              {streamNeedsKey && (
+              {markingError.needsKey && (
                 <button type="button" onClick={() => openAiStudio('apiKey')} className="btn btn-ink">
                   Add an API key
                 </button>
               )}
               <button
                 type="button"
-                onClick={() => startEvaluationStream(manifest, session)}
-                className={`btn ${streamNeedsKey ? 'btn-quiet-paper' : 'btn-ink'}`}
+                onClick={() => startMarking(manifest, session)}
+                className={`btn ${markingError.needsKey ? 'btn-quiet-paper' : 'btn-ink'}`}
               >
-                Try marking again
+                {markingError.question && !markingError.needsKey ? `Retry question ${failedLabel}` : 'Try marking again'}
               </button>
             </div>
           </section>
         ) : !isFinished ? (
           <section role="status" aria-live="polite" className="space-y-3">
             <h2 className="font-serif text-[22px] font-semibold text-ink">
-              {isStreaming ? 'Marking your script' : 'Not yet marked'}
+              {isMarking ? 'Marking your script' : 'Not yet marked'}
             </h2>
             <p className="tabular text-[16px] text-ink">
               {markedCount} of {totalQuestions} questions marked.
-              {isStreaming && markedCount > 0 && ' Read each question below as soon as it is marked.'}
+              {isMarking && markedCount > 0 && ' Read each question below as soon as it is marked.'}
             </p>
             <div className="h-px bg-paper-rule" aria-hidden="true">
               <div
@@ -273,8 +261,8 @@ export default function ResultsPage() {
                 style={{ width: `${totalQuestions ? (markedCount / totalQuestions) * 100 : 0}%` }}
               />
             </div>
-            {!isStreaming && (
-              <button type="button" onClick={() => startEvaluationStream(manifest, session)} className="btn btn-ink">
+            {!isMarking && (
+              <button type="button" onClick={() => startMarking(manifest, session)} className="btn btn-ink">
                 Mark this script
               </button>
             )}
@@ -325,8 +313,12 @@ export default function ResultsPage() {
           pendingLabel={pendingLabel}
         />
 
-        {evaluations.length > 0 && (
-          <SyllabusMatrix syllabusBreakdown={syllabusBreakdown} paperId={manifest.id} allQuestions={manifest.questions} />
+        {isFinished && session.gradingResults && (
+          <SyllabusMatrix
+            syllabusBreakdown={session.gradingResults.syllabusBreakdown}
+            paperId={manifest.id}
+            allQuestions={manifest.questions}
+          />
         )}
       </article>
     </div>

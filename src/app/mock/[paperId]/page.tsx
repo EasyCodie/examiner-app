@@ -322,6 +322,7 @@ export default function MockExamPage() {
         activePageNumber,
         distinctQuestionPages,
         timeRemainingSeconds: remainingOverride ?? timeRemainingSeconds,
+        startedAt,
         humanitiesSubmissions,
       });
 
@@ -345,6 +346,7 @@ export default function MockExamPage() {
     activePageNumber,
     distinctQuestionPages,
     timeRemainingSeconds,
+    startedAt,
     humanitiesSubmissions,
     paperId,
     router,

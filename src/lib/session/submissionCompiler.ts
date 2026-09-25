@@ -15,6 +15,8 @@ export interface SubmissionCompilerInput {
   activePageNumber: number;
   distinctQuestionPages: number[];
   timeRemainingSeconds: number;
+  /** When the student began this attempt. */
+  startedAt: string;
   humanitiesSubmissions?: Record<string, QuestionSubmission>;
   existingSubmissions?: Record<string, QuestionSubmission>;
   sessionId?: string;
@@ -37,6 +39,7 @@ export function compileMockSession(input: SubmissionCompilerInput): {
     activePageNumber,
     distinctQuestionPages,
     timeRemainingSeconds,
+    startedAt,
     humanitiesSubmissions,
     existingSubmissions = {},
     sessionId = `session-${Date.now()}`,
@@ -65,7 +68,8 @@ export function compileMockSession(input: SubmissionCompilerInput): {
       paperTitle: manifest.title,
       subjectCategory: manifest.category,
       mode: 'TIMED_MOCK',
-      startedAt: new Date().toISOString(),
+      startedAt,
+      submittedAt: new Date().toISOString(),
       timeRemainingSeconds,
       durationSeconds: manifest.durationMinutes * 60,
       submissions: finalSubmissions,
@@ -133,7 +137,8 @@ export function compileMockSession(input: SubmissionCompilerInput): {
     paperTitle: manifest.title,
     subjectCategory: manifest.category,
     mode: 'TIMED_MOCK',
-    startedAt: new Date().toISOString(),
+    startedAt,
+    submittedAt: new Date().toISOString(),
     timeRemainingSeconds,
     durationSeconds: manifest.durationMinutes * 60,
     submissions: updatedSubmissions,

@@ -32,22 +32,24 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(missingKeyBody, { status: 401 });
     }
 
-    const { evaluation, isSimulated } = await evaluateSingleQuestion(
-      question,
-      submission,
-      previousEvaluations,
-      clientKey,
-      thinkingBudget,
-      clientZaiKey
-    );
-
-    return NextResponse.json({
-      evaluation,
-      isSimulated,
-      ...(isSimulated
-        ? { notice: 'Evaluated via local examiner engine fallback.' }
-        : {}),
-    });
+    try {
+      const evaluation = await evaluateSingleQuestion(
+        question,
+        submission,
+        previousEvaluations,
+        clientKey,
+        thinkingBudget,
+        clientZaiKey
+      );
+      return NextResponse.json({ evaluation });
+    } catch (error: unknown) {
+      // No marks are invented: the student sees this question as not marked and can retry it
+      console.error(`Grading failed for Question ${question.number}:`, error);
+      return NextResponse.json(
+        { error: 'The examiner could not mark this question. Try again in a moment.', code: 'MARKING_FAILED' },
+        { status: 502 }
+      );
+    }
   } catch (error: unknown) {
     console.error('Grading API Error:', error);
     const message = error instanceof Error ? error.message : 'Error evaluating submission.';

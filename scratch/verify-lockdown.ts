@@ -5,6 +5,7 @@ import {
   MAY_2021_MATH_AA_HL_P1,
 } from '../src/lib/samplePapers';
 import { evaluateSingleQuestion } from '../src/lib/assessment/evaluator';
+import { MissingKeyError } from '../src/lib/aiKey';
 import { calculatePredictedGrade, synthesizeSyllabusBreakdown } from '../src/lib/assessment/aggregate';
 import { QuestionSubmission, QuestionEvaluation, QuestionGrading } from '../src/types/exam';
 
@@ -175,79 +176,21 @@ async function runLockdownVerification() {
       questionNumber: q1.number,
       timeSpentSeconds: 10,
     };
-    const { evaluation, isSimulated } = await evaluateSingleQuestion(q1, emptySub, []);
-    assert.strictEqual(isSimulated, false);
+    const evaluation = await evaluateSingleQuestion(q1, emptySub, []);
     assert.strictEqual(evaluation.marksAwarded, 0);
     assert.strictEqual(evaluation.ecfApplied, false);
     assert(evaluation.markBreakdown.every((m) => !m.awarded && m.marksAwarded === 0));
   });
 
-  await test('Simulated engine applies ECF when previous subpart had an upstream error', async () => {
-    const q1 = BUNDLED_MATH_AA_HL.questions[0];
+  await test('Attempted question without a key fails instead of inventing marks', async () => {
     const q2 = BUNDLED_MATH_AA_HL.questions[1];
-
-    // Mock an upstream evaluation with lost marks (e.g. calculation slip)
-    const prevEvaluations: QuestionGrading[] = [
-      {
-        questionId: q1.id,
-        questionNumber: q1.number,
-        marksAwarded: 2,
-        maxMarks: q1.totalMarks,
-        examinerNotes: 'Upstream algebraic calculation error.',
-        marginAnnotations: [],
-        markBreakdown: [],
-        ecfApplied: false,
-        syllabusSubtopic: q1.syllabusSubtopic,
-        subtopicMasteryScore: 40,
-        revisionRecommendation: 'Check factorization.',
-      },
-    ];
-
-    // Submission for Q2 with substantial work
     const sub2: QuestionSubmission = {
       questionId: q2.id,
       questionNumber: q2.number,
       canvasImageBase64: 'data:image/png;base64,' + 'A'.repeat(2500),
       timeSpentSeconds: 90,
     };
-
-    const { evaluation } = await evaluateSingleQuestion(q2, sub2, prevEvaluations);
-
-    // Verify ECF triggered
-    assert.strictEqual(evaluation.ecfApplied, true, 'ECF should be flagged as true');
-    assert(
-      evaluation.markBreakdown.some((m) => m.isEcfApplied && m.awarded),
-      'At least one method mark should be awarded under ECF'
-    );
-    assert(
-      evaluation.examinerNotes.includes('Error Carried Forward (ECF)'),
-      'Examiner notes must mention ECF protection'
-    );
-  });
-
-  // 5. SUBPART ATTEMPT ISOLATION TEST
-  console.log('\n--- 5. SUBPART ATTEMPT ISOLATION ---');
-  await test('Question 12 with work only in part (a) awards 0 marks for unattempted subparts', async () => {
-    const q12 = MAY_2021_MATH_AA_HL_P1.questions.find((q) => q.number === '12')!;
-    assert(q12, 'Question 12 should exist in specimen paper');
-
-    const sub: QuestionSubmission = {
-      questionId: q12.id,
-      questionNumber: q12.number,
-      canvasImageBase64: 'data:image/png;base64,' + 'A'.repeat(3000),
-      timeSpentSeconds: 150,
-    };
-
-    const { evaluation } = await evaluateSingleQuestion(q12, sub, []);
-    assert(evaluation.marksAwarded > 0, 'Part a should receive marks');
-    assert(evaluation.marksAwarded < q12.totalMarks, 'Cannot receive full marks without attempting later subparts');
-
-    // Verify later subparts (b, c) were marked unattempted
-    const laterSubparts = evaluation.markBreakdown.slice(3);
-    assert(
-      laterSubparts.every((m) => !m.awarded && m.marksAwarded === 0),
-      'Later unattempted subparts must receive 0 marks'
-    );
+    await assert.rejects(evaluateSingleQuestion(q2, sub2, []), MissingKeyError);
   });
 
   // 6. SOCRATIC SCAFFOLDING SECRECY & TIER UNLOCKING
@@ -291,51 +234,6 @@ async function runLockdownVerification() {
 
   // 7. SUBPART EVALUATION & DISCRETE SCORING
   console.log('\n--- 7. SUBPART EVALUATION & DISCRETE SCORING ---');
-  await test('Multi-part question yields structured subpartScores with marks and ECF status', async () => {
-    const q10 = MAY_2021_MATH_AA_HL_P1.questions.find((q) => q.number === '10') || MAY_2021_MATH_AA_HL_P1.questions[9];
-    assert(q10 && q10.subparts && q10.subparts.length > 0, 'Question 10 should have subparts');
-
-    const sub: QuestionSubmission = {
-      questionId: q10.id,
-      questionNumber: q10.number,
-      canvasImageBase64: 'data:image/png;base64,' + 'B'.repeat(3500),
-      timeSpentSeconds: 180,
-    };
-
-    const prevEvals: QuestionEvaluation[] = [
-      {
-        questionId: 'q9',
-        questionNumber: '9',
-        marksAwarded: 2,
-        maxMarks: 6,
-        examinerNotes: 'Upstream calculation error.',
-        marginAnnotations: [],
-        markBreakdown: [],
-        ecfApplied: false,
-        syllabusSubtopic: 'Calculus',
-        subtopicMasteryScore: 33,
-        revisionRecommendation: 'Review derivatives.',
-      },
-    ];
-
-    const { evaluation } = await evaluateSingleQuestion(q10, sub, prevEvals);
-    assert(evaluation.subpartScores, 'evaluation.subpartScores must be populated');
-
-    // Verify each subpart is present
-    q10.subparts.forEach((sp) => {
-      const spScore = evaluation.subpartScores![sp.partLetter];
-      assert(spScore, `Subpart score for ${sp.partLetter} must exist`);
-      assert.strictEqual(spScore.maxMarks, sp.totalMarks, `Subpart ${sp.partLetter} maxMarks should match subpart totalMarks`);
-      assert(typeof spScore.marksAwarded === 'number', `marksAwarded should be numeric for ${sp.partLetter}`);
-    });
-
-    // Verify subpartPartLetter is present in marginAnnotations
-    assert(
-      evaluation.marginAnnotations.some((a) => a.subpartPartLetter !== undefined),
-      'Margin annotations should anchor to subpart letters'
-    );
-  });
-
   test('QuestionEvaluation is type-assignable to QuestionGrading alias', () => {
     const testEval: QuestionEvaluation = {
       questionId: 'q1',
@@ -374,6 +272,7 @@ async function runLockdownVerification() {
       activePageNumber: 1,
       distinctQuestionPages: [1],
       timeRemainingSeconds: 3000,
+      startedAt: '2026-05-04T08:00:00.000Z',
     });
 
     assert.strictEqual(session.paperId, paper.id);
@@ -394,6 +293,7 @@ async function runLockdownVerification() {
       activePageNumber: 1,
       distinctQuestionPages: [1],
       timeRemainingSeconds: 2400,
+      startedAt: '2026-05-04T08:00:00.000Z',
       humanitiesSubmissions: {
         [q1.id]: {
           questionId: q1.id,

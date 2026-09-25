@@ -1,46 +1,13 @@
-import {
-  ExamManifest,
-  ExamSession,
-  QuestionItem,
-  QuestionSubmission,
-  QuestionEvaluation,
-  AwardedMarkItem,
-  SubpartScoreItem,
-} from '@/types/exam';
+import { QuestionItem, QuestionSubmission, QuestionEvaluation, SubpartScoreItem } from '@/types/exam';
 import { getGeminiClient, DEFAULT_MODEL, FALLBACK_MODELS } from '@/lib/gemini';
 import { SENIOR_EXAMINER_PROMPT } from '@/lib/prompts';
 import { QUESTION_EVALUATION_SCHEMA } from '@/lib/schemas';
 import { transcribeStudentHandwriting, getZaiApiKey } from '@/lib/ocr/glmOcr';
-import { gradePaper } from '@/lib/assessment/aggregate';
-
-export type AssessmentEvent =
-  | {
-      type: 'question_evaluated';
-      questionIndex: number;
-      totalQuestions: number;
-      questionNumber: string;
-      evaluation: QuestionEvaluation;
-    }
-  | {
-      type: 'session_complete';
-      session: ExamSession;
-    }
-  | {
-      type: 'error';
-      message: string;
-    };
-
-export interface AssessmentOptions {
-  clientKey?: string;
-  zaiKey?: string;
-  thinkingBudget?: number;
-  sessionId?: string;
-  timeRemainingSeconds?: number;
-}
+import { MissingKeyError } from '@/lib/aiKey';
 
 /**
- * Evaluates a single exam question with multimodal artifacts, Error Carried Forward (ECF) context,
- * parallel GLM-OCR handwriting transcription, and automated failover to the local examiner simulation engine.
+ * Evaluates a single exam question with multimodal artifacts, Error Carried Forward (ECF) context
+ * and parallel GLM-OCR handwriting transcription. Throws when no model can mark it: marks are never invented.
  */
 export async function evaluateSingleQuestion(
   question: QuestionItem,
@@ -49,7 +16,7 @@ export async function evaluateSingleQuestion(
   clientKey?: string,
   thinkingBudget = 8192,
   zaiKey?: string
-): Promise<{ evaluation: QuestionEvaluation; isSimulated: boolean }> {
+): Promise<QuestionEvaluation> {
   const safeSubmission: QuestionSubmission = submission || {
     questionId: question.id,
     questionNumber: question.number,
@@ -99,16 +66,11 @@ export async function evaluateSingleQuestion(
       subtopicMasteryScore: 0,
       revisionRecommendation: `Review key principles in ${question.syllabusSubtopic}. Practice routine exercises addressing command term "${question.commandTerm}".`,
     };
-    return { evaluation: unattempted, isSimulated: false };
+    return unattempted;
   }
 
   const ai = getGeminiClient(clientKey);
-  if (!ai) {
-    const simulated = generateSimulatedGrading(question, safeSubmission, previousEvaluations);
-    simulated.questionId = question.id;
-    simulated.questionNumber = question.number;
-    return { evaluation: simulated, isSimulated: true };
-  }
+  if (!ai) throw new MissingKeyError();
 
   // Construct multimodal prompt payload
   const contents: (string | { inlineData: { data: string; mimeType: string } })[] = [];
@@ -294,226 +256,12 @@ Please evaluate the student's submission rigorously following IB examiner guidel
         const evaluationResult: QuestionEvaluation = JSON.parse(response.text);
         evaluationResult.questionId = question.id;
         evaluationResult.questionNumber = question.number;
-        return { evaluation: evaluationResult, isSimulated: false };
+        return evaluationResult;
       }
     } catch (err) {
       console.warn(`Grading model ${m} unavailable for Question ${question.number}:`, err);
     }
   }
 
-  // Seamless fallback to simulated examiner engine on model congestion
-  const simulated = generateSimulatedGrading(question, safeSubmission, previousEvaluations);
-  simulated.questionId = question.id;
-  simulated.questionNumber = question.number;
-  return { evaluation: simulated, isSimulated: true };
-}
-
-/**
- * Streams the evaluation of an entire exam attempt sequentially:
- * - Emits Question 1 first (~3-5s) so the student has immediate feedback.
- * - Streams questions 2..N sequentially with ECF progression.
- * - Concludes with the finalized ExamSession containing Grade Boundaries and Syllabus Matrix.
- */
-export async function* streamExamAssessment(
-  manifest: ExamManifest,
-  submissions: Record<string, QuestionSubmission>,
-  options: AssessmentOptions = {}
-): AsyncGenerator<AssessmentEvent, void, unknown> {
-  const evaluations: QuestionEvaluation[] = [];
-  const totalQuestions = manifest.questions.length;
-  const thinkingBudget = options.thinkingBudget ?? 8192;
-
-  try {
-    for (let i = 0; i < totalQuestions; i++) {
-      const question = manifest.questions[i];
-      const submission = submissions[question.id];
-
-      const { evaluation } = await evaluateSingleQuestion(
-        question,
-        submission,
-        evaluations,
-        options.clientKey,
-        thinkingBudget,
-        options.zaiKey
-      );
-
-      evaluations.push(evaluation);
-
-      yield {
-        type: 'question_evaluated',
-        questionIndex: i,
-        totalQuestions,
-        questionNumber: question.number,
-        evaluation,
-      };
-    }
-
-    const sessionId = options.sessionId || `session-${Date.now()}`;
-    const finalizedSession: ExamSession = {
-      id: sessionId,
-      paperId: manifest.id,
-      paperTitle: manifest.title,
-      subjectCategory: manifest.category,
-      mode: 'TIMED_MOCK',
-      startedAt: new Date().toISOString(),
-      submittedAt: new Date().toISOString(),
-      timeRemainingSeconds: options.timeRemainingSeconds ?? 0,
-      durationSeconds: manifest.durationMinutes * 60,
-      submissions,
-      gradingResults: gradePaper(manifest, evaluations, thinkingBudget),
-    };
-
-    yield {
-      type: 'session_complete',
-      session: finalizedSession,
-    };
-  } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : 'Error evaluating exam session.';
-    yield {
-      type: 'error',
-      message,
-    };
-  }
-}
-
-/**
- * Fallback local examiner simulator for offline testing or upstream API congestion.
- */
-function generateSimulatedGrading(
-  question: QuestionItem,
-  submission: QuestionSubmission,
-  previousEvaluations: QuestionEvaluation[]
-): QuestionEvaluation {
-  const hasWork = Boolean(
-    (submission.canvasImageBase64 && submission.canvasImageBase64.length > 2000) ||
-    (submission.textResponse && submission.textResponse.trim().length > 20) ||
-    (submission.subpartImages && Object.values(submission.subpartImages).some((img) => img && img.length > 2000))
-  );
-
-  const prevHadError = previousEvaluations.some((p) => p.marksAwarded < p.maxMarks);
-  const triggerEcf = prevHadError && hasWork;
-
-  // Determine if question has subparts and calculate subpart distribution
-  const hasSubparts = Boolean(question.subparts && question.subparts.length > 1);
-  const partACount = (hasSubparts && question.subparts?.[0]?.markCodes?.length) || 3;
-
-  const markBreakdown: AwardedMarkItem[] = question.markCodes.map((mc, idx) => {
-    let awarded = false;
-    let isEcf = false;
-    let reason = 'Incomplete or unverified step.';
-
-    if (hasWork) {
-      // If question has multiple subparts and the student only attempted subpart (a),
-      // only award marks within subpart (a) criteria!
-      const isBeyondPartA = hasSubparts && idx >= partACount;
-      if (isBeyondPartA) {
-        awarded = false;
-        reason = 'No working or solution provided for this subpart.';
-      } else if (idx === 0) {
-        awarded = true;
-        reason = `Valid method demonstrated according to markscheme criterion for ${mc.code}.`;
-      } else if (triggerEcf && mc.type === 'M') {
-        awarded = true;
-        isEcf = true;
-        reason = `[ECF Applied] Valid method correctly applied to intermediate value carried forward from previous subpart.`;
-      } else if (idx < (hasSubparts ? partACount - 1 : question.markCodes.length - 1)) {
-        awarded = true;
-        reason = `Step properly calculated with correct algebraic progression.`;
-      } else {
-        awarded = !prevHadError;
-        reason = awarded
-          ? `Correct final answer/reasoning accurately aligned with markscheme.`
-          : `Final numerical value diverged due to upstream working, but method marks preserved.`;
-      }
-    }
-
-    return {
-      code: mc.code,
-      type: mc.type,
-      awarded,
-      marksAwarded: awarded ? mc.marks : 0,
-      maxMarks: mc.marks,
-      reason,
-      isEcfApplied: isEcf,
-    };
-  });
-
-  const totalAwarded = markBreakdown.reduce((sum, m) => sum + m.marksAwarded, 0);
-
-  // Compute discrete subpart scores if question has subparts
-  const subpartScores: Record<string, SubpartScoreItem> = {};
-  if (question.subparts && question.subparts.length > 0) {
-    let codeIndex = 0;
-    question.subparts.forEach((sp, spIdx) => {
-      const numCodes = sp.markCodes?.length || Math.ceil(question.markCodes.length / question.subparts!.length);
-      const spCodes = markBreakdown.slice(codeIndex, codeIndex + numCodes);
-      codeIndex += numCodes;
-
-      const spMarksAwarded = spCodes.reduce((sum, m) => sum + m.marksAwarded, 0);
-      const spEcf = spCodes.some((m) => m.isEcfApplied);
-      const isAttempted = hasWork && (spIdx === 0 || spMarksAwarded > 0);
-
-      subpartScores[sp.partLetter] = {
-        marksAwarded: spMarksAwarded,
-        maxMarks: sp.totalMarks,
-        ecfApplied: spEcf,
-        reason: !isAttempted
-          ? `No working or solution recorded for Subpart ${sp.partLetter}.`
-          : spMarksAwarded === sp.totalMarks
-          ? `Full criteria achieved for Subpart ${sp.partLetter}.`
-          : spEcf
-          ? `Subpart ${sp.partLetter} method preserved under IB Error Carried Forward protocol.`
-          : `Calculated per markscheme criteria for Subpart ${sp.partLetter}.`,
-      };
-    });
-  }
-
-  return {
-    questionId: question.id,
-    questionNumber: question.number,
-    marksAwarded: totalAwarded,
-    maxMarks: question.totalMarks,
-    subpartScores: Object.keys(subpartScores).length > 0 ? subpartScores : undefined,
-    examinerNotes: hasWork
-      ? `The student demonstrated solid engagement with command term "${question.commandTerm}". Method marks were secured through explicit working. ${
-          triggerEcf ? 'Notice that Error Carried Forward (ECF) conventions were rigorously applied to ensure no double penalty occurred.' : ''
-        }`
-      : `No sufficient working or text was provided for this question.`,
-    marginAnnotations: hasWork
-      ? [
-          {
-            label: 'M1 Awarded',
-            type: 'tick',
-            text: 'Valid method step shown clearly.',
-            subpartPartLetter: question.subparts?.[0]?.partLetter,
-          },
-          ...(triggerEcf
-            ? [
-                {
-                  label: 'ECF Applied',
-                  type: 'ecf' as const,
-                  text: 'Follow-through method credited without penalty.',
-                  subpartPartLetter: question.subparts?.[1]?.partLetter || question.subparts?.[0]?.partLetter,
-                },
-              ]
-            : []),
-          {
-            label: totalAwarded === question.totalMarks ? 'Full Marks' : 'Accuracy Slip',
-            type: totalAwarded === question.totalMarks ? ('tick' as const) : ('cross' as const),
-            text: totalAwarded === question.totalMarks ? 'Exact answer verified against markscheme.' : 'Check final constant/arithmetic step.',
-            subpartPartLetter: question.subparts?.[question.subparts.length - 1]?.partLetter,
-          },
-        ]
-      : [{ label: 'No response', type: 'cross', text: 'Blank submission.' }],
-    markBreakdown,
-    ecfApplied: triggerEcf,
-    ecfExplanation: triggerEcf
-      ? 'Error from preceding subpart was detected, but student executed the downstream calculus/algebraic method accurately. ECF marks awarded per IB conventions.'
-      : undefined,
-    syllabusSubtopic: question.syllabusSubtopic,
-    subtopicMasteryScore: question.totalMarks > 0 ? Math.round((totalAwarded / question.totalMarks) * 100) : 0,
-    revisionRecommendation: `Review key examples in ${question.syllabusSubtopic}. Practice verifying intermediate steps using the formula booklet (${
-      question.formulaBookletRef || 'core syllabus'
-    }).`,
-  };
+  throw new Error(`No grading model could mark Question ${question.number}.`);
 }

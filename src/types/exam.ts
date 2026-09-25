@@ -150,6 +150,8 @@ export interface ExamSession {
   timeRemainingSeconds: number;
   durationSeconds: number;
   submissions: Record<string, QuestionSubmission>; // questionId -> submission
+  /** Question Evaluations saved as marking goes, in paper order; gradingResults is set once every question is marked. */
+  questionEvaluations?: QuestionEvaluation[];
   gradingResults?: {
     totalMarksAwarded: number;
     totalPossibleMarks: number;
