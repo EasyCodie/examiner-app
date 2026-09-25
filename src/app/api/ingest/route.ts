@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { compileExamManifest, IngestionError } from '@/lib/ingestion/compiler';
 import { checkUploadPair, isPdfBytes, MAX_UPLOAD_BYTES } from '@/lib/ingestion/uploadLimits';
-import { INVALID_KEY, missingKeyBody, readClientKeys } from '@/lib/aiKey';
+import { missingKeyBody, readClientKeys } from '@/lib/aiKey';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 300; // Vercel Hobby's ceiling; the pipeline stops itself at 270 s
@@ -65,7 +65,7 @@ export async function POST(req: NextRequest) {
     console.error('Ingestion Route Adapter Error:', error);
     if (error instanceof IngestionError) {
       const { status, error: message } = INGESTION_ERRORS[error.code];
-      return NextResponse.json({ error: message, code: error.code === 'INVALID_KEY' ? INVALID_KEY : error.code }, { status });
+      return NextResponse.json({ error: message, code: error.code }, { status });
     }
     return NextResponse.json(
       { error: 'Something went wrong while reading the PDFs. Try again.', code: 'INGEST_FAILED' },

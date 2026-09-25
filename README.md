@@ -4,7 +4,7 @@ Criterion is an exam practice app for IB Diploma students. You sit an IB-style p
 
 I built it as part of my IB CAS (Creativity, Activity, Service) portfolio.
 
-> Criterion writes IB-style practice papers and marks them in the IB's method. It is not affiliated with or endorsed by the International Baccalaureate.
+> Criterion comes with an IB-style specimen paper and one past IB paper, and marks your work in the IB's method. It is not affiliated with or endorsed by the International Baccalaureate.
 
 ## What you can do
 

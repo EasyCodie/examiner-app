@@ -252,7 +252,7 @@ Please evaluate the student's submission rigorously following IB examiner guidel
           responseMimeType: 'application/json',
           responseSchema: QUESTION_EVALUATION_SCHEMA,
           thinkingConfig: {
-            thinkingBudget: thinkingBudget > 0 ? thinkingBudget : 8192,
+            thinkingBudget,
           },
           temperature: 0.1,
         },

@@ -38,3 +38,4 @@ Context: this amends ADR 0001 (streaming session evaluation with failover to the
   - A reload made no new requests and showed no alert.
   - `startedAt` matched the seeded start.
   - The only console entry was the expected 502 resource log from the forced failure.
+- Code review: `scratch/test-q12.ts` was deleted with the simulator because it only exercised simulated grading of Q12, and per-question marking is covered by `scratch/test-mark-script.mjs`. The session also records `submittedAt`, so the report's "Handed in" date stays true now that `startedAt` is the real start.

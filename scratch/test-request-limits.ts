@@ -44,6 +44,13 @@ assert.ok(
   'history too long'
 );
 assert.ok(checkGradeRequest({ question, submission: submission(), previousEvaluations: 'nope' }), 'history must be a list');
+const bulky = { examinerNotes: 'x'.repeat(LIMITS.previousEvaluationsChars) };
+assert.ok(checkGradeRequest({ question, submission: submission(), previousEvaluations: [bulky] }), 'history too large');
+assert.equal(
+  checkGradeRequest({ question, submission: submission(), previousEvaluations: Array(LIMITS.previousEvaluations).fill({ examinerNotes: 'ok' }) }),
+  null,
+  'a full paper of ordinary history is fine'
+);
 
 // Tutor requests.
 const ok = { question, userMessage: 'Where do I start?', messages: [], studentSnapshotImageBase64: '', studentSnapshotText: '' };

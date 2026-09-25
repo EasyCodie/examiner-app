@@ -15,7 +15,7 @@ We restructure the application into **Deep Modules** adhering to the [codebase-d
 
 1. **Manifest Ingestion Compiler (`src/lib/ingestion/compiler.ts`)**:
    - Presents a high-leverage in-process interface: `compileExamManifest(paperPdf, markschemePdf, options?)`.
-   - Encapsulates all dual-document GLM-OCR parsing, markscheme binary omission, prompt formulation, multi-model fallback racing, SVG diagram normalization, and schema validation.
+   - Encapsulates all dual-document GLM-OCR parsing, markscheme binary omission, prompt formulation, multi-model fallback under one overall deadline with aborted requests, SVG diagram normalization, and schema validation.
    - `src/app/api/ingest/route.ts` becomes a thin 25-line transport adapter extracting files from `FormData` and delegating to the compiler.
 
 2. **Socratic Tutoring Engine (`src/lib/socratic/tutor.ts`)**:

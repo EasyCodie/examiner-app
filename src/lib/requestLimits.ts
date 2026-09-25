@@ -6,7 +6,8 @@ export const LIMITS = {
   textResponseChars: 20_000,
   tutorMessageChars: 2_000,
   subpartImages: 12,
-  previousEvaluations: 60,
+  previousEvaluations: 200,
+  previousEvaluationsChars: 400_000,
   conversationMessages: 100,
 } as const;
 
@@ -48,6 +49,8 @@ export function checkGradeRequest(body: {
   const history = body.previousEvaluations;
   if (history !== undefined && !Array.isArray(history)) return 'Earlier marks must be a list.';
   if (Array.isArray(history) && history.length > LIMITS.previousEvaluations) return 'Too many earlier marks.';
+  // Earlier marks go into the prompt, so their total size is bounded too
+  if (Array.isArray(history) && JSON.stringify(history).length > LIMITS.previousEvaluationsChars) return 'Earlier marks are too large.';
   return null;
 }
 

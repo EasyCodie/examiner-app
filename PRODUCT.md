@@ -20,7 +20,7 @@ Unlike generic AI study chatbots or broad flashcard tools, Criterion anchors eva
   - *STEM Subjects*: High-resolution drawing canvas overlaid on rendered exam booklets, supporting stylus/touch input, ballpoint/highlighter strokes, and composite page flattening for vision-based grading.
   - *Humanities Subjects*: Split-screen prompt viewer and structured essay composer with word count, scaffolded insertion templates, and an inline economic/scientific diagram sketchpad.
 - **Senior Examiner Evaluation**: High reasoning effort assessment pass (`thinkingBudget: 8192`) providing granular mark breakdowns (`M1`, `A1`, `R1`, `AG`), simulated margin annotations, and IB 1–7 grade boundary predictions.
-- **Socratic Learn Mode**: Collaborative AI dialogue with dedicated reasoning budget (`thinkingBudget: 2048`) structured across a 4-tier pedagogical scaffold (Tier 1: Command Term Anchor, Tier 2: Formula Booklet/Model Clue, Tier 3: Diagnostic Clue, Tier 4: Markscheme Walkthrough).
+- **Socratic Learn Mode**: Collaborative AI dialogue with dedicated reasoning budget (`thinkingBudget: 2048`) structured across a 4-tier pedagogical scaffold (Tier 1: Command Term Anchor, Tier 2: Formula Clue, or Concept Clue for subjects without a formula booklet, Tier 3: Diagnostic Clue, Tier 4: Markscheme Walkthrough).
 - **Settings Drawer**: Slide-out panel where each student adds their own Gemini API key and tunes the examiner's and tutor's reasoning budgets.
 
 ## Capabilities and Constraints

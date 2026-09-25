@@ -24,7 +24,7 @@ export default function OpengraphImage() {
           <svg width="96" height="96" viewBox="0 0 24 24" fill="none" stroke="#e9ecef" strokeWidth={2} strokeLinecap="square">
             <path d="M8 3.5H4.5v17H8" />
             <path d="M16 3.5h3.5v17H16" />
-            <path d="M8.5 12.5l2.25 2.5L15.5 9" stroke="#9db0ff" />
+            <path d="M8.5 12.5l2.25 2.5L15.5 9" />
           </svg>
           <div style={{ fontSize: 88, fontWeight: 700 }}>Criterion</div>
         </div>

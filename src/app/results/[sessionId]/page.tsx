@@ -74,6 +74,7 @@ export default function ResultsPage() {
           });
           const data = await res.json().catch(() => ({}));
           if (data.code === NO_KEY || data.code === INVALID_KEY) throw new MissingKeyError();
+          if (res.status === 413) throw new Error('The working for this question is too large to send for marking.');
           if (!res.ok || !data.evaluation) throw new Error(data.error || 'The marking service did not respond.');
           return data.evaluation as QuestionEvaluation;
         },

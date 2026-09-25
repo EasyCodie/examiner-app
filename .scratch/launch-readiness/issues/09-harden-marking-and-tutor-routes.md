@@ -53,3 +53,4 @@
   - t06: a stubbed 502 on question 2(a) gives "not marked", and retry re-marks from 2(a) only.
   - t09: a rejected key at hand-in shows the key prompt, keeps the session and records no grade.
   - t07: tiers 1–3 stay locked, tier 4 unlocks, and a rejected key shows the key prompt.
+- Code review: the total size of the earlier-evaluation history is capped too (400,000 characters of JSON), and the entry cap was raised to 200 so a long ingested paper can't get stuck on a count limit. A requested thinking budget of 0 is now honoured instead of becoming 8192. A 413 from the host names the oversized working instead of reporting a generic failure.
