@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { evaluateSingleQuestion } from '@/lib/assessment/evaluator';
 import { QuestionItem, QuestionSubmission, QuestionEvaluation } from '@/types/exam';
+import { missingKeyBody, readClientKeys } from '@/lib/aiKey';
 
 export const dynamic = 'force-dynamic';
 
@@ -26,8 +27,10 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const clientKey = req.headers.get('x-gemini-key') || undefined;
-    const clientZaiKey = req.headers.get('x-zai-key') || undefined;
+    const { geminiKey: clientKey, zaiKey: clientZaiKey } = readClientKeys(req.headers);
+    if (!clientKey) {
+      return NextResponse.json(missingKeyBody, { status: 401 });
+    }
 
     const { evaluation, isSimulated } = await evaluateSingleQuestion(
       question,

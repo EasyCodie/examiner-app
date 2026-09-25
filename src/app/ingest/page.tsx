@@ -6,10 +6,9 @@ import { ExamManifest } from '@/types/exam';
 import { saveManifest, savePdfBlob, getAiConfig } from '@/lib/storage';
 import { useAppShell } from '@/components/common/AppShell';
 import { PdfField } from '@/components/ingest/PdfField';
+import { MissingKeyError, NO_KEY } from '@/lib/aiKey';
 
 type FlowStep = 'UPLOAD' | 'COMPILING' | 'READY';
-
-const looksLikeMissingKey = (msg: string) => /api[\s_-]?key|GEMINI|unauthori[sz]ed|401|403/i.test(msg);
 
 const formatElapsed = (sec: number) => `${Math.floor(sec / 60)}:${(sec % 60).toString().padStart(2, '0')}`;
 
@@ -20,6 +19,7 @@ export default function IngestPage() {
   const [paperFile, setPaperFile] = useState<File | null>(null);
   const [markschemeFile, setMarkschemeFile] = useState<File | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [needsKey, setNeedsKey] = useState(false);
   const [hasClientKey, setHasClientKey] = useState<boolean | null>(null);
   const [elapsed, setElapsed] = useState(0);
   const [activeManifest, setActiveManifest] = useState<ExamManifest | null>(null);
@@ -45,6 +45,7 @@ export default function IngestPage() {
     }
 
     setError(null);
+    setNeedsKey(false);
     setElapsed(0);
     setStep('COMPILING');
     const controller = new AbortController();
@@ -56,6 +57,7 @@ export default function IngestPage() {
       formData.append('markschemeFile', markschemeFile);
 
       const cfg = await getAiConfig();
+      if (!cfg.apiKey) throw new MissingKeyError();
       const response = await fetch('/api/ingest', {
         method: 'POST',
         signal: controller.signal,
@@ -68,6 +70,7 @@ export default function IngestPage() {
 
       const data = await response.json().catch(() => ({}));
       if (!response.ok) {
+        if (data.code === NO_KEY) throw new MissingKeyError();
         throw new Error(data.error || `The server returned ${response.status}.`);
       }
 
@@ -88,6 +91,7 @@ export default function IngestPage() {
         return;
       }
       setError(err instanceof Error ? err.message : 'The PDFs could not be read.');
+      setNeedsKey(err instanceof MissingKeyError);
       setStep('UPLOAD');
     }
   };
@@ -96,11 +100,10 @@ export default function IngestPage() {
     setPaperFile(null);
     setMarkschemeFile(null);
     setError(null);
+    setNeedsKey(false);
     setActiveManifest(null);
     setStep('UPLOAD');
   };
-
-  const needsKey = error ? looksLikeMissingKey(error) : false;
 
   return (
     <div className="flex-1 w-full px-3 sm:px-5 py-10 sm:py-14">
@@ -118,8 +121,7 @@ export default function IngestPage() {
             {hasClientKey === false && (
               <div className="border-t border-b border-ink py-4 flex flex-wrap items-center justify-between gap-3">
                 <p className="text-[15px] leading-relaxed text-ink max-w-[52ch]">
-                  Reading PDFs needs a Gemini API key. None is saved in this browser yet; skip this only if your server has
-                  one configured.
+                  Reading PDFs needs your own Gemini API key. None is saved in this browser yet.
                 </p>
                 <button type="button" onClick={() => openAiStudio('apiKey')} className="btn btn-sm btn-quiet-paper">
                   Add an API key

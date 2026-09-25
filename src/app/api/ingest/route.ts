@@ -1,10 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { compileExamManifest } from '@/lib/ingestion/compiler';
+import { missingKeyBody, readClientKeys } from '@/lib/aiKey';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 180; // 3 minute maximum for dual PDF multimodal extraction
 
 export async function POST(req: NextRequest) {
+  const { geminiKey: clientKey, zaiKey: clientZaiKey } = readClientKeys(req.headers);
+  if (!clientKey) {
+    return NextResponse.json(missingKeyBody, { status: 401 });
+  }
+
   try {
     const formData = await req.formData();
     const paperFile = formData.get('paperFile') as File | null;
@@ -16,9 +22,6 @@ export async function POST(req: NextRequest) {
         { status: 400 }
       );
     }
-
-    const clientKey = req.headers.get('x-gemini-key') || undefined;
-    const clientZaiKey = req.headers.get('x-zai-key') || undefined;
 
     const paperBuffer = Buffer.from(await paperFile.arrayBuffer());
     const markschemeBuffer = Buffer.from(await markschemeFile.arrayBuffer());

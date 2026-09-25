@@ -10,14 +10,13 @@ import { GradeBoundaryCard } from '@/components/assessment/GradeBoundaryCard';
 import { ExaminerReview, findEvaluation } from '@/components/assessment/ExaminerReview';
 import { SyllabusMatrix } from '@/components/assessment/SyllabusMatrix';
 import { synthesizeSyllabusBreakdown } from '@/lib/assessment/aggregate';
+import { MissingKeyError, NO_KEY } from '@/lib/aiKey';
 
 type StreamEvent =
   | { type: 'question_evaluated'; evaluation: QuestionEvaluation }
   | { type: 'session_complete'; session: ExamSession }
   | { type: 'error'; message?: string }
   | { type: string };
-
-const looksLikeMissingKey = (msg: string) => /api[\s_-]?key|GEMINI|unauthori[sz]ed|401|403/i.test(msg);
 
 export default function ResultsPage() {
   const params = useParams();
@@ -35,6 +34,7 @@ export default function ResultsPage() {
   const [isStreaming, setIsStreaming] = useState(false);
   const [liveEvaluations, setLiveEvaluations] = useState<QuestionEvaluation[]>([]);
   const [streamError, setStreamError] = useState<string | null>(null);
+  const [streamNeedsKey, setStreamNeedsKey] = useState(false);
 
   const streamInitiatedRef = useRef(false);
   const abortControllerRef = useRef<AbortController | null>(null);
@@ -46,10 +46,12 @@ export default function ResultsPage() {
 
     setIsStreaming(true);
     setStreamError(null);
+    setStreamNeedsKey(false);
     setLiveEvaluations([]);
 
     try {
       const cfg = await getAiConfig();
+      if (!cfg.apiKey) throw new MissingKeyError();
       const res = await fetch('/api/evaluate-session', {
         method: 'POST',
         signal: controller.signal,
@@ -68,8 +70,9 @@ export default function ResultsPage() {
       });
 
       if (!res.ok || !res.body) {
-        const errorText = await res.text();
-        throw new Error(errorText || 'The marking service did not respond.');
+        const data = await res.json().catch(() => ({}));
+        if (data.code === NO_KEY) throw new MissingKeyError();
+        throw new Error(data.error || 'The marking service did not respond.');
       }
 
       const reader = res.body.getReader();
@@ -116,8 +119,9 @@ export default function ResultsPage() {
       if (controller.signal.aborted || (err instanceof Error && err.name === 'AbortError')) {
         return;
       }
-      console.error('Streaming assessment error:', err);
+      if (!(err instanceof MissingKeyError)) console.error('Streaming assessment error:', err);
       setStreamError(err instanceof Error ? err.message : 'Marking stopped unexpectedly.');
+      setStreamNeedsKey(err instanceof MissingKeyError);
       setIsStreaming(false);
     }
   }, []);
@@ -223,7 +227,7 @@ export default function ResultsPage() {
           <section role="alert" className="border border-lost p-5 sm:p-6 space-y-4">
             <h2 className="font-serif text-[22px] font-semibold text-ink">Marking stopped</h2>
             <p className="text-[16px] leading-relaxed text-ink max-w-[65ch]">
-              {looksLikeMissingKey(streamError)
+              {streamNeedsKey
                 ? 'The examiner needs a Gemini API key to mark this script. Add one, then try again. Your script is saved.'
                 : `The examiner could not finish marking (${streamError}). Your script is saved, so you can try again.`}
             </p>
@@ -233,7 +237,7 @@ export default function ResultsPage() {
               </p>
             )}
             <div className="flex flex-wrap gap-3">
-              {looksLikeMissingKey(streamError) && (
+              {streamNeedsKey && (
                 <button type="button" onClick={() => openAiStudio('apiKey')} className="btn btn-ink">
                   Add an API key
                 </button>
@@ -241,7 +245,7 @@ export default function ResultsPage() {
               <button
                 type="button"
                 onClick={() => startEvaluationStream(manifest, session)}
-                className={`btn ${looksLikeMissingKey(streamError) ? 'btn-quiet-paper' : 'btn-ink'}`}
+                className={`btn ${streamNeedsKey ? 'btn-quiet-paper' : 'btn-ink'}`}
               >
                 Try marking again
               </button>

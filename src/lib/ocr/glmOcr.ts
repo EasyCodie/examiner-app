@@ -43,10 +43,10 @@ export const ZAI_API_ENDPOINT = 'https://api.z.ai/api/paas/v4/layout_parsing';
 export const GLM_OCR_MODEL = 'glm-ocr';
 
 /**
- * Resolves the active Z.AI / GLM-OCR API key from request, environment, or config.
+ * Resolves the student's own Z.AI / GLM-OCR API key from the request. The server holds no key.
  */
 export function getZaiApiKey(customKey?: string): string | null {
-  const key = customKey || process.env.ZAI_API_KEY || process.env.GLM_API_KEY;
+  const key = customKey;
   if (!key || !key.trim()) return null;
   return key.trim();
 }
@@ -75,7 +75,7 @@ export async function parseWithGlmOcr(
 ): Promise<GlmOcrResponse> {
   const key = getZaiApiKey(apiKey);
   if (!key) {
-    throw new Error('Z.AI API Key is missing. Please configure ZAI_API_KEY in .env.local or via AI Studio Workbench.');
+    throw new Error('Z.AI API key is missing.');
   }
 
   const normalizedFile = normalizeFileInput(fileInput, mimeType);

@@ -5,9 +5,9 @@ import { parseWithGlmOcr, GLM_OCR_MODEL } from '@/lib/ocr/glmOcr';
 export async function POST(req: NextRequest) {
   try {
     const { apiKey, provider = 'gemini' } = await req.json();
+    const keyToTest = typeof apiKey === 'string' ? apiKey.trim() : '';
 
     if (provider === 'zai' || provider === 'glm-ocr') {
-      const keyToTest = apiKey || process.env.ZAI_API_KEY || process.env.GLM_API_KEY;
       if (!keyToTest) {
         return NextResponse.json({ valid: false, message: 'No Z.AI / GLM-OCR API key provided.' }, { status: 400 });
       }
@@ -28,8 +28,6 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ valid: false, message: msg, provider: 'zai' }, { status: 401 });
       }
     }
-
-    const keyToTest = apiKey || process.env.GEMINI_API_KEY;
 
     if (!keyToTest) {
       return NextResponse.json({ valid: false, message: 'No API key provided.' }, { status: 400 });
@@ -69,7 +67,6 @@ export async function POST(req: NextRequest) {
       valid: true,
       message: `${successfulModel} connected successfully.`,
       model: successfulModel,
-      reply,
     });
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : 'Failed to test API key.';

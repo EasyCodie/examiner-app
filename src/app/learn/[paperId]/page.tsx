@@ -11,6 +11,7 @@ import {
   CanvasStroke,
 } from '@/types/exam';
 import { getManifestById, getAiConfig } from '@/lib/storage';
+import { MissingKeyError, NO_KEY } from '@/lib/aiKey';
 import { useAppShell } from '@/components/common/AppShell';
 import { SocraticSidebar, TutorFailure } from '@/components/socratic/SocraticSidebar';
 import { ContentsStrip } from '@/components/exam/ContentsStrip';
@@ -180,6 +181,7 @@ export default function SocraticLearnPage() {
       }
 
       const cfg = await getAiConfig();
+      if (!cfg.apiKey) throw new MissingKeyError();
       const response = await fetch('/api/socratic', {
         method: 'POST',
         headers: {
@@ -199,6 +201,7 @@ export default function SocraticLearnPage() {
 
       const data = await response.json().catch(() => ({}));
       if (!response.ok || !data.response) {
+        if (data.code === NO_KEY) throw new MissingKeyError();
         throw new Error(data.error || data.message || `the tutor service returned ${response.status}`);
       }
 
@@ -217,14 +220,14 @@ export default function SocraticLearnPage() {
       if (reply.unlockedMarkscheme) setIsMarkschemeUnlocked(true);
       setConversations((prev) => ({ ...prev, [questionId]: [...history, tutorMsg] }));
     } catch (err) {
-      console.error('Socratic error', err);
+      if (!(err instanceof MissingKeyError)) console.error('Socratic error', err);
       const message = err instanceof Error ? err.message : 'unknown error';
       setTutorFailure({
         questionId,
         text: userText,
         tier,
         message,
-        needsKey: /api[\s_-]?key|GEMINI|unauthori[sz]ed|401|403/i.test(message),
+        needsKey: err instanceof MissingKeyError,
       });
     } finally {
       setIsLoadingTutor(false);

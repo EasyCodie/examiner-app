@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { consultSocraticTutor, generateSimulatedSocraticResponse } from '@/lib/socratic/tutor';
 import { QuestionItem, SocraticMessage, PedagogicalTier } from '@/types/exam';
+import { missingKeyBody, readClientKeys } from '@/lib/aiKey';
 
 export const dynamic = 'force-dynamic';
 
@@ -29,7 +30,10 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Missing question context.' }, { status: 400 });
     }
 
-    const clientKey = req.headers.get('x-gemini-key') || undefined;
+    const { geminiKey: clientKey } = readClientKeys(req.headers);
+    if (!clientKey) {
+      return NextResponse.json(missingKeyBody, { status: 401 });
+    }
 
     const result = await consultSocraticTutor({
       question,
