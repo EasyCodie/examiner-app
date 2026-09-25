@@ -70,10 +70,12 @@ export const examRepo: ExamRepository = {
       try {
         const allKeys = await keys();
         const manifestKeys = allKeys.filter((k) => typeof k === 'string' && k.startsWith(MANIFESTS_PREFIX));
+        // Bundled papers win, as in getById: older builds seeded copies of them into IDB.
+        const bundledIds = new Set(ALL_BUNDLED_PAPERS.map((p) => p.id));
         const userManifests: ExamManifest[] = [];
         for (const key of manifestKeys) {
           const item = await get<ExamManifest>(key);
-          if (item) userManifests.push(item);
+          if (item && !bundledIds.has(item.id)) userManifests.push(item);
         }
         return [...ALL_BUNDLED_PAPERS, ...userManifests];
       } catch (err) {
