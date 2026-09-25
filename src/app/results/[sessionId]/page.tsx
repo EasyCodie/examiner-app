@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { ExamSession, ExamManifest, QuestionEvaluation } from '@/types/exam';
 import { getExamSession, getManifestById, saveExamSession, getAiConfig } from '@/lib/storage';
 import { useAppShell } from '@/components/common/AppShell';
+import { StorageErrorNotice } from '@/components/common/StorageErrorNotice';
 import { GradeBoundaryCard } from '@/components/assessment/GradeBoundaryCard';
 import { ExaminerReview, findEvaluation } from '@/components/assessment/ExaminerReview';
 import { SyllabusMatrix } from '@/components/assessment/SyllabusMatrix';
@@ -28,6 +29,7 @@ export default function ResultsPage() {
   const [session, setSession] = useState<ExamSession | null>(null);
   const [manifest, setManifest] = useState<ExamManifest | null>(null);
   const [loading, setLoading] = useState(true);
+  const [storageError, setStorageError] = useState(false);
   const [selectedQuestionIndex, setSelectedQuestionIndex] = useState(0);
 
   // Live streaming evaluation state
@@ -135,7 +137,7 @@ export default function ResultsPage() {
         return;
       }
       setSession(s);
-      getManifestById(s.paperId).then((m) => {
+      return getManifestById(s.paperId).then((m) => {
         if (!m) {
           setLoading(false);
           return;
@@ -150,8 +152,13 @@ export default function ResultsPage() {
           startEvaluationStream(m, s);
         }
       });
+    }).catch(() => {
+      setStorageError(true);
+      setLoading(false);
     });
   }, [sessionId, isEvaluatingParam, setHeaderInfo, startEvaluationStream]);
+
+  if (storageError) return <StorageErrorNotice />;
 
   if (loading) {
     return (

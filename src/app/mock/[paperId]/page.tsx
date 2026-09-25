@@ -17,6 +17,7 @@ import {
   clearInProgressSession,
 } from '@/lib/storage';
 import { useAppShell } from '@/components/common/AppShell';
+import { StorageErrorNotice } from '@/components/common/StorageErrorNotice';
 import { DrawingCanvas, DrawingCanvasRef } from '@/components/canvas/DrawingCanvas';
 import { CanvasToolbar } from '@/components/canvas/CanvasToolbar';
 import { SplitScreenEditor } from '@/components/editor/SplitScreenEditor';
@@ -30,7 +31,7 @@ import { examClockReducer, initialExamClock, FINAL_PHASE_SECONDS } from '@/lib/s
 const AUTOSAVE_DEBOUNCE_MS = 1200;
 const CLOCK_SAVE_INTERVAL_MS = 15000;
 
-type LoadState = 'loading' | 'ready' | 'not-found';
+type LoadState = 'loading' | 'ready' | 'not-found' | 'storage-error';
 
 export default function MockExamPage() {
   const params = useParams();
@@ -104,6 +105,8 @@ export default function MockExamPage() {
         examMode: true,
       });
       setLoadState('ready');
+    }).catch(() => {
+      if (!cancelled) setLoadState('storage-error');
     });
     return () => {
       cancelled = true;
@@ -360,6 +363,8 @@ export default function MockExamPage() {
   };
 
   // ---------- Render ----------
+  if (loadState === 'storage-error') return <StorageErrorNotice />;
+
   if (loadState === 'not-found') {
     return (
       <div className="flex-1 flex items-center justify-center px-4 py-16">

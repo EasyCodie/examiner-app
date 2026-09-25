@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
-import { useParams, useSearchParams } from 'next/navigation';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import {
   ExamManifest,
   QuestionItem,
@@ -13,6 +13,7 @@ import {
 import { getManifestById, getAiConfig } from '@/lib/storage';
 import { MissingKeyError, NO_KEY } from '@/lib/aiKey';
 import { useAppShell } from '@/components/common/AppShell';
+import { StorageErrorNotice } from '@/components/common/StorageErrorNotice';
 import { SocraticSidebar, TutorFailure } from '@/components/socratic/SocraticSidebar';
 import { ContentsStrip } from '@/components/exam/ContentsStrip';
 import { ReportDialog } from '@/components/common/ReportDialog';
@@ -25,6 +26,7 @@ import { PieChart } from 'lucide-react';
 export default function SocraticLearnPage() {
   const params = useParams();
   const searchParams = useSearchParams();
+  const router = useRouter();
   const paperId = params.paperId as string;
   const questionParam = searchParams.get('question');
   const { setHeaderInfo } = useAppShell();
@@ -35,7 +37,10 @@ export default function SocraticLearnPage() {
   const [isMarkschemeUnlocked, setIsMarkschemeUnlocked] = useState(false);
   const [highestTier, setHighestTier] = useState<Record<string, PedagogicalTier>>({});
   const [showRevealDialog, setShowRevealDialog] = useState(false);
+  const [hasDraft, setHasDraft] = useState(false);
+  const [pendingLeaveHref, setPendingLeaveHref] = useState<string | null>(null);
   const [notFound, setNotFound] = useState(false);
+  const [storageError, setStorageError] = useState(false);
   const [tutorFailure, setTutorFailure] = useState<(TutorFailure & { questionId: string; text: string; tier: PedagogicalTier }) | null>(null);
 
   // Chat message history per question: questionId -> SocraticMessage[]
@@ -102,10 +107,40 @@ export default function SocraticLearnPage() {
           });
         }
       }
-    });
+    }).catch(() => setStorageError(true));
   }, [paperId, setHeaderInfo, questionParam]);
 
   const currentQuestion: QuestionItem | undefined = manifest?.questions[selectedQuestionIndex];
+
+  // Guided practice isn't saved, so leaving loses the working, the tutor conversation and any unsent message
+  const hasUnsavedWork =
+    hasDraft ||
+    Object.values(strokes).some((s) => s.length > 0) ||
+    Object.values(questionBoxStrokes).some((boxes) => Object.values(boxes).some((b) => b.length > 0)) ||
+    Object.values(humanitiesText).some((t) => t.trim()) ||
+    Object.values(humanitiesDiagrams).some(Boolean) ||
+    Object.values(conversations).some((messages) => messages.some((m) => m.sender === 'student'));
+
+  useEffect(() => {
+    if (!hasUnsavedWork) return;
+    const onBeforeUnload = (e: BeforeUnloadEvent) => e.preventDefault();
+    // Links off this page (the header's logo and mode switch) ask first; captured before Next's Link navigates
+    const onClick = (e: MouseEvent) => {
+      if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+      const link = (e.target as Element | null)?.closest('a[href]');
+      if (!(link instanceof HTMLAnchorElement) || link.target === '_blank') return;
+      if (link.origin !== window.location.origin || link.pathname === window.location.pathname) return;
+      e.preventDefault();
+      e.stopPropagation();
+      setPendingLeaveHref(link.pathname + link.search + link.hash);
+    };
+    window.addEventListener('beforeunload', onBeforeUnload);
+    window.addEventListener('click', onClick, true);
+    return () => {
+      window.removeEventListener('beforeunload', onBeforeUnload);
+      window.removeEventListener('click', onClick, true);
+    };
+  }, [hasUnsavedWork]);
 
   const handleSelectQuestion = useCallback((idx: number) => {
     setSelectedQuestionIndex(idx);
@@ -274,6 +309,8 @@ export default function SocraticLearnPage() {
     setIsMarkschemeUnlocked(true);
     await handleSendMessage('Please reveal the markscheme breakdown and mark codes.', 4);
   };
+
+  if (storageError) return <StorageErrorNotice />;
 
   if (notFound) {
     return (
@@ -471,6 +508,7 @@ export default function SocraticLearnPage() {
             failure={tutorFailure && tutorFailure.questionId === currentQuestion.id ? tutorFailure : null}
             onRetry={handleRetry}
             workingShared={questionHasWorking(currentQuestion)}
+            onDraftChange={setHasDraft}
           />
         </div>
       </div>
@@ -486,6 +524,27 @@ export default function SocraticLearnPage() {
           </button>
           <button type="button" onClick={handleUnlockMarkscheme} className="btn btn-ink">
             Reveal markscheme
+          </button>
+        </div>
+      </ReportDialog>
+
+      <ReportDialog open={pendingLeaveHref !== null} onClose={() => setPendingLeaveHref(null)} title="Leave guided practice?">
+        <p className="text-[16px] leading-relaxed text-ink">
+          Guided practice isn&rsquo;t saved. Your working, the tutor conversation and any unsent message will be lost.
+        </p>
+        <div className="flex flex-wrap justify-end gap-3 pt-1">
+          <button type="button" onClick={() => setPendingLeaveHref(null)} className="btn btn-quiet-paper" autoFocus>
+            Stay
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              if (pendingLeaveHref) router.push(pendingLeaveHref);
+              setPendingLeaveHref(null);
+            }}
+            className="btn btn-ink"
+          >
+            Leave
           </button>
         </div>
       </ReportDialog>

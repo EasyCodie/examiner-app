@@ -16,6 +16,7 @@ import { ReportDialog } from '@/components/common/ReportDialog';
 import { CriterionMark } from '@/components/common/CriterionMark';
 import { formatClock } from '@/components/exam/ExamPageHead';
 import { MarkCodeKey } from '@/components/assessment/MarkCodeKey';
+import { STORAGE_ERROR_MESSAGE } from '@/components/common/StorageErrorNotice';
 
 /** Sample marking for the first viewport: one slip, carried forward. */
 const SAMPLE_LINES: { working: string; code: string; outcome: 'tick' | 'cross'; note: string }[] = [
@@ -43,6 +44,7 @@ export default function HomePage() {
   const [pastSessions, setPastSessions] = useState<ExamSession[]>([]);
   const [unfinished, setUnfinished] = useState<{ manifest: ExamManifest; session: InProgressExamSession }[]>([]);
   const [pendingDelete, setPendingDelete] = useState<ExamSession | 'all' | null>(null);
+  const [storageError, setStorageError] = useState(false);
 
   useEffect(() => {
     setHeaderInfo({});
@@ -56,7 +58,7 @@ export default function HomePage() {
         })
       );
       setUnfinished(found.filter((x): x is { manifest: ExamManifest; session: InProgressExamSession } => x !== null));
-    });
+    }).catch(() => setStorageError(true));
   }, [setHeaderInfo]);
 
   const confirmDelete = async () => {
@@ -143,6 +145,18 @@ export default function HomePage() {
       </section>
 
       {/* 2. Returning students: sessions first */}
+      {storageError && (
+        <section role="alert" aria-labelledby="storage-heading" className="max-w-[1280px] mx-auto px-6 py-16 border-t border-shell-line">
+          <h2 id="storage-heading" className="font-serif text-[32px] font-semibold text-shell-ink">
+            Your saved work couldn&rsquo;t be opened
+          </h2>
+          <p className="mt-3 max-w-[62ch] text-[16px] leading-relaxed text-shell-muted">{STORAGE_ERROR_MESSAGE}</p>
+          <button type="button" onClick={() => window.location.reload()} className="mt-5 btn btn-quiet-shell">
+            Reload
+          </button>
+        </section>
+      )}
+
       {hasSessions && (
         <section id="sessions" aria-labelledby="sessions-heading" className="max-w-[1280px] mx-auto px-6 py-16 border-t border-shell-line scroll-mt-16">
           <div className="flex flex-wrap items-baseline justify-between gap-4">

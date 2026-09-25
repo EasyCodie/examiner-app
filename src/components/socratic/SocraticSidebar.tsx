@@ -27,6 +27,8 @@ interface SocraticSidebarProps {
   onRetry: () => void;
   /** True when the student's current working is sent along with each message. */
   workingShared: boolean;
+  /** Called when the unsent message goes from empty to written, or back. */
+  onDraftChange: (hasDraft: boolean) => void;
 }
 
 /** The Socratic tutor, writing in examiner ink beside the student's script. */
@@ -43,6 +45,7 @@ export const SocraticSidebar: React.FC<SocraticSidebarProps> = ({
   failure,
   onRetry,
   workingShared,
+  onDraftChange,
 }) => {
   const { hasFormulaBooklet, openFormulaBooklet, openAiStudio } = useAppShell();
   const [inputText, setInputText] = useState('');
@@ -57,6 +60,7 @@ export const SocraticSidebar: React.FC<SocraticSidebarProps> = ({
     if (!inputText.trim() || isLoading) return;
     const msg = inputText.trim();
     setInputText('');
+    onDraftChange(false);
     await onSendMessage(msg);
   };
 
@@ -162,7 +166,10 @@ export const SocraticSidebar: React.FC<SocraticSidebarProps> = ({
             id="tutor-input"
             type="text"
             value={inputText}
-            onChange={(e) => setInputText(e.target.value)}
+            onChange={(e) => {
+              setInputText(e.target.value);
+              onDraftChange(e.target.value.trim().length > 0);
+            }}
             placeholder="Explain your step or ask a question"
             disabled={isLoading}
             className="flex-1 min-w-0 min-h-11 border border-paper-rule-strong bg-paper px-3 text-[15px] text-student placeholder:text-ink-muted"
