@@ -141,7 +141,7 @@ export const SocraticSidebar: React.FC<SocraticSidebarProps> = ({
             <p className="text-[15px] leading-relaxed text-ink">
               {failure.needsKey
                 ? 'The tutor needs a Gemini API key to reply.'
-                : `The tutor couldn't reply (${failure.message}).`}
+                : failure.message}
             </p>
             <div className="flex flex-wrap gap-2">
               {failure.needsKey && (

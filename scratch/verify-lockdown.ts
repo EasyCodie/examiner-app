@@ -195,41 +195,46 @@ async function runLockdownVerification() {
 
   // 6. SOCRATIC SCAFFOLDING SECRECY & TIER UNLOCKING
   console.log('\n--- 6. SOCRATIC SCAFFOLDING SECRECY & TIER UNLOCKING ---');
-  const { generateSimulatedSocraticResponse } = await import('../src/app/api/socratic/route');
+  const { buildTutorPrompt, shapeTutorReply, TutorUnavailableError } = await import('../src/lib/socratic/tutor');
   const testQ = BUNDLED_MATH_AA_HL.questions[0];
+  const promptFor = (tier: 1 | 2 | 3 | 4) => buildTutorPrompt({ question: testQ, requestedTier: tier, userMessage: 'Help' });
 
-  test('Tier 1 anchors command term without revealing markscheme or mark codes', () => {
-    const t1 = generateSimulatedSocraticResponse(testQ, 1);
-    assert.strictEqual(t1.tierActive, 1);
-    assert.strictEqual(t1.unlockedMarkscheme, false);
-    assert(t1.text.includes(testQ.commandTerm), 'Must mention command term');
-    assert(!t1.text.includes(testQ.markschemeExcerpt), 'Must not leak markscheme in Tier 1');
+  test('Tiers 1-3 never send the markscheme or mark codes to the model', () => {
+    for (const tier of [1, 2, 3] as const) {
+      const prompt = promptFor(tier);
+      assert(prompt.includes(testQ.commandTerm), `Tier ${tier} prompt must carry the command term`);
+      assert(!prompt.includes(testQ.markschemeExcerpt), `Tier ${tier} prompt must not include the markscheme`);
+      testQ.markCodes.forEach((mc) => assert(!prompt.includes(mc.description), `Tier ${tier} prompt must not include mark code ${mc.code}`));
+    }
   });
 
-  test('Tier 2 references formula booklet without revealing markscheme', () => {
-    const t2 = generateSimulatedSocraticResponse(testQ, 2);
-    assert.strictEqual(t2.tierActive, 2);
-    assert.strictEqual(t2.unlockedMarkscheme, false);
-    assert(t2.formulaQuote, 'Must include formula quote');
-    assert(!t2.text.includes(testQ.markschemeExcerpt), 'Must not leak markscheme in Tier 2');
+  test('Tier 4 grounds the walkthrough in the markscheme and its mark codes', () => {
+    const prompt = promptFor(4);
+    assert(prompt.includes(testQ.markschemeExcerpt), 'Tier 4 prompt must include the markscheme');
+    testQ.markCodes.forEach((mc) => assert(prompt.includes(mc.description), `Tier 4 prompt must include mark code ${mc.code}`));
   });
 
-  test('Tier 3 gives diagnostic highlight without revealing markscheme', () => {
-    const t3 = generateSimulatedSocraticResponse(testQ, 3);
-    assert.strictEqual(t3.tierActive, 3);
-    assert.strictEqual(t3.unlockedMarkscheme, false);
-    assert(t3.diagnosticHighlight, 'Must include diagnostic highlight');
-    assert(!t3.text.includes(testQ.markschemeExcerpt), 'Must not leak markscheme in Tier 3');
+  test('Without working, the tutor is told there is none instead of an attached image', () => {
+    assert(promptFor(3).includes('has not written any working'), 'Blank snapshot must not be described as attached');
+    const withImage = buildTutorPrompt({ question: testQ, requestedTier: 3, studentSnapshotImageBase64: 'data:image/png;base64,AAAA' });
+    assert(withImage.includes('Handwritten working attached in image.'));
   });
 
-  test('Tier 4 explicitly unlocks markscheme criteria and discrete mark codes', () => {
-    const t4 = generateSimulatedSocraticResponse(testQ, 4);
+  test('The server sets the tier, whatever the model claims', () => {
+    const claimsUnlock = JSON.stringify({ text: 'Here is the markscheme', tierActive: 4, unlockedMarkscheme: true });
+    for (const tier of [1, 2, 3] as const) {
+      const reply = shapeTutorReply(claimsUnlock, tier);
+      assert.strictEqual(reply.tierActive, tier);
+      assert.strictEqual(reply.unlockedMarkscheme, false, `Tier ${tier} must never unlock the markscheme`);
+    }
+    const t4 = shapeTutorReply(JSON.stringify({ text: 'Walkthrough', tierActive: 1, unlockedMarkscheme: false }), 4);
     assert.strictEqual(t4.tierActive, 4);
     assert.strictEqual(t4.unlockedMarkscheme, true);
-    assert(t4.text.includes(testQ.markschemeExcerpt), 'Must reveal official markscheme excerpt');
-    testQ.markCodes.forEach((mc) => {
-      assert(t4.text.includes(mc.code), `Must list mark code ${mc.code}`);
-    });
+  });
+
+  test('A malformed model reply means the tutor is unavailable, not a crash', () => {
+    assert.throws(() => shapeTutorReply('{not json', 2), TutorUnavailableError);
+    assert.throws(() => shapeTutorReply(JSON.stringify({ tierActive: 2 }), 2), TutorUnavailableError);
   });
 
   // 7. SUBPART EVALUATION & DISCRETE SCORING
@@ -310,19 +315,11 @@ async function runLockdownVerification() {
     assert(submissions[q1.id]?.textResponse?.includes('macroeconomic essay'));
   });
 
-  await test('consultSocraticTutor delivers tier-appropriate guidance via deep module seam', async () => {
-    const testQ = BUNDLED_MATH_AA_HL.questions[0];
-    const result = await consultSocraticTutor({
-      question: testQ,
-      messages: [],
-      requestedTier: 1,
-      userMessage: 'How do I begin this question?',
-    });
-
-    assert(result.message, 'Result must contain a tutor message');
-    assert.strictEqual(result.message.tierActive, 1);
-    assert.strictEqual(result.message.unlockedMarkscheme, false);
-    assert(result.message.text.includes(testQ.commandTerm), 'Must anchor on command term');
+  await test('consultSocraticTutor without a key refuses instead of inventing a reply', async () => {
+    await assert.rejects(
+      consultSocraticTutor({ question: BUNDLED_MATH_AA_HL.questions[0], requestedTier: 1, userMessage: 'How do I begin?' }),
+      MissingKeyError
+    );
   });
 
   await test('examRepo exposes manifests, sessions, strokes, and config facets', async () => {

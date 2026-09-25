@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { consultSocraticTutor, generateSimulatedSocraticResponse } from '@/lib/socratic/tutor';
+import { consultSocraticTutor, TutorUnavailableError } from '@/lib/socratic/tutor';
 import { QuestionItem, SocraticMessage, PedagogicalTier } from '@/types/exam';
 import { missingKeyBody, readClientKeys } from '@/lib/aiKey';
 
@@ -46,17 +46,16 @@ export async function POST(req: NextRequest) {
       apiKey: clientKey,
     });
 
-    return NextResponse.json({
-      response: result.message,
-      isSimulated: result.isSimulated,
-      ...(result.notice ? { notice: result.notice } : {}),
-    });
+    return NextResponse.json({ response: result.message });
   } catch (error: unknown) {
     console.error('Socratic API Error:', error);
+    if (error instanceof TutorUnavailableError) {
+      return NextResponse.json(
+        { error: 'The tutor is unavailable right now. Try again in a moment.', code: 'TUTOR_UNAVAILABLE' },
+        { status: 502 }
+      );
+    }
     const message = error instanceof Error ? error.message : 'Socratic tutor service error.';
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }
-
-// Re-export for backward-compatible test imports
-export { generateSimulatedSocraticResponse };

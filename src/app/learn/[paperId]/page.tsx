@@ -209,7 +209,11 @@ export default function SocraticLearnPage() {
 
     try {
       let snapshotImg = '';
-      if (manifest?.category === 'STEM' && canvasRef.current) {
+      const hasStemWorking =
+        (strokes[questionId]?.length ?? 0) > 0 ||
+        Object.values(questionBoxStrokes[questionId] ?? {}).some((b) => b.length > 0);
+      // A blank canvas is not sent, so the tutor never "sees" working that isn't there
+      if (manifest?.category === 'STEM' && canvasRef.current && hasStemWorking) {
         snapshotImg = canvasRef.current.getCanvasSnapshot();
       } else if (manifest?.category === 'HUMANITIES') {
         snapshotImg = humanitiesDiagrams[questionId] || '';
@@ -237,7 +241,7 @@ export default function SocraticLearnPage() {
       const data = await response.json().catch(() => ({}));
       if (!response.ok || !data.response) {
         if (data.code === NO_KEY) throw new MissingKeyError();
-        throw new Error(data.error || data.message || `the tutor service returned ${response.status}`);
+        throw new Error(data.error || `The tutor couldn't reply (error ${response.status}). Try again in a moment.`);
       }
 
       const reply = data.response;
@@ -255,8 +259,11 @@ export default function SocraticLearnPage() {
       if (reply.unlockedMarkscheme) setIsMarkschemeUnlocked(true);
       setConversations((prev) => ({ ...prev, [questionId]: [...history, tutorMsg] }));
     } catch (err) {
-      if (!(err instanceof MissingKeyError)) console.error('Socratic error', err);
-      const message = err instanceof Error ? err.message : 'unknown error';
+      // A TypeError here is fetch failing to reach the server at all
+      const message =
+        err instanceof Error && !(err instanceof TypeError)
+          ? err.message
+          : "The tutor couldn't be reached. Check your connection and try again.";
       setTutorFailure({
         questionId,
         text: userText,
