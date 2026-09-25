@@ -40,11 +40,3 @@ export async function generateWithTimeout<T>(
     if (timer) clearTimeout(timer);
   });
 }
-
-export interface GenerateConfigOptions {
-  model?: string;
-  systemInstruction?: string;
-  responseSchema?: Record<string, unknown>;
-  thinkingBudget?: number; // 0 for minimal reasoning (Socratic), 4096-16384 for high reasoning (Grading)
-  temperature?: number;
-}

@@ -65,9 +65,6 @@ export default function MockExamPage() {
   const [pageStrokes, setPageStrokes] = useState<Record<number, CanvasStroke[]>>({});
   const [pageBoxStrokes, setPageBoxStrokes] = useState<Record<number, Record<string, CanvasStroke[]>>>({});
 
-  // Submissions mapping (STEM)
-  const [submissions] = useState<Record<string, QuestionSubmission>>({});
-
   const [saveStatus, setSaveStatus] = useState<SaveStatus>({ state: 'idle' });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [gradingProgress, setGradingProgress] = useState<string>('');
@@ -323,7 +320,6 @@ export default function MockExamPage() {
         distinctQuestionPages,
         timeRemainingSeconds: remainingOverride ?? timeRemainingSeconds,
         humanitiesSubmissions,
-        existingSubmissions: submissions,
       });
 
       setGradingProgress('Handing your script to the examiner');
@@ -347,7 +343,6 @@ export default function MockExamPage() {
     distinctQuestionPages,
     timeRemainingSeconds,
     humanitiesSubmissions,
-    submissions,
     paperId,
     router,
   ]);

@@ -13,10 +13,30 @@ const sourceSerif = Source_Serif_4({
 });
 const jetbrainsMono = JetBrains_Mono({ subsets: ['latin'], display: 'swap', variable: '--font-jetbrains-mono' });
 
+// Vercel sets the production domain at build time; social images resolve against it.
+const siteUrl = process.env.VERCEL_PROJECT_PRODUCTION_URL
+  ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
+  : 'http://localhost:3000';
+
 export const metadata: Metadata = {
-  title: 'Criterion • Senior Examiner Assessment & Socratic Tutoring',
+  metadataBase: new URL(siteUrl),
+  title: 'Criterion • IB exam practice with examiner marking',
   description:
-    'Authentic IB examination revision, timed mock exams with handwritten working overlays, and Socratic tutoring.',
+    'Sit IB-style papers under timed conditions, get method-level marking with Error Carried Forward, and practise with a Socratic tutor.',
+  applicationName: 'Criterion',
+  openGraph: {
+    type: 'website',
+    siteName: 'Criterion',
+    title: 'Criterion • IB exam practice with examiner marking',
+    description:
+      'Sit IB-style papers under timed conditions, get method-level marking with Error Carried Forward, and practise with a Socratic tutor.',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Criterion • IB exam practice with examiner marking',
+    description:
+      'Sit IB-style papers under timed conditions, get method-level marking with Error Carried Forward, and practise with a Socratic tutor.',
+  },
 };
 
 export default function RootLayout({
