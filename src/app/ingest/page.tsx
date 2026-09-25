@@ -6,7 +6,8 @@ import { ExamManifest } from '@/types/exam';
 import { saveManifest, savePdfBlob, getAiConfig } from '@/lib/storage';
 import { useAppShell } from '@/components/common/AppShell';
 import { PdfField } from '@/components/ingest/PdfField';
-import { MissingKeyError, NO_KEY } from '@/lib/aiKey';
+import { INVALID_KEY, MissingKeyError, NO_KEY } from '@/lib/aiKey';
+import { checkUploadPair } from '@/lib/ingestion/uploadLimits';
 
 type FlowStep = 'UPLOAD' | 'COMPILING' | 'READY';
 
@@ -43,6 +44,7 @@ export default function IngestPage() {
       setError('Add both PDFs: the question paper and its markscheme.');
       return;
     }
+    if (uploadTooLarge) return;
 
     setError(null);
     setNeedsKey(false);
@@ -70,8 +72,9 @@ export default function IngestPage() {
 
       const data = await response.json().catch(() => ({}));
       if (!response.ok) {
-        if (data.code === NO_KEY) throw new MissingKeyError();
-        throw new Error(data.error || `The server returned ${response.status}.`);
+        if (data.code === NO_KEY || data.code === INVALID_KEY) throw new MissingKeyError();
+        if (response.status === 413) throw new Error(data.error || 'These PDFs are too large to upload. Upload smaller copies.');
+        throw new Error(data.error || `The PDFs couldn't be read (error ${response.status}). Try again.`);
       }
 
       const manifest: ExamManifest = data.manifest;
@@ -95,6 +98,8 @@ export default function IngestPage() {
       setStep('UPLOAD');
     }
   };
+
+  const uploadTooLarge = paperFile && markschemeFile ? checkUploadPair(paperFile, markschemeFile) : null;
 
   const resetForm = () => {
     setPaperFile(null);
@@ -166,10 +171,15 @@ export default function IngestPage() {
             )}
 
             <div className="flex flex-wrap items-center justify-between gap-4 border-t border-paper-rule pt-6">
-              <p className="text-[14px] text-ink-muted">
-                {paperFile && markschemeFile ? 'Both files are ready.' : 'Add both files to continue.'}
+              <p className={`text-[14px] max-w-[52ch] ${uploadTooLarge ? 'text-ink' : 'text-ink-muted'}`}>
+                {uploadTooLarge ?? (paperFile && markschemeFile ? 'Both files are ready.' : 'Add both files to continue.')}
               </p>
-              <button type="button" disabled={!paperFile || !markschemeFile} onClick={handleStartIngest} className="btn btn-ink">
+              <button
+                type="button"
+                disabled={!paperFile || !markschemeFile || Boolean(uploadTooLarge)}
+                onClick={handleStartIngest}
+                className="btn btn-ink"
+              >
                 Build the paper
               </button>
             </div>

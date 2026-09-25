@@ -3,6 +3,9 @@
 
 export const NO_KEY = 'NO_KEY';
 
+/** Code an AI route returns when Gemini refused the student's key as not valid. */
+export const INVALID_KEY = 'INVALID_KEY';
+
 export const MISSING_KEY_MESSAGE = 'Add your Gemini API key in Settings to use marking and tutoring.';
 
 /** Body of the 401 an AI route returns when the request carries no Gemini key. */
