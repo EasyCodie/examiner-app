@@ -9,7 +9,7 @@ import { useAppShell } from '@/components/common/AppShell';
 import { GradeBoundaryCard } from '@/components/assessment/GradeBoundaryCard';
 import { ExaminerReview, findEvaluation } from '@/components/assessment/ExaminerReview';
 import { SyllabusMatrix } from '@/components/assessment/SyllabusMatrix';
-import { synthesizeSyllabusBreakdown } from '@/lib/assessment/evaluator';
+import { synthesizeSyllabusBreakdown } from '@/lib/assessment/aggregate';
 
 type StreamEvent =
   | { type: 'question_evaluated'; evaluation: QuestionEvaluation }

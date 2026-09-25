@@ -11,6 +11,7 @@ import { getGeminiClient, DEFAULT_MODEL, FALLBACK_MODELS } from '@/lib/gemini';
 import { SENIOR_EXAMINER_PROMPT } from '@/lib/prompts';
 import { QUESTION_EVALUATION_SCHEMA } from '@/lib/schemas';
 import { transcribeStudentHandwriting, getZaiApiKey } from '@/lib/ocr/glmOcr';
+import { gradePaper } from '@/lib/assessment/aggregate';
 
 export type AssessmentEvent =
   | {
@@ -308,59 +309,6 @@ Please evaluate the student's submission rigorously following IB examiner guidel
 }
 
 /**
- * Calculates official IB Grade (1 to 7) based on percentage score and paper grade boundaries.
- */
-export function calculatePredictedGrade(scorePercentage: number, boundaries: ExamManifest['gradeBoundaries']): number {
-  if (scorePercentage >= boundaries.grade7) return 7;
-  if (scorePercentage >= boundaries.grade6) return 6;
-  if (scorePercentage >= boundaries.grade5) return 5;
-  if (scorePercentage >= boundaries.grade4) return 4;
-  if (scorePercentage >= boundaries.grade3) return 3;
-  if (scorePercentage >= boundaries.grade2) return 2;
-  return 1;
-}
-
-/**
- * Synthesizes the Syllabus Weakness Matrix from question evaluations.
- */
-export function synthesizeSyllabusBreakdown(
-  evaluations: QuestionEvaluation[]
-): NonNullable<ExamSession['gradingResults']>['syllabusBreakdown'] {
-  const syllabusMap: Record<
-    string,
-    { marksAwarded: number; totalMarks: number; recommendation: string }
-  > = {};
-
-  evaluations.forEach((ev) => {
-    const key = ev.syllabusSubtopic || 'General Examination Syllabus';
-    if (!syllabusMap[key]) {
-      syllabusMap[key] = {
-        marksAwarded: 0,
-        totalMarks: 0,
-        recommendation: ev.revisionRecommendation,
-      };
-    }
-    syllabusMap[key].marksAwarded += ev.marksAwarded;
-    syllabusMap[key].totalMarks += ev.maxMarks;
-  });
-
-  return Object.entries(syllabusMap).map(([subtopic, val]) => {
-    const percentage = val.totalMarks > 0 ? Math.round((val.marksAwarded / val.totalMarks) * 100) : 0;
-    const status =
-      percentage >= 80 ? ('mastered' as const) : percentage >= 50 ? ('developing' as const) : ('critical' as const);
-
-    return {
-      subtopic,
-      marksAwarded: val.marksAwarded,
-      totalMarks: val.totalMarks,
-      percentage,
-      status,
-      targetedDrillPrompt: val.recommendation,
-    };
-  });
-}
-
-/**
  * Streams the evaluation of an entire exam attempt sequentially:
  * - Emits Question 1 first (~3-5s) so the student has immediate feedback.
  * - Streams questions 2..N sequentially with ECF progression.
@@ -400,13 +348,6 @@ export async function* streamExamAssessment(
       };
     }
 
-    // Compute paper-level aggregation
-    const totalMarksAwarded = evaluations.reduce((sum, e) => sum + e.marksAwarded, 0);
-    const totalPossibleMarks = manifest.totalMarks || evaluations.reduce((sum, e) => sum + e.maxMarks, 0);
-    const scorePct = totalPossibleMarks > 0 ? Math.round((totalMarksAwarded / totalPossibleMarks) * 100) : 0;
-    const predictedGrade = calculatePredictedGrade(scorePct, manifest.gradeBoundaries);
-    const syllabusBreakdown = synthesizeSyllabusBreakdown(evaluations);
-
     const sessionId = options.sessionId || `session-${Date.now()}`;
     const finalizedSession: ExamSession = {
       id: sessionId,
@@ -419,15 +360,7 @@ export async function* streamExamAssessment(
       timeRemainingSeconds: options.timeRemainingSeconds ?? 0,
       durationSeconds: manifest.durationMinutes * 60,
       submissions,
-      gradingResults: {
-        totalMarksAwarded,
-        totalPossibleMarks,
-        percentage: scorePct,
-        predictedGrade,
-        reasoningEffortUsed: thinkingBudget >= 4096 ? 'high' : 'minimal',
-        evaluations,
-        syllabusBreakdown,
-      },
+      gradingResults: gradePaper(manifest, evaluations, thinkingBudget),
     };
 
     yield {

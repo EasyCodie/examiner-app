@@ -4,11 +4,8 @@ import {
   BUNDLED_ECONOMICS_HL,
   MAY_2021_MATH_AA_HL_P1,
 } from '../src/lib/samplePapers';
-import {
-  calculatePredictedGrade,
-  synthesizeSyllabusBreakdown,
-  evaluateSingleQuestion,
-} from '../src/lib/assessment/evaluator';
+import { evaluateSingleQuestion } from '../src/lib/assessment/evaluator';
+import { calculatePredictedGrade, synthesizeSyllabusBreakdown } from '../src/lib/assessment/aggregate';
 import { QuestionSubmission, QuestionEvaluation, QuestionGrading } from '../src/types/exam';
 
 async function runLockdownVerification() {
