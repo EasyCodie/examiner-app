@@ -1,5 +1,5 @@
 import { ExamManifest } from '@/types/exam';
-import { QUESTION_12_MATPLOTLIB_SVG } from '@/lib/graphRenderer';
+import { QUESTION_12_MATPLOTLIB_SVG } from '@/lib/graphs/q12Graph';
 
 export const BUNDLED_MATH_AA_HL: ExamManifest = {
   id: 'math-aa-hl-specimen',

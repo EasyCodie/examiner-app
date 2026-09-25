@@ -432,7 +432,7 @@ async function runLockdownVerification() {
     assert(examRepo.config && typeof examRepo.config.get === 'function');
 
     const config = await examRepo.config.get();
-    assert(config.modelName, 'Config must have modelName');
+    assert(config.thinkingBudgetGrading, 'Config must have thinkingBudgetGrading');
 
     const manifests = await examRepo.manifests.getAll();
     assert(manifests.length >= 2, 'Must include bundled sample papers');
@@ -445,7 +445,7 @@ async function runLockdownVerification() {
     const facadeManifests = await getAllManifests();
     assert.strictEqual(facadeManifests.length, manifests.length, 'Facade must return identical count');
     const facadeConfig = await getAiConfig();
-    assert.strictEqual(facadeConfig.modelName, config.modelName, 'Facade config must match repo');
+    assert.strictEqual(facadeConfig.thinkingBudgetGrading, config.thinkingBudgetGrading, 'Facade config must match repo');
   });
 
   await test('compileExamManifest validates inputs and handles pipeline execution', async () => {

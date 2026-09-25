@@ -1,4 +1,4 @@
-export const QUESTION_12_MATPLOTLIB_SVG = `<svg xmlns:xlink="http://www.w3.org/1999/xlink" width="100%" height="auto" viewBox="0 0 341.336241 267.934495" xmlns="http://www.w3.org/2000/svg" version="1.1">
+export const QUESTION_12_MATPLOTLIB_SVG = `<svg xmlns:xlink="http://www.w3.org/1999/xlink" width="100%" viewBox="0 0 341.336241 267.934495" xmlns="http://www.w3.org/2000/svg" version="1.1">
  <metadata>
   <rdf:RDF xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
    <cc:Work>

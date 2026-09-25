@@ -102,7 +102,7 @@ export const Header: React.FC<HeaderProps> = ({ paperTitle, mode, paperId }) => 
           <button
             type="button"
             onClick={() => openAiStudio()}
-            title="Settings: API keys, marking depth, prompts"
+            title="Settings: API keys and marking depth"
             className="min-h-11 min-w-11 flex items-center justify-center text-shell-muted hover:text-shell-ink"
           >
             <Settings className="w-5 h-5" aria-hidden="true" />

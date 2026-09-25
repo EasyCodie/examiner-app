@@ -198,12 +198,8 @@ export interface SocraticMessage {
 }
 
 export interface AiStudioConfig {
-  modelName: string;
-  gradingReasoningEffort: 'high' | 'medium' | 'low';
-  socraticReasoningEffort: 'minimal' | 'low';
   thinkingBudgetGrading: number; // e.g. 16384 tokens
   thinkingBudgetSocratic: number; // e.g. 0 or 1024 tokens
-  temperature: number;
   apiKey?: string;
   zaiApiKey?: string;
   ocrProvider?: 'glm-ocr' | 'gemini';

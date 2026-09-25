@@ -12,12 +12,8 @@ export const IN_PROGRESS_PREFIX = 'session-in-progress:';
 export const CONFIG_KEY = 'examiner:aistudio:config';
 
 export const DEFAULT_AI_CONFIG: AiStudioConfig = {
-  modelName: 'gemini-3.6-flash',
-  gradingReasoningEffort: 'high',
-  socraticReasoningEffort: 'low',
   thinkingBudgetGrading: 8192,
   thinkingBudgetSocratic: 2048,
-  temperature: 0.2,
   ocrProvider: 'glm-ocr',
   zaiApiKey: '',
 };
