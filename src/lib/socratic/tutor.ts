@@ -1,4 +1,4 @@
-import { getGeminiClient, DEFAULT_MODEL, FALLBACK_MODELS } from '@/lib/gemini';
+import { getGeminiClient, DEFAULT_MODEL, FALLBACK_MODELS, isInvalidKeyError } from '@/lib/gemini';
 import { SOCRATIC_SYSTEM_PROMPT } from '@/lib/prompts';
 import { SOCRATIC_RESPONSE_SCHEMA } from '@/lib/schemas';
 import { QuestionItem, SocraticMessage, PedagogicalTier } from '@/types/exam';
@@ -148,6 +148,8 @@ export async function consultSocraticTutor(
 
   const ai = getGeminiClient(apiKey);
   if (!ai) throw new MissingKeyError();
+  // The tutor stops within this, inside /api/socratic's maxDuration of 120 s
+  const deadline = Date.now() + 110_000;
 
   const promptText = buildTutorPrompt(input);
 
@@ -170,11 +172,15 @@ export async function consultSocraticTutor(
   const effectiveBudget = typeof thinkingBudget === 'number' ? thinkingBudget : 2048;
 
   for (const m of modelsToTry) {
+    const remaining = deadline - Date.now();
+    if (remaining < 5_000) break;
     try {
       const response = await ai.models.generateContent({
         model: m,
         contents,
         config: {
+          // Aborts the request itself, not just the wait for it
+          abortSignal: AbortSignal.timeout(Math.min(60_000, remaining)),
           systemInstruction: SOCRATIC_SYSTEM_PROMPT,
           responseMimeType: 'application/json',
           responseSchema: SOCRATIC_RESPONSE_SCHEMA,
@@ -190,6 +196,8 @@ export async function consultSocraticTutor(
       }
     } catch (err) {
       lastError = err;
+      // Another model won't accept a key Gemini has already rejected
+      if (isInvalidKeyError(err)) throw err;
       console.warn(`Socratic model ${m} unavailable, trying fallback:`, err);
     }
   }

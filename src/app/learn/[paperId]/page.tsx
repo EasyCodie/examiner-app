@@ -11,7 +11,7 @@ import {
   CanvasStroke,
 } from '@/types/exam';
 import { getManifestById, getAiConfig } from '@/lib/storage';
-import { MissingKeyError, NO_KEY } from '@/lib/aiKey';
+import { INVALID_KEY, MissingKeyError, NO_KEY } from '@/lib/aiKey';
 import { useAppShell } from '@/components/common/AppShell';
 import { StorageErrorNotice } from '@/components/common/StorageErrorNotice';
 import { SocraticSidebar, TutorFailure } from '@/components/socratic/SocraticSidebar';
@@ -240,7 +240,7 @@ export default function SocraticLearnPage() {
 
       const data = await response.json().catch(() => ({}));
       if (!response.ok || !data.response) {
-        if (data.code === NO_KEY) throw new MissingKeyError();
+        if (data.code === NO_KEY || data.code === INVALID_KEY) throw new MissingKeyError();
         throw new Error(data.error || `The tutor couldn't reply (error ${response.status}). Try again in a moment.`);
       }
 

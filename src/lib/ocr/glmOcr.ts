@@ -52,12 +52,12 @@ export function getZaiApiKey(customKey?: string): string | null {
 }
 
 /**
- * Normalizes input into a valid Z.AI file argument (URL or base64 Data URI).
+ * Normalizes input into a base64 Data URI for Z.AI. URLs are refused, so Z.AI is never asked to fetch one.
  */
 export function normalizeFileInput(input: string, mimeType = 'image/png'): string {
   const trimmed = input.trim();
-  if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
-    return trimmed;
+  if (/^[a-z][a-z0-9+.-]*:\/\//i.test(trimmed)) {
+    throw new Error('GLM-OCR accepts inline files only, not URLs.');
   }
   if (trimmed.startsWith('data:')) {
     return trimmed;

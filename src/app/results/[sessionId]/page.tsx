@@ -12,7 +12,7 @@ import { ExaminerReview, findEvaluation } from '@/components/assessment/Examiner
 import { SyllabusMatrix } from '@/components/assessment/SyllabusMatrix';
 import { gradePaper } from '@/lib/assessment/aggregate';
 import { markScript } from '@/lib/assessment/markScript';
-import { MissingKeyError, NO_KEY } from '@/lib/aiKey';
+import { INVALID_KEY, MissingKeyError, NO_KEY } from '@/lib/aiKey';
 
 const questionLabel = (q: QuestionItem) => q.number.replace(/^Question\s*/i, '').replace(/\.$/, '');
 
@@ -73,7 +73,7 @@ export default function ResultsPage() {
             body: JSON.stringify({ question, submission, previousEvaluations, thinkingBudget }),
           });
           const data = await res.json().catch(() => ({}));
-          if (data.code === NO_KEY) throw new MissingKeyError();
+          if (data.code === NO_KEY || data.code === INVALID_KEY) throw new MissingKeyError();
           if (!res.ok || !data.evaluation) throw new Error(data.error || 'The marking service did not respond.');
           return data.evaluation as QuestionEvaluation;
         },
@@ -221,7 +221,7 @@ export default function ResultsPage() {
             </h2>
             <p className="text-[16px] leading-relaxed text-ink max-w-[65ch]">
               {markingError.needsKey
-                ? 'The examiner needs a Gemini API key to mark this script. Add one, then try again. Your script is saved.'
+                ? 'The examiner needs a valid Gemini API key to mark this script. Add or check your key in Settings, then try again. Your script is saved.'
                 : markingError.question
                   ? `${markingError.message} No marks have been given for question ${failedLabel}, and the questions after it wait until it is marked. Your script is saved.`
                   : `The examiner could not finish marking (${markingError.message}). Your script is saved, so you can try again.`}

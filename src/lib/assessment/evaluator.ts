@@ -1,5 +1,5 @@
 import { QuestionItem, QuestionSubmission, QuestionEvaluation, SubpartScoreItem } from '@/types/exam';
-import { getGeminiClient, DEFAULT_MODEL, FALLBACK_MODELS } from '@/lib/gemini';
+import { getGeminiClient, DEFAULT_MODEL, FALLBACK_MODELS, isInvalidKeyError } from '@/lib/gemini';
 import { SENIOR_EXAMINER_PROMPT } from '@/lib/prompts';
 import { QUESTION_EVALUATION_SCHEMA } from '@/lib/schemas';
 import { transcribeStudentHandwriting, getZaiApiKey } from '@/lib/ocr/glmOcr';
@@ -71,6 +71,8 @@ export async function evaluateSingleQuestion(
 
   const ai = getGeminiClient(clientKey);
   if (!ai) throw new MissingKeyError();
+  // Marking stops within this, inside /api/grade's maxDuration of 300 s
+  const deadline = Date.now() + 270_000;
 
   // Construct multimodal prompt payload
   const contents: (string | { inlineData: { data: string; mimeType: string } })[] = [];
@@ -237,11 +239,15 @@ Please evaluate the student's submission rigorously following IB examiner guidel
   // Deduplicate model fallbacks
   const modelsToTry = Array.from(new Set([DEFAULT_MODEL, ...FALLBACK_MODELS]));
   for (const m of modelsToTry) {
+    const remaining = deadline - Date.now();
+    if (remaining < 10_000) break;
     try {
       const response = await ai.models.generateContent({
         model: m,
         contents,
         config: {
+          // Aborts the request itself, not just the wait for it
+          abortSignal: AbortSignal.timeout(Math.min(150_000, remaining)),
           systemInstruction: SENIOR_EXAMINER_PROMPT,
           responseMimeType: 'application/json',
           responseSchema: QUESTION_EVALUATION_SCHEMA,
@@ -259,6 +265,8 @@ Please evaluate the student's submission rigorously following IB examiner guidel
         return evaluationResult;
       }
     } catch (err) {
+      // Another model won't accept a key Gemini has already rejected
+      if (isInvalidKeyError(err)) throw err;
       console.warn(`Grading model ${m} unavailable for Question ${question.number}:`, err);
     }
   }

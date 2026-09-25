@@ -140,7 +140,7 @@ export const SocraticSidebar: React.FC<SocraticSidebarProps> = ({
           <div role="alert" className="border border-lost px-4 py-3 space-y-3">
             <p className="text-[15px] leading-relaxed text-ink">
               {failure.needsKey
-                ? 'The tutor needs a Gemini API key to reply.'
+                ? 'The tutor needs a valid Gemini API key to reply.'
                 : failure.message}
             </p>
             <div className="flex flex-wrap gap-2">

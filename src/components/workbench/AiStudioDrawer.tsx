@@ -210,7 +210,7 @@ export const AiStudioDrawer: React.FC<AiStudioDrawerProps> = ({ isOpen, onClose,
                 <input
                   type="range"
                   min={1024}
-                  max={16384}
+                  max={8192}
                   step={1024}
                   value={config?.thinkingBudgetGrading || 8192}
                   onChange={(e) => handleSaveBudget('thinkingBudgetGrading', Number(e.target.value))}
@@ -219,8 +219,7 @@ export const AiStudioDrawer: React.FC<AiStudioDrawerProps> = ({ isOpen, onClose,
 
                 <div className="flex justify-between text-[12px] font-mono text-shell-muted">
                   <span>Standard (1024)</span>
-                  <span className="text-examiner-on-shell font-semibold">Recommended (8192)</span>
-                  <span>Maximum Depth (16384)</span>
+                  <span className="text-examiner-on-shell font-semibold">Maximum, recommended (8192)</span>
                 </div>
               </div>
 
