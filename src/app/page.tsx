@@ -9,6 +9,7 @@ import {
   getInProgressSession,
   deleteExamSession,
   clearAllExamSessions,
+  getAiConfig,
 } from '@/lib/storage';
 import { useAppShell } from '@/components/common/AppShell';
 import { MathRenderer } from '@/components/common/MathRenderer';
@@ -38,13 +39,22 @@ const Tick: React.FC<{ outcome: 'tick' | 'cross' }> = ({ outcome }) => (
 );
 
 export default function HomePage() {
-  const { setHeaderInfo } = useAppShell();
+  const { setHeaderInfo, openAiStudio, onAiKeySaved } = useAppShell();
 
   const [papers, setPapers] = useState<ExamManifest[]>([]);
   const [pastSessions, setPastSessions] = useState<ExamSession[]>([]);
   const [unfinished, setUnfinished] = useState<{ manifest: ExamManifest; session: InProgressExamSession }[]>([]);
   const [pendingDelete, setPendingDelete] = useState<ExamSession | 'all' | null>(null);
   const [storageError, setStorageError] = useState(false);
+  // Unknown until the saved config is read, so the key callout never flashes for someone who has a key
+  const [hasKey, setHasKey] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    getAiConfig()
+      .then((cfg) => setHasKey(Boolean(cfg.apiKey)))
+      .catch(() => setHasKey(null));
+    return onAiKeySaved(() => setHasKey(true));
+  }, [onAiKeySaved]);
 
   useEffect(() => {
     setHeaderInfo({});
@@ -143,6 +153,49 @@ export default function HomePage() {
           </figcaption>
         </figure>
       </section>
+
+      {/* First visit: nothing is marked without the student's own key */}
+      {hasKey === false && (
+        <section aria-labelledby="gemini-key-heading" className="max-w-[1280px] mx-auto px-6 py-16 border-t border-shell-line grid gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]">
+          <div className="space-y-3">
+            <h2 id="gemini-key-heading" className="font-serif text-[32px] font-semibold text-shell-ink">
+              Add your free Gemini key
+            </h2>
+            <p className="text-[16px] leading-relaxed text-shell-muted max-w-[42ch]">
+              You can sit a paper without one, but the examiner and the tutor use Google&rsquo;s Gemini with your own key.
+              It takes about a minute.
+            </p>
+          </div>
+          <div className="space-y-6">
+            <ol className="border-t-2 border-shell-ink">
+              {[
+                <>
+                  Open{' '}
+                  <a
+                    href="https://aistudio.google.com/apikey"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="underline underline-offset-2 hover:text-shell-muted"
+                  >
+                    Google AI Studio
+                  </a>{' '}
+                  and sign in with a Google account.
+                </>,
+                <>Choose Create API key, then copy the key.</>,
+                <>Paste it into Settings and choose Test and save. It stays in this browser.</>,
+              ].map((step, i) => (
+                <li key={i} className="flex items-baseline gap-5 py-3.5 border-b border-shell-line">
+                  <span className="font-serif text-[20px] font-semibold text-shell-ink tabular w-5 shrink-0">{i + 1}</span>
+                  <span className="text-[16px] leading-relaxed text-shell-ink">{step}</span>
+                </li>
+              ))}
+            </ol>
+            <button type="button" onClick={() => openAiStudio('apiKey')} className="btn btn-slip">
+              Add your key
+            </button>
+          </div>
+        </section>
+      )}
 
       {/* 2. Returning students: sessions first */}
       {storageError && (

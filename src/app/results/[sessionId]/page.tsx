@@ -29,7 +29,7 @@ export default function ResultsPage() {
   const sessionId = params.sessionId as string;
   const isEvaluatingParam = searchParams.get('evaluating') === 'true';
 
-  const { setHeaderInfo, openAiStudio } = useAppShell();
+  const { setHeaderInfo, openAiStudio, onAiKeySaved } = useAppShell();
   const [session, setSession] = useState<ExamSession | null>(null);
   const [manifest, setManifest] = useState<ExamManifest | null>(null);
   const [loading, setLoading] = useState(true);
@@ -111,6 +111,12 @@ export default function ResultsPage() {
   }, []);
 
   useEffect(() => () => abortControllerRef.current?.abort(), []);
+
+  // A key saved in Settings picks marking up where it stopped
+  useEffect(() => {
+    if (!markingError?.needsKey || !manifest || !session) return;
+    return onAiKeySaved(() => startMarking(manifest, session));
+  }, [onAiKeySaved, markingError, manifest, session, startMarking]);
 
   useEffect(() => {
     getExamSession(sessionId).then((s) => {

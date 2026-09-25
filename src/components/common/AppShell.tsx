@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, createContext, useContext, useMemo } from 'react';
+import React, { useState, useEffect, createContext, useContext, useMemo, useRef, useCallback } from 'react';
 import { Header } from './Header';
 import { AiStudioDrawer, AiStudioTab } from '@/components/workbench/AiStudioDrawer';
 import { FormulaBookletDrawer } from '@/components/formula/FormulaBookletDrawer';
@@ -26,6 +26,8 @@ interface AppShellContextType {
   toggleFormulaBooklet: (anchor?: string) => void;
   isFormulaBookletOpen: boolean;
   hasFormulaBooklet: boolean;
+  /** Calls the listener each time a Gemini key is saved in Settings, so pages waiting on a key can carry on. Returns an unsubscribe. */
+  onAiKeySaved: (listener: () => void) => () => void;
 }
 
 const AppShellContext = createContext<AppShellContextType | null>(null);
@@ -41,6 +43,13 @@ export const useAppShell = () => {
 export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [isAiStudioOpen, setIsAiStudioOpen] = useState(false);
   const [aiStudio, setAiStudio] = useState<{ tab: AiStudioTab; opens: number }>({ tab: 'reasoning', opens: 0 });
+  const keySavedListeners = useRef(new Set<() => void>());
+  const onAiKeySaved = useCallback((listener: () => void) => {
+    keySavedListeners.current.add(listener);
+    return () => {
+      keySavedListeners.current.delete(listener);
+    };
+  }, []);
   const [isFormulaBookletOpen, setIsFormulaBookletOpen] = useState(false);
   const [formulaBookletAnchor, setFormulaBookletAnchor] = useState<string | null>(null);
 
@@ -97,6 +106,7 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) 
         toggleFormulaBooklet,
         isFormulaBookletOpen,
         hasFormulaBooklet,
+        onAiKeySaved,
       }}
     >
       <div className="min-h-[100dvh] flex flex-col bg-shell text-shell-ink">
@@ -127,6 +137,7 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) 
           initialTab={aiStudio.tab}
           isOpen={isAiStudioOpen}
           onClose={() => setIsAiStudioOpen(false)}
+          onKeySaved={() => keySavedListeners.current.forEach((listener) => listener())}
         />
       </div>
     </AppShellContext.Provider>

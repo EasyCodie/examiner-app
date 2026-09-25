@@ -20,9 +20,30 @@ interface AiStudioDrawerProps {
   isOpen: boolean;
   onClose: () => void;
   initialTab?: AiStudioTab;
+  /** Called after a Gemini key is saved. */
+  onKeySaved?: () => void;
 }
 
-export const AiStudioDrawer: React.FC<AiStudioDrawerProps> = ({ isOpen, onClose, initialTab = 'reasoning' }) => {
+type KeyTestResult = { tone: 'ok' | 'warn' | 'error'; message: string };
+
+/** The outcome of a key test: a glyph and a word as well as the colour. */
+const KeyTestNotice: React.FC<{ result: KeyTestResult }> = ({ result }) => {
+  const look = {
+    ok: { label: 'Saved', Icon: CheckCircle2, className: 'border-awarded-on-shell/40 text-awarded-on-shell' },
+    warn: { label: 'Saved, not confirmed', Icon: AlertCircle, className: 'border-shell-line text-shell-ink' },
+    error: { label: 'Not saved', Icon: AlertCircle, className: 'border-lost-on-shell/40 text-lost-on-shell' },
+  }[result.tone];
+  return (
+    <div role="status" className={`p-3 rounded-sm border text-[14px] leading-relaxed flex items-start gap-2 ${look.className}`}>
+      <look.Icon className="w-4 h-4 mt-0.5 shrink-0" aria-hidden="true" />
+      <p>
+        <span className="font-semibold">{look.label}.</span> {result.message}
+      </p>
+    </div>
+  );
+};
+
+export const AiStudioDrawer: React.FC<AiStudioDrawerProps> = ({ isOpen, onClose, initialTab = 'reasoning', onKeySaved }) => {
   const [activeTab, setActiveTab] = useState<AiStudioTab>(initialTab);
   const dialogRef = useRef<HTMLDialogElement>(null);
 
@@ -39,11 +60,11 @@ export const AiStudioDrawer: React.FC<AiStudioDrawerProps> = ({ isOpen, onClose,
   }, [isOpen]);
   const [config, setConfig] = useState<AiStudioConfig | null>(null);
   const [tempApiKey, setTempApiKey] = useState('');
-  const [testResult, setTestResult] = useState<{ valid?: boolean; message?: string } | null>(null);
+  const [testResult, setTestResult] = useState<KeyTestResult | null>(null);
   const [isTesting, setIsTesting] = useState(false);
 
   const [tempZaiKey, setTempZaiKey] = useState('');
-  const [testZaiResult, setTestZaiResult] = useState<{ valid?: boolean; message?: string } | null>(null);
+  const [testZaiResult, setTestZaiResult] = useState<KeyTestResult | null>(null);
   const [isTestingZai, setIsTestingZai] = useState(false);
 
   useEffect(() => {
@@ -51,6 +72,7 @@ export const AiStudioDrawer: React.FC<AiStudioDrawerProps> = ({ isOpen, onClose,
       getAiConfig().then((cfg) => {
         setConfig(cfg);
         if (cfg.apiKey) setTempApiKey(cfg.apiKey);
+        else setActiveTab('apiKey'); // Nothing works without a key, so that's where Settings opens
         if (cfg.zaiApiKey) setTempZaiKey(cfg.zaiApiKey);
       });
     }
@@ -65,44 +87,61 @@ export const AiStudioDrawer: React.FC<AiStudioDrawerProps> = ({ isOpen, onClose,
   };
 
   const handleTestKey = async () => {
+    const key = tempApiKey.trim();
+    if (!key) return;
     setIsTesting(true);
     setTestResult(null);
     try {
       const res = await fetch('/api/test-key', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ apiKey: tempApiKey, provider: 'gemini' }),
+        body: JSON.stringify({ apiKey: key, provider: 'gemini' }),
       });
-      const data = await res.json();
-      setTestResult(data);
+      const data = await res.json().catch(() => ({}));
       if (data.valid) {
-        await saveAiConfig({ apiKey: tempApiKey });
+        await saveAiConfig({ apiKey: key });
+        setTestResult({ tone: 'ok', message: 'Marking and the tutor are ready.' });
+        onKeySaved?.();
+      } else if (data.code === 'GEMINI_UNAVAILABLE') {
+        // Gemini being busy says nothing about the key, so keep it
+        await saveAiConfig({ apiKey: key });
+        setTestResult({
+          tone: 'warn',
+          message: "Gemini is busy and couldn't confirm the key just now. If marking says the key is wrong, check it here.",
+        });
+        onKeySaved?.();
+      } else if (data.code === 'INVALID_KEY') {
+        setTestResult({ tone: 'error', message: 'Gemini rejected this key. Copy it again from Google AI Studio.' });
+      } else {
+        setTestResult({ tone: 'error', message: data.message || "The key couldn't be tested. Try again." });
       }
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Network test error';
-      setTestResult({ valid: false, message: msg });
+    } catch {
+      setTestResult({ tone: 'error', message: "Couldn't reach Criterion to test the key. Check your connection and try again." });
     } finally {
       setIsTesting(false);
     }
   };
 
   const handleTestZaiKey = async () => {
+    const key = tempZaiKey.trim();
+    if (!key) return;
     setIsTestingZai(true);
     setTestZaiResult(null);
     try {
       const res = await fetch('/api/test-key', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ apiKey: tempZaiKey, provider: 'zai' }),
+        body: JSON.stringify({ apiKey: key, provider: 'zai' }),
       });
-      const data = await res.json();
-      setTestZaiResult(data);
+      const data = await res.json().catch(() => ({}));
       if (data.valid) {
-        await saveAiConfig({ zaiApiKey: tempZaiKey });
+        await saveAiConfig({ zaiApiKey: key });
+        setTestZaiResult({ tone: 'ok', message: 'Z.AI will read your handwriting and PDFs too.' });
+      } else {
+        setTestZaiResult({ tone: 'error', message: data.message || "Couldn't test this key. Try again." });
       }
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Network test error';
-      setTestZaiResult({ valid: false, message: msg });
+    } catch {
+      setTestZaiResult({ tone: 'error', message: "Couldn't reach Criterion to test the key. Check your connection and try again." });
     } finally {
       setIsTestingZai(false);
     }
@@ -173,7 +212,7 @@ export const AiStudioDrawer: React.FC<AiStudioDrawerProps> = ({ isOpen, onClose,
             }`}
           >
             <Key className="w-3.5 h-3.5" />
-            <span>API Settings</span>
+            <span>API key</span>
           </button>
         </div>
 
@@ -258,131 +297,103 @@ export const AiStudioDrawer: React.FC<AiStudioDrawerProps> = ({ isOpen, onClose,
             </div>
           )}
 
-          {/* 4. API SETTINGS */}
+          {/* 2. API KEYS */}
           {activeTab === 'apiKey' && (
             <div className="space-y-5">
               <div className="p-4 bg-shell-raised border border-shell-line rounded-sm space-y-3">
-                <label className="text-xs font-semibold text-shell-ink uppercase tracking-wider block font-mono">
-                  Gemini API Key Override
+                <label htmlFor="gemini-key" className="text-[15px] font-semibold text-shell-ink block">
+                  Your Gemini API key
                 </label>
-                <p className="text-[12px] text-shell-muted">
-                  By default, the application reads <code className="text-examiner-on-shell font-mono">GEMINI_API_KEY</code> from your server environment. You can also supply a temporary key below for local browser testing.
+                <p className="text-[14px] leading-relaxed text-shell-muted">
+                  Criterion marks your scripts and runs the tutor with Google&rsquo;s Gemini, using your own key. It&rsquo;s
+                  free. The key stays in this browser and is sent with your marking and tutor requests, which pass it straight
+                  to Google; Criterion doesn&rsquo;t keep it anywhere else.
                 </p>
+                <ol className="list-decimal pl-5 space-y-1 text-[14px] leading-relaxed text-shell-ink">
+                  <li>
+                    Open{' '}
+                    <a
+                      href="https://aistudio.google.com/apikey"
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex items-center gap-1 underline underline-offset-2 hover:text-shell-muted"
+                    >
+                      Google AI Studio
+                      <ExternalLink className="w-3 h-3" aria-hidden="true" />
+                    </a>{' '}
+                    and sign in with a Google account.
+                  </li>
+                  <li>Choose Create API key, then copy the key.</li>
+                  <li>Paste it here and choose Test and save.</li>
+                </ol>
 
                 <div className="flex gap-2">
                   <input
+                    id="gemini-key"
                     type="password"
+                    autoComplete="off"
+                    spellCheck={false}
                     value={tempApiKey}
                     onChange={(e) => setTempApiKey(e.target.value)}
-                    placeholder="AIzaSy..."
-                    className="flex-1 bg-shell border border-shell-line rounded-sm px-3.5 py-2 text-xs font-mono text-shell-ink placeholder:text-shell-muted outline-none focus:border-examiner-on-shell"
+                    placeholder="Paste your key"
+                    className="flex-1 bg-shell border border-shell-line rounded-sm px-3.5 py-2 text-[14px] text-shell-ink placeholder:text-shell-muted outline-none focus:border-shell-ink"
                   />
                   <button
                     type="button"
                     onClick={handleTestKey}
-                    disabled={isTesting}
+                    disabled={isTesting || !tempApiKey.trim()}
                     className="flex items-center gap-1.5 px-4 py-2 rounded-sm btn btn-sm btn-slip disabled:opacity-40 text-xs font-medium transition"
                   >
                     {isTesting ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Key className="w-3.5 h-3.5" />}
-                    <span>Test &amp; Save</span>
+                    <span>{isTesting ? 'Testing…' : 'Test and save'}</span>
                   </button>
                 </div>
 
-                {testResult && (
-                  <div
-                    className={`p-3 rounded-sm border text-xs flex items-center gap-2 font-mono ${
-                      testResult.valid
-                        ? 'bg-awarded-on-shell/10 border-awarded-on-shell/30 text-awarded-on-shell'
-                        : 'bg-lost-on-shell/10 border-lost-on-shell/30 text-lost-on-shell'
-                    }`}
-                  >
-                    {testResult.valid ? (
-                      <CheckCircle2 className="w-4 h-4 text-awarded-on-shell shrink-0" />
-                    ) : (
-                      <AlertCircle className="w-4 h-4 text-lost-on-shell shrink-0" />
-                    )}
-                    <span>{testResult.message}</span>
-                  </div>
-                )}
+                {testResult && <KeyTestNotice result={testResult} />}
               </div>
 
               {/* Z.AI / GLM-OCR API KEY */}
               <div className="p-4 bg-shell-raised border border-shell-line rounded-sm space-y-3">
-                <div className="flex items-center justify-between">
-                  <label className="text-xs font-semibold text-shell-ink uppercase tracking-wider block font-mono">
-                    Z.AI / GLM-OCR API Key (SOTA Math &amp; Layout OCR)
-                  </label>
-                  <span className="text-[12px] font-mono text-awarded-on-shell bg-awarded-on-shell/10 px-2 py-0.5 rounded border border-awarded-on-shell/20">
-                    GLM-OCR 0.9B
-                  </span>
-                </div>
-                <p className="text-[12px] text-shell-muted">
-                  GLM-OCR is the primary OCR engine for dual-PDF ingestion (tables, LaTeX math, diagrams) and student canvas handwriting recognition. Reads <code className="text-examiner-on-shell font-mono">ZAI_API_KEY</code> from <code className="text-examiner-on-shell font-mono">.env.local</code> or local browser storage.
-                </p>
-
-                <div className="flex gap-2">
-                  <input
-                    type="password"
-                    value={tempZaiKey}
-                    onChange={(e) => setTempZaiKey(e.target.value)}
-                    placeholder="Enter Z.AI API key..."
-                    className="flex-1 bg-shell border border-shell-line rounded-sm px-3.5 py-2 text-xs font-mono text-shell-ink placeholder:text-shell-muted outline-none focus:border-examiner-on-shell"
-                  />
-                  <button
-                    type="button"
-                    onClick={handleTestZaiKey}
-                    disabled={isTestingZai}
-                    className="flex items-center gap-1.5 px-4 py-2 rounded-sm btn btn-sm btn-slip disabled:opacity-40 text-xs font-medium transition"
-                  >
-                    {isTestingZai ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Key className="w-3.5 h-3.5" />}
-                    <span>Test &amp; Save</span>
-                  </button>
-                </div>
-
-                {testZaiResult && (
-                  <div
-                    className={`p-3 rounded-sm border text-xs flex items-center gap-2 font-mono ${
-                      testZaiResult.valid
-                        ? 'bg-awarded-on-shell/10 border-awarded-on-shell/30 text-awarded-on-shell'
-                        : 'bg-lost-on-shell/10 border-lost-on-shell/30 text-lost-on-shell'
-                    }`}
-                  >
-                    {testZaiResult.valid ? (
-                      <CheckCircle2 className="w-4 h-4 text-awarded-on-shell shrink-0" />
-                    ) : (
-                      <AlertCircle className="w-4 h-4 text-lost-on-shell shrink-0" />
-                    )}
-                    <span>{testZaiResult.message}</span>
-                  </div>
-                )}
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div className="p-3 bg-shell-raised border border-shell-line rounded-sm text-xs text-shell-muted flex items-center justify-between">
-                  <span>Google AI Studio:</span>
-                  <a
-                    href="https://aistudio.google.com"
-                    target="_blank"
-                    rel="noreferrer"
-                    className="flex items-center gap-1 text-examiner-on-shell hover:text-shell-ink font-mono transition"
-                  >
-                    <span>aistudio.google.com</span>
-                    <ExternalLink className="w-3 h-3" />
-                  </a>
-                </div>
-
-                <div className="p-3 bg-shell-raised border border-shell-line rounded-sm text-xs text-shell-muted flex items-center justify-between">
-                  <span>Z.AI Developer Portal:</span>
+                <label htmlFor="zai-key" className="text-[15px] font-semibold text-shell-ink block">
+                  Z.AI key (optional)
+                </label>
+                <p className="text-[14px] leading-relaxed text-shell-muted">
+                  You don&rsquo;t need this. With a Z.AI key, its GLM-OCR model also reads your handwriting and the PDFs you
+                  upload, alongside Gemini.{' '}
                   <a
                     href="https://z.ai/manage-apikey/apikey-list"
                     target="_blank"
                     rel="noreferrer"
-                    className="flex items-center gap-1 text-awarded-on-shell hover:text-shell-ink font-mono transition"
+                    className="inline-flex items-center gap-1 text-shell-ink underline underline-offset-2 hover:text-shell-muted"
                   >
-                    <span>z.ai/manage-apikey</span>
-                    <ExternalLink className="w-3 h-3" />
+                    Get a Z.AI key
+                    <ExternalLink className="w-3 h-3" aria-hidden="true" />
                   </a>
+                </p>
+
+                <div className="flex gap-2">
+                  <input
+                    id="zai-key"
+                    type="password"
+                    autoComplete="off"
+                    spellCheck={false}
+                    value={tempZaiKey}
+                    onChange={(e) => setTempZaiKey(e.target.value)}
+                    placeholder="Paste your Z.AI key"
+                    className="flex-1 bg-shell border border-shell-line rounded-sm px-3.5 py-2 text-[14px] text-shell-ink placeholder:text-shell-muted outline-none focus:border-shell-ink"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleTestZaiKey}
+                    disabled={isTestingZai || !tempZaiKey.trim()}
+                    className="flex items-center gap-1.5 px-4 py-2 rounded-sm btn btn-sm btn-slip disabled:opacity-40 text-xs font-medium transition"
+                  >
+                    {isTestingZai ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Key className="w-3.5 h-3.5" />}
+                    <span>{isTestingZai ? 'Testing…' : 'Test and save'}</span>
+                  </button>
                 </div>
+
+                {testZaiResult && <KeyTestNotice result={testZaiResult} />}
               </div>
             </div>
           )}
