@@ -31,6 +31,30 @@ interface SocraticSidebarProps {
   onDraftChange: (hasDraft: boolean) => void;
 }
 
+/**
+ * One entry in the tutor feed. A reply that has just arrived is written down the
+ * page by the tutor's pen, at a pace set by its length; the student's own line
+ * inks in. Entries already on the page when the feed opens are simply there.
+ */
+const FeedEntry: React.FC<{ message: SocraticMessage; className: string; children: React.ReactNode }> = ({
+  message,
+  className,
+  children,
+}) => {
+  const [fresh] = useState(() => Date.now() - Date.parse(message.timestamp) < 4000);
+  if (!fresh) return <div className={className}>{children}</div>;
+  if (message.sender !== 'tutor') return <div className={`${className} animate-ink-in-fast`}>{children}</div>;
+  const duration = Math.min(2200, 450 + message.text.length * 5);
+  return (
+    <div
+      className={`${className} animate-write-down`}
+      style={{ '--write-duration': `${duration}ms` } as React.CSSProperties}
+    >
+      {children}
+    </div>
+  );
+};
+
 /** The Socratic tutor, writing in examiner ink beside the student's script. */
 export const SocraticSidebar: React.FC<SocraticSidebarProps> = ({
   question,
@@ -89,7 +113,7 @@ export const SocraticSidebar: React.FC<SocraticSidebarProps> = ({
         {messages.map((m) => {
           const isTutor = m.sender === 'tutor';
           return (
-            <div key={m.id} className={isTutor ? 'pr-6' : 'pl-10'}>
+            <FeedEntry key={m.id} message={m} className={isTutor ? 'pr-6' : 'pl-10'}>
               <p className={`text-[12px] font-semibold mb-1 ${isTutor ? 'text-examiner' : 'text-ink-muted text-right'}`}>
                 {isTutor ? `Tutor${m.tierActive ? ` · step ${m.tierActive}` : ''}` : 'You'}
                 {m.unlockedMarkscheme && ' · markscheme'}
@@ -131,11 +155,16 @@ export const SocraticSidebar: React.FC<SocraticSidebarProps> = ({
                   </div>
                 </div>
               )}
-            </div>
+            </FeedEntry>
           );
         })}
 
-        {isLoading && <p className="text-[14px] text-ink-muted">The tutor is thinking…</p>}
+        {isLoading && (
+          <div className="space-y-2">
+            <p className="text-[14px] text-ink-muted">The tutor is thinking…</p>
+            <div className="rule-working w-24 text-examiner" aria-hidden="true" />
+          </div>
+        )}
 
         {failure && !isLoading && (
           <div role="alert" className="border border-lost px-4 py-3 space-y-3">

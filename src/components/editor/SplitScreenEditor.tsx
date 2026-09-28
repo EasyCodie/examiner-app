@@ -13,6 +13,8 @@ interface SplitScreenEditorProps {
   onUpdateSubmission: (questionId: string, text: string, diagramBase64?: string) => void;
   /** Reading time: the prompt can be read but the answer sheet is locked. */
   readOnly?: boolean;
+  /** Which way the candidate last moved through the paper; the question sheet turns that way. */
+  turn?: 'forward' | 'back';
 }
 
 /**
@@ -25,6 +27,7 @@ export const SplitScreenEditor: React.FC<SplitScreenEditorProps> = ({
   submissions,
   onUpdateSubmission,
   readOnly = false,
+  turn,
 }) => {
   const currentQuestion = questions[activeQuestionIndex] || questions[0];
   const submission = submissions[currentQuestion.id] || {
@@ -54,8 +57,9 @@ export const SplitScreenEditor: React.FC<SplitScreenEditorProps> = ({
 
   return (
     <div className="grid gap-5 lg:grid-cols-[5fr_7fr] items-start select-text">
-      {/* Question sheet */}
-      <article className="script-sheet paper-surface px-6 sm:px-10 py-8 sm:py-10 lg:sticky lg:top-[120px]">
+      {/* Question sheet: turns like a page as the candidate moves between questions */}
+      <div key={currentQuestion.id} data-turn={turn} className="lg:sticky lg:top-[120px]">
+      <article className="script-sheet paper-surface px-6 sm:px-10 py-8 sm:py-10">
         <div className="grid grid-cols-[auto_1fr_auto] gap-x-4 items-baseline border-b border-ink pb-3">
           <h2 className="font-serif text-[28px] font-semibold leading-none text-ink tabular">
             {currentQuestion.number}
@@ -69,9 +73,10 @@ export const SplitScreenEditor: React.FC<SplitScreenEditorProps> = ({
           <MathRenderer content={currentQuestion.promptText} lightMode={true} />
         </div>
       </article>
+      </div>
 
       {/* Answer sheet */}
-      <section className="script-sheet paper-surface flex flex-col" aria-labelledby={`${answerId}-label`}>
+      <section className="script-sheet paper-surface flex flex-col [--d:90ms]" aria-labelledby={`${answerId}-label`}>
         <div className="flex flex-wrap items-center justify-between gap-3 px-6 sm:px-10 pt-6 pb-4 border-b border-paper-rule">
           <label id={`${answerId}-label`} htmlFor={answerId} className="text-[15px] font-semibold text-ink">
             Answer to question {currentQuestion.number}

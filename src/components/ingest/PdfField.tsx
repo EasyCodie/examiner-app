@@ -2,6 +2,7 @@
 
 import React, { useId, useState } from 'react';
 import { FileUp } from 'lucide-react';
+import { motionDelay } from '@/components/common/motion';
 
 interface PdfFieldProps {
   label: string;
@@ -50,7 +51,7 @@ export const PdfField: React.FC<PdfFieldProps> = ({ label, hint, file, onChange,
         }}
         className={`relative flex min-h-[132px] cursor-pointer flex-col items-center justify-center gap-2 px-5 py-6 text-center transition-colors focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-ink ${
           file
-            ? 'border border-ink bg-paper'
+            ? 'border border-paper-rule bg-paper'
             : dragging
               ? 'border border-ink bg-paper-tint'
               : 'border border-dashed border-paper-rule-strong bg-paper hover:bg-paper-tint'
@@ -70,10 +71,25 @@ export const PdfField: React.FC<PdfFieldProps> = ({ label, hint, file, onChange,
           }}
         />
         {file ? (
-          <>
-            <span className="max-w-full truncate text-[15px] font-semibold text-ink">{file.name}</span>
-            <span className="tabular text-[13px] text-ink-muted">{(file.size / 1024 / 1024).toFixed(2)} MB · choose again to replace</span>
-          </>
+          <React.Fragment key={`${file.name}-${file.size}-${file.lastModified}`}>
+            {/* A chosen file is ruled round in ink, in one pass of the pen: across, down, back, up */}
+            <span className="absolute -inset-x-px -top-px h-px bg-ink animate-rule-draw" aria-hidden="true" />
+            <span className="absolute -right-px -inset-y-px w-px bg-ink animate-rule-draw-y" style={motionDelay(110)} aria-hidden="true" />
+            <span
+              className="absolute -inset-x-px -bottom-px h-px bg-ink animate-rule-draw"
+              style={{ ...motionDelay(220), transformOrigin: 'right center' }}
+              aria-hidden="true"
+            />
+            <span
+              className="absolute -left-px -inset-y-px w-px bg-ink animate-rule-draw-y"
+              style={{ ...motionDelay(330), transformOrigin: 'center bottom' }}
+              aria-hidden="true"
+            />
+            <span className="animate-ink-in max-w-full truncate text-[15px] font-semibold text-ink" style={motionDelay(120)}>
+              {file.name}
+            </span>
+            <span className="animate-ink-in tabular text-[13px] text-ink-muted" style={motionDelay(220)}>{(file.size / 1024 / 1024).toFixed(2)} MB · choose again to replace</span>
+          </React.Fragment>
         ) : (
           <>
             <FileUp className="h-5 w-5 text-ink" aria-hidden="true" />

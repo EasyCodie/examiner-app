@@ -30,13 +30,14 @@ export const MarkCodeBadge: React.FC<MarkCodeBadgeProps> = ({ code, type, awarde
     <span className="inline-flex items-baseline gap-2 whitespace-nowrap" title={TYPE_LABEL[type] ?? 'Mark'}>
       <span className="tabular font-sans text-[15px] font-bold text-examiner min-w-[2.5ch]">{code}</span>
       <span className={`inline-flex items-center gap-1 text-[13px] font-semibold ${outcomeTone}`}>
-        <svg viewBox="0 0 12 12" className="w-3 h-3" aria-hidden="true">
+        {/* The outcome glyph is stroked by the examiner's pen just after the code is written */}
+        <svg viewBox="0 0 12 12" className="draw-stroke w-3 h-3 [&_path]:[animation-delay:calc(var(--d,0ms)+180ms)]" aria-hidden="true">
           {isEcfApplied ? (
-            <path d="M1 6h7M5.5 3L8.5 6 5.5 9" fill="none" stroke="currentColor" strokeWidth="1.6" />
+            <path d="M1 6h7M5.5 3L8.5 6 5.5 9" pathLength={1} fill="none" stroke="currentColor" strokeWidth="1.6" />
           ) : awarded ? (
-            <path d="M1.5 6.5l3 3 6-7" fill="none" stroke="currentColor" strokeWidth="1.8" />
+            <path d="M1.5 6.5l3 3 6-7" pathLength={1} fill="none" stroke="currentColor" strokeWidth="1.8" />
           ) : (
-            <path d="M2 2l8 8M10 2l-8 8" fill="none" stroke="currentColor" strokeWidth="1.8" />
+            <path d="M2 2l8 8M10 2l-8 8" pathLength={1} fill="none" stroke="currentColor" strokeWidth="1.8" />
           )}
         </svg>
         {outcome}

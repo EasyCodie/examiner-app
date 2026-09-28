@@ -27,8 +27,8 @@ export const Header: React.FC<HeaderProps> = ({ paperTitle, mode, paperId }) => 
   const [menuOpen, setMenuOpen] = useState(false);
 
   const segment = (active: boolean) =>
-    `min-h-11 px-3 flex items-center text-[14px] font-medium border-r border-shell-line last:border-r-0 transition-colors ${
-      active ? 'bg-paper text-ink' : 'text-shell-muted hover:text-shell-ink'
+    `wipe min-h-11 px-3 flex items-center text-[14px] font-medium border-r border-shell-line last:border-r-0 ${
+      active ? 'text-ink' : 'text-shell-muted hover:text-shell-ink'
     }`;
 
   return (
@@ -55,7 +55,7 @@ export const Header: React.FC<HeaderProps> = ({ paperTitle, mode, paperId }) => 
                 key={item.href}
                 href={item.href}
                 aria-current={pathname === item.href ? 'page' : undefined}
-                className="min-h-11 px-3 flex items-center text-[14px] font-medium text-shell-muted hover:text-shell-ink aria-[current=page]:text-shell-ink"
+                className="rule-link min-h-11 px-3 flex items-center text-[14px] font-medium text-shell-muted hover:text-shell-ink aria-[current=page]:text-shell-ink transition-colors"
               >
                 {item.label}
               </Link>

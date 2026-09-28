@@ -6,6 +6,7 @@ import { QuestionItem, QuestionSubmission, QuestionEvaluation } from '@/types/ex
 import { MarkCodeBadge } from './MarkCodeBadge';
 import { MarkCodeKey } from './MarkCodeKey';
 import { MathRenderer } from '@/components/common/MathRenderer';
+import { motionDelay } from '@/components/common/motion';
 
 interface ExaminerReviewProps {
   questions: QuestionItem[];
@@ -141,6 +142,10 @@ export const ExaminerReview: React.FC<ExaminerReviewProps> = ({
   const submission = submissions[currentQuestion.id];
   const evaluation = findEvaluation(evaluations, currentQuestion, activeIndex);
   const label = stripNumber(currentQuestion.number);
+  // The page is re-marked whenever the question changes or its marks arrive
+  const markingKey = `${currentQuestion.id}-${evaluation ? 'marked' : 'pending'}`;
+  const marginCount = evaluation?.markBreakdown?.length ?? 0;
+  const marginStep = (i: number) => 180 + Math.min(i, 8) * 120;
 
   return (
     <section aria-labelledby="review-heading" className="grid gap-8 lg:grid-cols-[260px_1fr]">
@@ -161,13 +166,13 @@ export const ExaminerReview: React.FC<ExaminerReviewProps> = ({
               const ev = findEvaluation(evaluations, q, idx);
               const isSelected = idx === activeIndex;
               return (
-                <tr key={q.id} className={`border-b border-paper-rule ${isSelected ? 'bg-ink text-paper' : 'text-ink'}`}>
+                <tr key={q.id} className={`border-b border-paper-rule ${isSelected ? 'text-paper' : 'text-ink'}`}>
                   <td colSpan={2} className="p-0">
                     <button
                       type="button"
                       onClick={() => handleSelectIndex(idx)}
                       aria-current={isSelected ? 'true' : undefined}
-                      className="w-full min-h-11 px-2 flex items-center justify-between gap-3 text-left text-[15px] hover:bg-paper-tint aria-[current=true]:hover:bg-ink"
+                      className="wipe [--wipe:var(--color-ink)] w-full min-h-11 px-2 flex items-center justify-between gap-3 text-left text-[15px] hover:bg-paper-tint aria-[current=true]:hover:bg-ink"
                     >
                       <span className="flex items-center gap-2 font-semibold">
                         <span className={isSelected ? '[&_svg]:text-paper' : ''}>
@@ -188,8 +193,8 @@ export const ExaminerReview: React.FC<ExaminerReviewProps> = ({
       </div>
 
       {/* The selected question, marked */}
-      <article aria-label={`Question ${label}`} className="min-w-0 space-y-8">
-        <header className="flex items-baseline justify-between gap-4 border-b-2 border-ink pb-3">
+      <article key={markingKey} aria-label={`Question ${label}`} className="min-w-0 space-y-8">
+        <header className="animate-ink-in flex items-baseline justify-between gap-4 border-b-2 border-ink pb-3">
           <h3 className="font-serif text-[28px] font-semibold text-ink tabular">Question {label}</h3>
           <p className="tabular text-[22px] font-semibold text-ink">
             {evaluation ? evaluation.marksAwarded : '–'}
@@ -274,11 +279,13 @@ export const ExaminerReview: React.FC<ExaminerReviewProps> = ({
               )}
             </div>
 
-            <aside aria-label="Examiner's marks" className="md:border-l md:border-examiner/40 md:pl-4 py-4 space-y-3">
+            <aside aria-label="Examiner's marks" className="relative md:pl-4 py-4 space-y-3">
+              {/* The examiner rules the margin first, then marks down it */}
+              <span className="hidden md:block absolute left-0 inset-y-0 w-px bg-examiner/40 animate-rule-draw-y" aria-hidden="true" />
               {evaluation?.markBreakdown && evaluation.markBreakdown.length > 0 ? (
                 <ol className="space-y-3">
                   {evaluation.markBreakdown.map((mb, mIdx) => (
-                    <li key={mIdx} className="space-y-0.5">
+                    <li key={mIdx} className="animate-ink-in space-y-0.5" style={motionDelay(marginStep(mIdx))}>
                       <MarkCodeBadge code={mb.code} type={mb.type} awarded={mb.awarded} isEcfApplied={mb.isEcfApplied} />
                       <div className="font-serif italic text-[14px] leading-snug text-examiner">
                         <MathRenderer content={mb.reason} lightMode={true} />
@@ -293,7 +300,11 @@ export const ExaminerReview: React.FC<ExaminerReviewProps> = ({
               {evaluation?.marginAnnotations
                 ?.filter((ann) => ann.type === 'comment' || ann.type === 'ecf')
                 .map((ann, aIdx) => (
-                  <div key={aIdx} className="font-serif italic text-[14px] leading-snug text-examiner">
+                  <div
+                    key={aIdx}
+                    className="animate-ink-in font-serif italic text-[14px] leading-snug text-examiner"
+                    style={motionDelay(marginStep(marginCount + aIdx))}
+                  >
                     <span className="not-italic font-sans font-bold">{ann.label}: </span>
                     <MathRenderer content={ann.text} lightMode={true} className="inline" />
                   </div>
@@ -302,7 +313,10 @@ export const ExaminerReview: React.FC<ExaminerReviewProps> = ({
           </div>
 
           {evaluation?.ecfApplied && (
-            <div className="border-t border-b border-ecf py-4 space-y-1.5">
+            <div className="relative py-4 space-y-1.5">
+              {/* The ECF band is ruled across in ochre as the carried-forward credit is shown */}
+              <span className="absolute inset-x-0 top-0 h-px bg-ecf animate-rule-draw" style={motionDelay(marginStep(marginCount))} aria-hidden="true" />
+              <span className="absolute inset-x-0 bottom-0 h-px bg-ecf animate-rule-draw" style={motionDelay(marginStep(marginCount) + 120)} aria-hidden="true" />
               <p className="text-[15px] font-semibold text-ecf">Error carried forward</p>
               <p className="text-[15px] leading-relaxed text-ink max-w-[68ch]">
                 {evaluation.ecfExplanation ||
@@ -318,7 +332,13 @@ export const ExaminerReview: React.FC<ExaminerReviewProps> = ({
           {evaluation?.examinerNotes && (
             <div className="space-y-1.5 pt-2">
               <p className="text-[15px] font-semibold text-ink">Examiner&rsquo;s comment</p>
-              <div className="font-serif italic text-[17px] leading-relaxed text-examiner max-w-[68ch]">
+              <div
+                className="animate-write-down font-serif italic text-[17px] leading-relaxed text-examiner max-w-[68ch]"
+                style={{
+                  ...motionDelay(marginStep(marginCount) + 200),
+                  ['--write-duration' as string]: `${Math.min(1800, 500 + evaluation.examinerNotes.length * 4)}ms`,
+                }}
+              >
                 <MathRenderer content={evaluation.examinerNotes} lightMode={true} />
               </div>
             </div>

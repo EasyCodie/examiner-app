@@ -6,6 +6,7 @@ import { ExamManifest } from '@/types/exam';
 import { saveManifest, savePdfBlob, getAiConfig } from '@/lib/storage';
 import { useAppShell } from '@/components/common/AppShell';
 import { PdfField } from '@/components/ingest/PdfField';
+import { CountUp, motionDelay } from '@/components/common/motion';
 import { INVALID_KEY, MissingKeyError, NO_KEY } from '@/lib/aiKey';
 import { checkUploadPair } from '@/lib/ingestion/uploadLimits';
 
@@ -199,6 +200,7 @@ export default function IngestPage() {
               <span className="sr-only">Time elapsed: </span>
               {formatElapsed(elapsed)}
             </p>
+            <div className="rule-working max-w-[240px] bg-paper-rule text-ink" aria-hidden="true" />
             <button type="button" onClick={() => abortRef.current?.abort()} className="btn btn-quiet-paper">
               Cancel
             </button>
@@ -208,20 +210,25 @@ export default function IngestPage() {
         {step === 'READY' && activeManifest && (
           <section className="space-y-8" aria-labelledby="ready-heading">
             <div className="space-y-2">
-              <h2 id="ready-heading" className="font-serif text-[28px] font-semibold text-ink">
+              <h2 id="ready-heading" className="animate-ink-in font-serif text-[28px] font-semibold text-ink">
                 {activeManifest.title}
               </h2>
               <p className="text-[16px] text-ink-muted">{activeManifest.subtitle}</p>
             </div>
             <dl className="grid grid-cols-3 gap-px bg-paper-rule border-t border-b border-ink tabular">
-              {[
-                ['Writing time', `${activeManifest.durationMinutes} min`],
-                ['Total marks', String(activeManifest.totalMarks)],
-                ['Questions', String(activeManifest.questions.length)],
-              ].map(([term, value]) => (
+              {(
+                [
+                  ['Writing time', activeManifest.durationMinutes, ' min'],
+                  ['Total marks', activeManifest.totalMarks, ''],
+                  ['Questions', activeManifest.questions.length, ''],
+                ] as const
+              ).map(([term, value, unit], i) => (
                 <div key={term} className="bg-paper p-4">
                   <dt className="text-[13px] text-ink-muted">{term}</dt>
-                  <dd className="mt-1 text-[22px] font-semibold text-ink">{value}</dd>
+                  <dd className="animate-ink-in mt-1 text-[22px] font-semibold text-ink" style={motionDelay(160 + i * 120)}>
+                    <CountUp value={value} duration={800} delay={160 + i * 120} />
+                    {unit}
+                  </dd>
                 </div>
               ))}
             </dl>

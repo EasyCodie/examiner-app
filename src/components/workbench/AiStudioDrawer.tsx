@@ -158,7 +158,7 @@ export const AiStudioDrawer: React.FC<AiStudioDrawerProps> = ({ isOpen, onClose,
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
-      className="shell-surface fixed m-0 ml-auto h-dvh max-h-none w-full max-w-2xl p-0 border-0 border-l border-shell-line bg-shell text-shell-ink backdrop:bg-[rgba(10,12,15,0.6)]"
+      className="drawer shell-surface fixed m-0 ml-auto h-dvh max-h-none w-full max-w-2xl p-0 border-0 border-l border-shell-line bg-shell text-shell-ink backdrop:bg-[rgba(10,12,15,0.6)]"
     >
       <div className="w-full h-full flex flex-col overflow-hidden">
         {/* Drawer Header */}
@@ -197,8 +197,8 @@ export const AiStudioDrawer: React.FC<AiStudioDrawerProps> = ({ isOpen, onClose,
               role="tab"
               aria-selected={activeTab === tab}
               onClick={() => setActiveTab(tab)}
-              className={`min-h-11 flex items-center gap-1.5 px-3 text-[14px] font-medium border border-shell-line -ml-px first:ml-0 transition ${
-                activeTab === tab ? 'bg-paper text-ink' : 'text-shell-muted hover:text-shell-ink'
+              className={`wipe min-h-11 flex items-center gap-1.5 px-3 text-[14px] font-medium border border-shell-line -ml-px first:ml-0 ${
+                activeTab === tab ? 'text-ink' : 'text-shell-muted hover:text-shell-ink'
               }`}
             >
               <Icon className="w-3.5 h-3.5" aria-hidden="true" />

@@ -118,7 +118,8 @@ export const ExamPageHead: React.FC<ExamPageHeadProps> = ({
 
         {/* Centre: phase */}
         <div className="flex justify-center min-w-0">
-          <div className="flex items-center gap-2 px-1 py-2 text-shell-ink">
+          {/* The phase name is rewritten as the rule beneath draws */}
+          <div key={phase} className="animate-ink-in flex items-center gap-2 px-1 py-2 text-shell-ink">
             <PhaseGlyph phase={phase} />
             <span className="report-label whitespace-nowrap">{PHASE_LABEL[phase]}</span>
           </div>
@@ -153,7 +154,9 @@ export const ExamPageHead: React.FC<ExamPageHeadProps> = ({
           <span className="hidden md:inline text-[13px] tabular whitespace-nowrap" aria-hidden={saveStatus.state === 'idle'}>
             {saveStatus.state === 'saving' && <span className="text-shell-muted">Saving…</span>}
             {saveStatus.state === 'saved' && (
-              <span className="text-shell-muted">Saved {formatSavedAt(saveStatus.at)}</span>
+              <span key={saveStatus.at.getTime()} className="animate-ink-in inline-block text-shell-muted">
+                Saved {formatSavedAt(saveStatus.at)}
+              </span>
             )}
             {saveStatus.state === 'error' && <span className="text-lost-on-shell">Not saved, retrying</span>}
           </span>

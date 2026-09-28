@@ -262,11 +262,18 @@ export default function ResultsPage() {
               {markedCount} of {totalQuestions} questions marked.
               {isMarking && markedCount > 0 && ' Read each question below as soon as it is marked.'}
             </p>
-            <div className="h-px bg-paper-rule" aria-hidden="true">
+            <div className="relative h-px bg-paper-rule" aria-hidden="true">
               <div
-                className="h-0.5 -mt-[0.5px] bg-ink transition-[width] duration-700 ease-[var(--ease-out-expo)]"
-                style={{ width: `${totalQuestions ? (markedCount / totalQuestions) * 100 : 0}%` }}
+                className="absolute inset-x-0 -top-[0.5px] h-0.5 bg-ink origin-left transition-transform duration-700 ease-[var(--ease-out-expo)]"
+                style={{ transform: `scaleX(${totalQuestions ? markedCount / totalQuestions : 0})` }}
               />
+              {/* The question the examiner is reading now: its stretch of the rule is being written */}
+              {isMarking && markedCount < totalQuestions && (
+                <div
+                  className="rule-working absolute -top-[0.5px] text-examiner"
+                  style={{ left: `${(markedCount / totalQuestions) * 100}%`, width: `${100 / totalQuestions}%` }}
+                />
+              )}
             </div>
             {!isMarking && (
               <button type="button" onClick={() => startMarking(manifest, session)} className="btn btn-ink">

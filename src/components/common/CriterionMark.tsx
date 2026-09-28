@@ -17,6 +17,6 @@ export const CriterionMark: React.FC<{ className?: string }> = ({ className = 'w
   >
     <path d="M8 3.5H4.5v17H8" />
     <path d="M16 3.5h3.5v17H16" />
-    <path d="M8.5 12.5l2.25 2.5L15.5 9" />
+    <path className="mark-tick" pathLength={1} d="M8.5 12.5l2.25 2.5L15.5 9" />
   </svg>
 );

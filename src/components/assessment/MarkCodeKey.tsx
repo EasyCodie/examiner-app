@@ -1,4 +1,7 @@
+'use client';
+
 import React from 'react';
+import { useRevealOnView } from '@/components/common/motion';
 
 export const MARK_CODE_KEY: { code: string; short: string; meaning: string }[] = [
   { code: 'M', short: 'method', meaning: 'Method mark: a valid method, attempted. It can be earned even if the answer is wrong.' },
@@ -17,6 +20,8 @@ export const MARK_CODE_KEY: { code: string; short: string; meaning: string }[] =
  * (home); `compact` is a one-line legend beside marking (results, tutor).
  */
 export const MarkCodeKey: React.FC<{ variant: 'full' | 'compact'; className?: string }> = ({ variant, className = '' }) => {
+  const revealOnView = useRevealOnView<HTMLDListElement>();
+
   if (variant === 'compact') {
     return (
       <dl aria-label="Mark code key" className={`flex flex-wrap gap-x-4 gap-y-1 text-[13px] text-ink-muted ${className}`}>
@@ -31,10 +36,16 @@ export const MarkCodeKey: React.FC<{ variant: 'full' | 'compact'; className?: st
   }
 
   return (
-    <dl className={`border-t-2 border-shell-ink ${className}`}>
-      {MARK_CODE_KEY.map(({ code, meaning }) => (
+    <dl ref={revealOnView} className={`border-t-2 border-shell-ink ${className}`}>
+      {/* As the key comes into view, the examiner writes each code into it */}
+      {MARK_CODE_KEY.map(({ code, meaning }, i) => (
         <div key={code} className="grid grid-cols-[4rem_1fr] gap-4 py-3.5 border-b border-shell-line">
-          <dt className="tabular font-sans text-[17px] font-bold text-examiner-on-shell">{code}</dt>
+          <dt
+            className="reveal-item tabular font-sans text-[17px] font-bold text-examiner-on-shell justify-self-start"
+            style={{ '--i': i * 2 } as React.CSSProperties}
+          >
+            {code}
+          </dt>
           <dd className="text-[16px] leading-relaxed text-shell-ink max-w-[70ch]">{meaning}</dd>
         </div>
       ))}

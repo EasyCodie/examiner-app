@@ -1,4 +1,7 @@
+'use client';
+
 import React from 'react';
+import { CountUp, useCountUp } from '@/components/common/motion';
 
 interface GradeBoundaryCardProps {
   totalAwarded: number;
@@ -41,6 +44,8 @@ export const GradeBoundaryCard: React.FC<GradeBoundaryCardProps> = ({
   boundaries,
   ecfCount,
 }) => {
+  // The verdict is totted up: the inverted cell climbs the table from 1 and settles on the grade
+  const shownGrade = Math.max(1, useCountUp(predictedGrade, { duration: 160 * predictedGrade, delay: 520 }));
   const nextGrade = Math.min(7, predictedGrade + 1);
   const nextBoundary = predictedGrade < 7 ? boundaries[`grade${nextGrade}` as keyof typeof boundaries] : null;
   const marksToNext = nextBoundary ? Math.max(0, Math.ceil((nextBoundary / 100) * totalPossible) - totalAwarded) : 0;
@@ -53,7 +58,11 @@ export const GradeBoundaryCard: React.FC<GradeBoundaryCardProps> = ({
   return (
     <section aria-labelledby="grade-heading" className="space-y-6">
       <h2 id="grade-heading" className="font-serif text-[30px] sm:text-[36px] font-semibold leading-tight text-ink">
-        Predicted grade <span className="tabular">{predictedGrade}</span>
+        Predicted grade{' '}
+        <span className="tabular" aria-hidden="true">
+          {shownGrade}
+        </span>
+        <span className="sr-only">{predictedGrade}</span>
       </h2>
 
       <table className="w-full border-collapse tabular text-center">
@@ -67,8 +76,8 @@ export const GradeBoundaryCard: React.FC<GradeBoundaryCardProps> = ({
                 key={g}
                 scope="col"
                 aria-current={g === predictedGrade ? 'true' : undefined}
-                className={`py-3 font-serif font-semibold ${
-                  g === predictedGrade ? 'bg-ink text-paper text-[28px] sm:text-[34px]' : 'text-ink text-[18px] sm:text-[20px]'
+                className={`h-16 sm:h-[72px] font-serif font-semibold ${
+                  g === shownGrade ? 'bg-ink text-paper text-[28px] sm:text-[34px]' : 'text-ink text-[18px] sm:text-[20px]'
                 }`}
               >
                 {g}
@@ -81,7 +90,7 @@ export const GradeBoundaryCard: React.FC<GradeBoundaryCardProps> = ({
             {GRADES.map((g) => (
               <td
                 key={g}
-                className={`py-2 text-[14px] ${g === predictedGrade ? 'bg-paper-tint font-semibold text-ink' : 'text-ink-muted'}`}
+                className={`py-2 text-[14px] ${g === shownGrade ? 'bg-paper-tint font-semibold text-ink' : 'text-ink-muted'}`}
               >
                 {boundaries[`grade${g}` as keyof typeof boundaries]}%
               </td>
@@ -91,8 +100,15 @@ export const GradeBoundaryCard: React.FC<GradeBoundaryCardProps> = ({
       </table>
 
       <p className="font-serif text-[18px] leading-relaxed text-ink max-w-[62ch]">
-        You scored <span className="tabular font-semibold">{totalAwarded}</span> of{' '}
-        <span className="tabular">{totalPossible}</span> marks (<span className="tabular">{percentage}%</span>).
+        You scored{' '}
+        <span className="tabular font-semibold">
+          <CountUp value={totalAwarded} duration={900} delay={520} />
+        </span>{' '}
+        of <span className="tabular">{totalPossible}</span> marks (
+        <span className="tabular">
+          <CountUp value={percentage} duration={900} delay={520} />%
+        </span>
+        ).
         {nextBoundary !== null && marksToNext > 0 && (
           <>
             {' '}

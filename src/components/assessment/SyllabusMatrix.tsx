@@ -3,6 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { QuestionItem } from '@/types/exam';
+import { useRevealOnView } from '@/components/common/motion';
 
 export interface SyllabusBreakdownItem {
   subtopic: string;
@@ -49,6 +50,7 @@ const ORDER = { critical: 0, developing: 1, mastered: 2 } as const;
  * weakest first, each with the question to practise it on.
  */
 export const SyllabusMatrix: React.FC<SyllabusMatrixProps> = ({ syllabusBreakdown, paperId, allQuestions }) => {
+  const revealOnView = useRevealOnView<HTMLTableSectionElement>();
   if (syllabusBreakdown.length === 0) return null;
 
   const rows = [...syllabusBreakdown].sort((a, b) => ORDER[a.status] - ORDER[b.status] || a.percentage - b.percentage);
@@ -76,12 +78,16 @@ export const SyllabusMatrix: React.FC<SyllabusMatrixProps> = ({ syllabusBreakdow
               <th scope="col" className="py-2 font-semibold"><span className="sr-only">Practise</span></th>
             </tr>
           </thead>
-          <tbody>
-            {rows.map((row) => {
+          <tbody ref={revealOnView}>
+            {rows.map((row, i) => {
               const standing = STANDING[row.status];
               const idx = practiceIndex(row.subtopic);
               return (
-                <tr key={row.subtopic} className="border-b border-paper-rule align-top">
+                <tr
+                  key={row.subtopic}
+                  className="reveal-item border-b border-paper-rule align-top"
+                  style={{ '--i': i } as React.CSSProperties}
+                >
                   <th scope="row" className="py-3 pr-4 text-left">
                     <span className="block text-[15px] font-semibold text-ink">{row.subtopic}</span>
                     {row.status !== 'mastered' && row.targetedDrillPrompt && (

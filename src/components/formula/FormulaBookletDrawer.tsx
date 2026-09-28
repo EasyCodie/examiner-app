@@ -149,7 +149,7 @@ export const FormulaBookletDrawer: React.FC<FormulaBookletDrawerProps> = ({
         // A click on the backdrop (the dialog box itself, outside the panel) closes it
         if (e.target === e.currentTarget) onClose();
       }}
-      className="paper-surface fixed m-0 ml-auto h-dvh max-h-none w-full sm:w-[560px] lg:w-[640px] max-w-full p-0 border-0 bg-paper text-ink backdrop:bg-[rgba(10,12,15,0.6)]"
+      className="drawer paper-surface fixed m-0 ml-auto h-dvh max-h-none w-full sm:w-[560px] lg:w-[640px] max-w-full p-0 border-0 bg-paper text-ink backdrop:bg-[rgba(10,12,15,0.6)]"
     >
       <div className="h-full flex flex-col">
         {/* Booklet head */}
@@ -191,8 +191,8 @@ export const FormulaBookletDrawer: React.FC<FormulaBookletDrawerProps> = ({
                   type="button"
                   onClick={() => setSelectedTopic(tab.id)}
                   aria-pressed={isActive}
-                  className={`min-h-11 px-3 text-[14px] font-medium whitespace-nowrap border-r border-paper-rule last:border-r-0 ${
-                    isActive ? 'bg-ink text-paper' : 'bg-paper text-ink hover:bg-paper-tint'
+                  className={`wipe [--wipe:var(--color-ink)] min-h-11 px-3 text-[14px] font-medium whitespace-nowrap border-r border-paper-rule last:border-r-0 ${
+                    isActive ? 'text-paper' : 'bg-paper text-ink hover:bg-paper-tint'
                   }`}
                 >
                   {tab.label}
@@ -231,8 +231,8 @@ export const FormulaBookletDrawer: React.FC<FormulaBookletDrawerProps> = ({
                   <li
                     key={item.id}
                     id={item.id}
-                    className={`grid grid-cols-[4.5rem_1fr] gap-x-4 px-5 sm:px-8 py-5 border-b border-paper-rule transition-colors duration-500 ${
-                      isTargeted ? 'bg-paper-tint outline-2 -outline-offset-2 outline-ink' : ''
+                    className={`grid grid-cols-[4.5rem_1fr] gap-x-4 px-5 sm:px-8 py-5 border-b border-paper-rule ${
+                      isTargeted ? 'highlighter-pass outline-2 -outline-offset-2 outline-ink' : ''
                     }`}
                   >
                     <div className="pt-0.5">
@@ -248,7 +248,7 @@ export const FormulaBookletDrawer: React.FC<FormulaBookletDrawerProps> = ({
                           className="min-h-9 min-w-9 -mt-1.5 flex items-center justify-center text-ink-muted hover:text-ink shrink-0"
                           title="Copy as LaTeX"
                         >
-                          {isCopied ? <Check className="w-4 h-4" aria-hidden="true" /> : <Copy className="w-4 h-4" aria-hidden="true" />}
+                          {isCopied ? <Check className="draw-icon w-4 h-4" aria-hidden="true" /> : <Copy className="w-4 h-4" aria-hidden="true" />}
                           <span className="sr-only">{isCopied ? 'Copied' : `Copy ${item.title} as LaTeX`}</span>
                         </button>
                       </div>

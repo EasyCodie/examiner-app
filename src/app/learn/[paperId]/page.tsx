@@ -33,6 +33,8 @@ export default function SocraticLearnPage() {
 
   const [manifest, setManifest] = useState<ExamManifest | null>(null);
   const [selectedQuestionIndex, setSelectedQuestionIndex] = useState(0);
+  // Which way the last move through the paper went, so the next sheet turns that way
+  const [turn, setTurn] = useState<'forward' | 'back' | undefined>(undefined);
   const [currentTier, setCurrentTier] = useState<PedagogicalTier>(1);
   const [isMarkschemeUnlocked, setIsMarkschemeUnlocked] = useState(false);
   const [highestTier, setHighestTier] = useState<Record<string, PedagogicalTier>>({});
@@ -143,6 +145,7 @@ export default function SocraticLearnPage() {
   }, [hasUnsavedWork]);
 
   const handleSelectQuestion = useCallback((idx: number) => {
+    if (idx !== selectedQuestionIndex) setTurn(idx > selectedQuestionIndex ? 'forward' : 'back');
     setSelectedQuestionIndex(idx);
     setCurrentTier(1);
     setIsMarkschemeUnlocked(false);
@@ -166,7 +169,7 @@ export default function SocraticLearnPage() {
         };
       });
     }
-  }, [manifest]);
+  }, [manifest, selectedQuestionIndex]);
 
   // Keyboard navigation: ArrowLeft / ArrowRight to switch questions (when not typing)
   useEffect(() => {
@@ -411,6 +414,7 @@ export default function SocraticLearnPage() {
                   onClear={() => canvasRef.current?.clear()}
                 />
               </div>
+              <div key={`learn-sheet-${currentQuestion.id}`} data-turn={turn}>
               <DrawingCanvas
                 key={`learn-canvas-${currentQuestion.id}`}
                 ref={canvasRef}
@@ -434,8 +438,10 @@ export default function SocraticLearnPage() {
                 }}
                 compact={true}
               />
+              </div>
             </>
           ) : (
+            <div key={`learn-sheet-${currentQuestion.id}`} data-turn={turn}>
             <article className="script-sheet paper-surface px-6 sm:px-10 py-8 sm:py-10 space-y-6">
               <div className="grid grid-cols-[auto_1fr_auto] gap-x-4 items-baseline border-b border-ink pb-3">
                 <h2 className="font-serif text-[28px] font-semibold leading-none text-ink tabular">
@@ -498,6 +504,7 @@ export default function SocraticLearnPage() {
                 className="ruled w-full min-h-[360px] px-4 pt-[18px] pb-8 bg-paper bg-[position:0_45px] border border-paper-rule-strong font-serif text-[17px] leading-[28px] text-student caret-student placeholder:text-ink-muted resize-y outline-none focus-visible:outline-2 focus-visible:outline-ink"
               />
             </article>
+            </div>
           )}
         </div>
 

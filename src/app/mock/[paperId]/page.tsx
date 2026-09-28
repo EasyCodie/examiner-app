@@ -44,6 +44,8 @@ export default function MockExamPage() {
   const [manifest, setManifest] = useState<ExamManifest | null>(null);
   const [resumable, setResumable] = useState<InProgressExamSession | null>(null);
   const [currentPage, setCurrentPage] = useState<number>(1);
+  // Which way the last page turn went, so the next page comes in from the right edge
+  const [turn, setTurn] = useState<'forward' | 'back' | undefined>(undefined);
 
   // Exam Session timing
   const [clock, dispatchClock] = useReducer(examClockReducer, initialExamClock);
@@ -180,9 +182,12 @@ export default function MockExamPage() {
     const idx = manifest.questions.findIndex((q) => q.id === key);
     if (idx < 0) return;
     if (isHumanities) {
+      if (idx !== humanitiesQuestionIndex) setTurn(idx > humanitiesQuestionIndex ? 'forward' : 'back');
       setHumanitiesQuestionIndex(idx);
     } else {
-      setCurrentPage(manifest.questions[idx].pageNumber);
+      const page = manifest.questions[idx].pageNumber;
+      if (page !== activePageNumber) setTurn(page > activePageNumber ? 'forward' : 'back');
+      setCurrentPage(page);
     }
     window.scrollTo({ top: 0 });
   };
@@ -437,6 +442,7 @@ export default function MockExamPage() {
                 submissions={humanitiesSubmissions}
                 onUpdateSubmission={handleUpdateHumanitiesSubmission}
                 readOnly={phase !== 'writing'}
+                turn={turn}
               />
             </div>
           ) : (
@@ -462,7 +468,7 @@ export default function MockExamPage() {
                 </div>
               </div>
 
-              <div className="w-full max-w-[816px] mx-auto">
+              <div key={`page-${activePageNumber}`} data-turn={turn} className="w-full max-w-[816px] mx-auto">
                 <DrawingCanvas
                   key={`canvas-page-${activePageNumber}`}
                   ref={canvasRef}
@@ -596,9 +602,10 @@ export default function MockExamPage() {
         dismissable={false}
         title={phase === 'pens-down' ? 'Pens down' : 'Handing in'}
       >
-        <p className="text-[16px] leading-relaxed text-ink" role="status">
+        <p key={gradingProgress} className="animate-ink-in text-[16px] leading-relaxed text-ink" role="status">
           {gradingProgress}…
         </p>
+        <div className="rule-working bg-paper-rule text-ink" aria-hidden="true" />
       </ReportDialog>
     </div>
   );

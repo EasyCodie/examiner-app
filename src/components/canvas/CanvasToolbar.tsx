@@ -122,8 +122,8 @@ export const CanvasToolbar: React.FC<CanvasToolbarProps> = ({
   const group = vertical ? 'flex flex-col items-stretch' : 'flex items-center';
   const divider = vertical ? 'h-px w-full bg-shell-line my-1' : 'w-px self-stretch bg-shell-line mx-1';
   const toolButton = (active: boolean) =>
-    `min-h-11 min-w-11 flex items-center justify-center gap-2 px-2.5 text-[14px] font-medium transition-colors ${
-      active ? 'bg-paper text-ink' : 'text-shell-muted hover:text-shell-ink'
+    `wipe min-h-11 min-w-11 flex items-center justify-center gap-2 px-2.5 text-[14px] font-medium ${
+      active ? 'text-ink' : 'text-shell-muted hover:text-shell-ink'
     }`;
 
   return (

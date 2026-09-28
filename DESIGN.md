@@ -213,7 +213,7 @@ Criterion is set as the documents an IB examiner actually produces: the candidat
 
 The system runs on two surfaces and a handful of inks. Paper carries the work (questions, working, the marked report). The shell carries the apparatus around it (page head, contents strip, tool rail, home and navigation). Colour is spent on meaning: blue-black for the candidate's ink, ultramarine for the examiner, and green, red and ochre for awarded, lost and carried-forward marks. Every state also has a glyph or a word, because the colour is never the only signal.
 
-Density is that of a printed paper: generous sheet margins, a 28px ruling for answers, tabular numerals wherever marks, times or grades appear. Motion is limited to a rule drawing across and examiner ink writing in from the left. Criterion is desktop web only; layouts are specified at 1440 wide and do not target phones.
+Density is that of a printed paper: generous sheet margins, a 28px ruling for answers, tabular numerals wherever marks, times or grades appear. Motion is the physical grammar of a marked paper: rules draw, ink writes in, numbers tick, sheets are laid on the desk. Nothing floats, fades up, pulses or glows. Criterion is desktop web only; layouts are specified at 1440 wide and do not target phones.
 
 **Key Characteristics:**
 - Graphite shell (desk) holding white script stock (paper); two surfaces, never a stack of cards.
@@ -370,13 +370,26 @@ A 260px sticky marks table (question, glyph, "n / max"; the selected row inverts
 The tutor's help steps as a ruled ordered list under a 2px ink rule: 48px rows with a serif step numeral, a 14px semibold title and 13px detail, and a trailing glyph (open square, tick when used, padlock when locked). The current step inverts to report black. The markscheme rung stays locked, labelled "Unlocks after step 3", until the three earlier steps are used.
 
 ### Inputs / File Fields
-A file field is a real input inside a square 132px drop zone: dashed strong paper-rule at rest, paper-tint on hover or drag, a solid ink border once a file is chosen. Focus shows a 2px ink outline. Text areas are ruled working areas.
+A file field is a real input inside a square 132px drop zone: dashed strong paper-rule at rest, paper-tint on hover or drag, and, once a file is chosen, an ink border ruled round it in one pass of the pen. Focus shows a 2px ink outline. Text areas are ruled working areas.
 
 ### Motion
-- **Rule draw** (520ms, expo-out, from the left): phase rules in the page head and the contents now-marker.
-- **Ink in** (420ms, expo-out, left-to-right clip): examiner marks writing into the margin, staggered line by line.
-- **State transitions** (160ms): colour and border only.
-- **Reduced motion:** all animation and transitions collapse to an instant state change.
+Everything moves the way something moves on an examiner's desk: a rule is drawn, ink is written, a tally is totted up, a sheet is laid down or turned. Nothing floats, fades up, scales in, bounces, pulses or glows. Curve is expo-out throughout (`--ease-out-expo`). Only `transform`, `clip-path`, `mask` and `background-size` animate, so motion stays on the compositor. Sequences are timed with a `--d` start delay (`motionDelay(ms)` in `src/components/common/motion.tsx`).
+
+- **Sheet feed** (620ms, clip from the top, shadow included): every script, report and notice sheet arrives on the desk. Dialogs feed in at 360ms over a dimming desk. The clip drops once the sheet is down.
+- **Page turn** (460ms): in the timed exam and guided practice, the next page is revealed from the fore-edge and the previous one from the spine (`data-turn="forward" | "back"`).
+- **Drawer** (420ms): settings and the formula booklet slide in from the right edge like a folder pulled across.
+- **Rule draw** (520ms, from the left; `-y` variant draws down): phase rules, the examiner's margin rule, the ochre ECF band rules, the hairline of the sample script, and a chosen PDF ruled round in one pass (across, down, back, up).
+- **Travelling now-marker** (420ms): the contents strip's current-page rule moves to the new page instead of jumping.
+- **Ink in** (420ms, 240ms fast; left-to-right clip): examiner marks into the margin, staggered 120ms per line; student lines; changed labels. Table rows ink in 55ms apart as the table scrolls into view (`useRevealOnView`).
+- **Pen stroke** (380ms, `pathLength=1`): ticks, crosses and ECF arrows are stroked just after the code beside them is written. The Criterion mark's tick signs itself on load and again under the pointer.
+- **Write down** (length-scaled, 500 to 2200ms): a soft pen edge travels down a fresh tutor reply or the examiner's comment. Only replies that have just arrived are written; history is simply there.
+- **Tally** (700 to 900ms, expo-out count): the sample total, the report score and percentage, and the paper summary tick to their value. The predicted grade climbs the boundary table from 1 and settles. Screen readers get the final value only.
+- **Wipe** (300ms, `background-size`): a selected slip, tab, tool or question row fills from the left in paper or report black, driven by its ARIA state.
+- **Highlighter pass** (700ms): a formula the tutor points to in the booklet is swept in selection blue.
+- **Strike-through** (420ms): a deleted session is ruled out in red before the row leaves.
+- **Work in progress** (1500ms loop): a short rule draws and undraws while the examiner marks, the tutor thinks, a paper is read or a script is handed in. It is the only loop in the app.
+- **State transitions** (160 to 220ms): colour and border only. Buttons press down 1px.
+- **Reduced motion:** every animation, delay and transition collapses to an instant state change. Tallies show their value at once, and the work-in-progress rule holds still at 40%.
 
 ## Do's and Don'ts
 

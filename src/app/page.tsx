@@ -18,6 +18,7 @@ import { CriterionMark } from '@/components/common/CriterionMark';
 import { formatClock } from '@/components/exam/ExamPageHead';
 import { MarkCodeKey } from '@/components/assessment/MarkCodeKey';
 import { STORAGE_ERROR_MESSAGE } from '@/components/common/StorageErrorNotice';
+import { CountUp, motionDelay, prefersReducedMotion, useRevealOnView } from '@/components/common/motion';
 
 /** Sample marking for the first viewport: one slip, carried forward. */
 const SAMPLE_LINES: { working: string; code: string; outcome: 'tick' | 'cross'; note: string }[] = [
@@ -27,16 +28,37 @@ const SAMPLE_LINES: { working: string; code: string; outcome: 'tick' | 'cross'; 
   { working: '$= \\tfrac16\\left(16\\sqrt2 - 1\\right)$', code: 'A1FT', outcome: 'tick', note: 'from their 8' },
 ];
 
-const Tick: React.FC<{ outcome: 'tick' | 'cross' }> = ({ outcome }) => (
-  <svg viewBox="0 0 12 12" className="w-3.5 h-3.5 shrink-0" aria-label={outcome === 'tick' ? 'awarded' : 'not awarded'}>
-    <path
-      d={outcome === 'tick' ? 'M1.5 6.5l3 3 6-7' : 'M2 2l8 8M10 2l-8 8'}
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.8"
-    />
+const Tick: React.FC<{ outcome: 'tick' | 'cross'; delay: number }> = ({ outcome, delay }) => (
+  <svg
+    viewBox="0 0 12 12"
+    className="draw-stroke w-3.5 h-3.5 shrink-0"
+    style={motionDelay(delay)}
+    aria-label={outcome === 'tick' ? 'awarded' : 'not awarded'}
+  >
+    {outcome === 'tick' ? (
+      <path d="M1.5 6.5l3 3 6-7" pathLength={1} fill="none" stroke="currentColor" strokeWidth="1.8" />
+    ) : (
+      <>
+        <path d="M2 2l8 8" pathLength={1} fill="none" stroke="currentColor" strokeWidth="1.8" />
+        <path d="M10 2l-8 8" pathLength={1} fill="none" stroke="currentColor" strokeWidth="1.8" style={motionDelay(delay + 140)} />
+      </>
+    )}
   </svg>
 );
+
+/**
+ * The sample marking plays as one sitting: the candidate writes, the examiner
+ * rules the margin, marks each line, underlines the slip, carries it forward, and totals.
+ */
+const SAMPLE_TIMING = {
+  questionRule: 260,
+  working: (i: number) => 460 + i * 200,
+  margin: 1260,
+  mark: [1460, 1760, 2060, 2840],
+  slipUnderline: 1920,
+  carry: [2200, 2360, 2580],
+  total: 3160,
+};
 
 export default function HomePage() {
   const { setHeaderInfo, openAiStudio, onAiKeySaved } = useAppShell();
@@ -45,6 +67,11 @@ export default function HomePage() {
   const [pastSessions, setPastSessions] = useState<ExamSession[]>([]);
   const [unfinished, setUnfinished] = useState<{ manifest: ExamManifest; session: InProgressExamSession }[]>([]);
   const [pendingDelete, setPendingDelete] = useState<ExamSession | 'all' | null>(null);
+  // Sessions being crossed out before they leave the table
+  const [striking, setStriking] = useState<string[]>([]);
+  // Bumped to play the sample marking again
+  const [sampleRun, setSampleRun] = useState(0);
+  const revealOnView = useRevealOnView<HTMLTableElement>();
   const [storageError, setStorageError] = useState(false);
   // Unknown until the saved config is read, so the key callout never flashes for someone who has a key
   const [hasKey, setHasKey] = useState<boolean | null>(null);
@@ -72,14 +99,22 @@ export default function HomePage() {
   }, [setHeaderInfo]);
 
   const confirmDelete = async () => {
-    if (pendingDelete === 'all') {
-      await clearAllExamSessions();
-      setPastSessions([]);
-    } else if (pendingDelete) {
-      await deleteExamSession(pendingDelete.id);
-      setPastSessions((prev) => prev.filter((s) => s.id !== pendingDelete.id));
-    }
+    const target = pendingDelete;
+    if (!target) return;
     setPendingDelete(null);
+    const ids = target === 'all' ? pastSessions.map((s) => s.id) : [target.id];
+    // The strike runs the full width of each row
+    ids.forEach((id) => {
+      const row = document.querySelector<HTMLTableRowElement>(`tr[data-session-row="${id}"]`);
+      row?.style.setProperty('--row-w', `${row.offsetWidth}px`);
+    });
+    setStriking(ids);
+    const struckThrough = new Promise((resolve) =>
+      setTimeout(resolve, prefersReducedMotion() ? 0 : 520 + Math.min(ids.length - 1, 10) * 60)
+    );
+    await Promise.all([target === 'all' ? clearAllExamSessions() : deleteExamSession(target.id), struckThrough]);
+    setPastSessions((prev) => prev.filter((s) => !ids.includes(s.id)));
+    setStriking([]);
   };
 
   const hasSessions = pastSessions.length > 0 || unfinished.length > 0;
@@ -115,41 +150,115 @@ export default function HomePage() {
 
         <figure className="space-y-3">
           <div className="script-sheet paper-surface px-6 sm:px-9 py-7 sm:py-8">
-            <div className="flex items-baseline justify-between border-b border-ink pb-2.5">
+            <div className="relative flex items-baseline justify-between pb-2.5">
               <p className="font-serif text-[18px] font-semibold text-ink tabular">1.</p>
               <p className="font-serif text-[14px] font-semibold text-ink">[Maximum mark: 6]</p>
+              <span
+                aria-hidden="true"
+                className="animate-rule-draw absolute inset-x-0 bottom-0 h-px bg-ink"
+                style={motionDelay(SAMPLE_TIMING.questionRule)}
+              />
             </div>
             <div className="mt-3 font-serif text-[16px] leading-relaxed text-ink">
               <MathRenderer content={'Find the exact value of $\\displaystyle\\int_0^2 x\\sqrt{2x^2+1}\\,dx$.'} lightMode={true} />
             </div>
 
-            <ol className="mt-5 border-t border-paper-rule">
-              {SAMPLE_LINES.map((line, i) => (
-                <li key={i} className="grid grid-cols-[minmax(0,1fr)_9.5rem] border-b border-paper-rule">
-                  <div className="py-2.5 pr-4 text-student text-[16px] overflow-x-auto">
-                    <MathRenderer content={line.working} lightMode={true} />
-                  </div>
-                  <div
-                    className="animate-ink-in border-l border-examiner/40 pl-3 py-2.5 flex items-center gap-2 text-examiner"
-                    style={{ animationDelay: `${400 + i * 260}ms` }}
-                  >
-                    <span className="tabular font-sans text-[14px] font-bold">{line.code}</span>
-                    <Tick outcome={line.outcome} />
-                    <span className="font-serif italic text-[13px] leading-tight">{line.note}</span>
-                  </div>
-                </li>
-              ))}
+            <ol key={sampleRun} className="relative mt-5 border-t border-paper-rule">
+              {/* The examiner rules the margin before marking */}
+              <span
+                aria-hidden="true"
+                className="animate-rule-draw-y absolute top-0 bottom-0 right-[9.5rem] w-px bg-examiner/40"
+                style={motionDelay(SAMPLE_TIMING.margin)}
+              />
+              {SAMPLE_LINES.map((line, i) => {
+                const markAt = SAMPLE_TIMING.mark[i];
+                const isSlip = i === 1;
+                return (
+                  <li key={i} className="grid grid-cols-[minmax(0,1fr)_9.5rem] border-b border-paper-rule">
+                    <div
+                      className="animate-ink-in py-2.5 pr-4 text-student text-[16px] overflow-x-auto"
+                      style={motionDelay(SAMPLE_TIMING.working(i))}
+                    >
+                      <span className="relative inline-block">
+                        <MathRenderer content={line.working} lightMode={true} />
+                        {isSlip && (
+                          // The examiner underlines the slip
+                          <svg
+                            aria-hidden="true"
+                            viewBox="0 0 100 6"
+                            preserveAspectRatio="none"
+                            className="draw-stroke absolute left-0 -bottom-1.5 w-full h-1.5 text-examiner overflow-visible"
+                            style={motionDelay(SAMPLE_TIMING.slipUnderline)}
+                          >
+                            <path
+                              d="M0 3 Q 6.25 0 12.5 3 T 25 3 T 37.5 3 T 50 3 T 62.5 3 T 75 3 T 87.5 3 T 100 3"
+                              pathLength={1}
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="1.4"
+                              vectorEffect="non-scaling-stroke"
+                            />
+                          </svg>
+                        )}
+                      </span>
+                    </div>
+                    <div className="relative pl-3 py-2.5 text-examiner">
+                      {/* Error carried forward: the slip in line 2 is followed down to the mark it earns in line 4 */}
+                      {i === 1 && (
+                        <span
+                          aria-hidden="true"
+                          className="animate-rule-draw-y absolute left-[3px] top-1/2 -bottom-px w-[1.5px] bg-ecf [animation-duration:170ms] [animation-timing-function:linear]"
+                          style={motionDelay(SAMPLE_TIMING.carry[0])}
+                        />
+                      )}
+                      {i === 2 && (
+                        <span
+                          aria-hidden="true"
+                          className="animate-rule-draw-y absolute left-[3px] top-0 -bottom-px w-[1.5px] bg-ecf [animation-duration:230ms] [animation-timing-function:linear]"
+                          style={motionDelay(SAMPLE_TIMING.carry[1])}
+                        />
+                      )}
+                      {i === 3 && (
+                        <svg
+                          aria-hidden="true"
+                          viewBox="0 0 10 20"
+                          className="draw-stroke absolute left-[2.75px] top-0 w-2.5 h-1/2 text-ecf overflow-visible"
+                          preserveAspectRatio="none"
+                          style={motionDelay(SAMPLE_TIMING.carry[2])}
+                        >
+                          <path d="M1 0 V20 H9 M6 17 L9 20 L6 23" pathLength={1} fill="none" stroke="currentColor" strokeWidth="1.5" vectorEffect="non-scaling-stroke" />
+                        </svg>
+                      )}
+                      <div className="animate-ink-in flex items-center gap-2" style={motionDelay(markAt)}>
+                        <span className="tabular font-sans text-[14px] font-bold">{line.code}</span>
+                        <Tick outcome={line.outcome} delay={markAt + 140} />
+                        <span className={`font-serif italic text-[13px] leading-tight ${i === 3 ? 'text-ecf' : ''}`}>
+                          {line.note}
+                        </span>
+                      </div>
+                    </div>
+                  </li>
+                );
+              })}
             </ol>
             <p
+              key={`total-${sampleRun}`}
               className="animate-ink-in mt-3 text-right font-sans text-[15px] font-bold text-examiner tabular"
-              style={{ animationDelay: `${400 + SAMPLE_LINES.length * 260}ms` }}
+              style={motionDelay(SAMPLE_TIMING.total)}
             >
-              3 / 4
+              <CountUp value={3} delay={SAMPLE_TIMING.total + 120} duration={420} /> / 4
             </p>
           </div>
           <figcaption className="text-[14px] leading-relaxed text-shell-muted max-w-[60ch]">
             Sample marking. The wrong limit costs one accuracy mark; the method after it still scores, because the error is
-            carried forward.
+            carried forward.{' '}
+            <button
+              type="button"
+              onClick={() => setSampleRun((n) => n + 1)}
+              className="min-h-9 text-shell-ink underline underline-offset-4 decoration-shell-line hover:decoration-shell-ink transition-colors"
+            >
+              Mark it again
+            </button>
           </figcaption>
         </figure>
       </section>
@@ -223,7 +332,7 @@ export default function HomePage() {
             )}
           </div>
 
-          <table className="mt-6 w-full border-collapse">
+          <table ref={revealOnView} className="mt-6 w-full border-collapse">
             <thead>
               <tr className="border-t-2 border-b border-shell-ink text-left text-[13px] text-shell-muted">
                 <th scope="col" className="py-2 pr-4 font-semibold">Paper</th>
@@ -233,8 +342,12 @@ export default function HomePage() {
               </tr>
             </thead>
             <tbody>
-              {unfinished.map(({ manifest, session }) => (
-                <tr key={`unfinished-${manifest.id}`} className="border-b border-shell-line align-middle">
+              {unfinished.map(({ manifest, session }, i) => (
+                <tr
+                  key={`unfinished-${manifest.id}`}
+                  className="reveal-item border-b border-shell-line align-middle"
+                  style={{ '--i': i } as React.CSSProperties}
+                >
                   <th scope="row" className="py-3 pr-4 text-left">
                     <span className="block text-[15px] font-semibold text-shell-ink">{manifest.title}</span>
                     <span className="block text-[13px] text-shell-muted">{manifest.subtitle}</span>
@@ -252,12 +365,21 @@ export default function HomePage() {
                   </td>
                 </tr>
               ))}
-              {pastSessions.map((sess) => {
+              {pastSessions.map((sess, i) => {
                 const res = sess.gradingResults;
+                const strikeIndex = striking.indexOf(sess.id);
                 return (
-                  <tr key={sess.id} className="border-b border-shell-line align-middle">
-                    <th scope="row" className="py-3 pr-4 text-left">
+                  <tr
+                    key={sess.id}
+                    data-session-row={sess.id}
+                    className="reveal-item border-b border-shell-line align-middle"
+                    style={{ '--i': unfinished.length + i } as React.CSSProperties}
+                  >
+                    <th scope="row" className="relative py-3 pr-4 text-left">
                       <span className="block text-[15px] font-semibold text-shell-ink">{sess.paperTitle}</span>
+                      {strikeIndex >= 0 && (
+                        <span aria-hidden="true" className="strike-rule" style={motionDelay(Math.min(strikeIndex, 10) * 60)} />
+                      )}
                     </th>
                     <td className="py-3 pr-4 tabular text-[14px] text-shell-muted whitespace-nowrap">
                       {new Date(sess.submittedAt || sess.startedAt).toLocaleDateString([], { day: 'numeric', month: 'short' })}
@@ -304,7 +426,7 @@ export default function HomePage() {
           </Link>
         </div>
 
-        <table className="mt-6 w-full border-collapse">
+        <table ref={revealOnView} className="mt-6 w-full border-collapse">
           <thead>
             <tr className="border-t-2 border-b border-shell-ink text-left text-[13px] text-shell-muted">
               <th scope="col" className="py-2 pr-4 font-semibold">Paper</th>
@@ -315,8 +437,8 @@ export default function HomePage() {
             </tr>
           </thead>
           <tbody>
-            {papers.map((p) => (
-              <tr key={p.id} className="border-b border-shell-line align-middle">
+            {papers.map((p, i) => (
+              <tr key={p.id} className="reveal-item border-b border-shell-line align-middle" style={{ '--i': i } as React.CSSProperties}>
                 <th scope="row" className="py-4 pr-4 text-left">
                   <span className="block font-serif text-[18px] font-semibold text-shell-ink">{p.title}</span>
                   <span className="block text-[14px] text-shell-muted">{p.subtitle}</span>
