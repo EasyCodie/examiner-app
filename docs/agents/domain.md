@@ -6,26 +6,24 @@ How the engineering skills should consume this repo's domain documentation when 
 
 - **`CONTEXT.md`**: Authoritative domain glossary (`Exam Manifest`, `Exam Session`, `Question Submission`, `Question Evaluation`, `Error Carried Forward (ECF)`, `Mark Code`, `Grade Boundary`, `Syllabus Weakness Matrix`).
 - **`PRODUCT.md`**: Core product commitments, dual-document ingestion, ECF marking rules, and Socratic clue scaffolding.
-- **`DESIGN.md`**: Design system tokens, Obsidian floor (`#0c0d0e`), 1px hairline borders, JetBrains Mono typography, and timeline pills.
+- **`DESIGN.md`**: The "Subject Report" design system: graphite shell, white paper, hairline rules, Source Serif 4 typography, and margin mark codes.
 - **`docs/adr/`**: Read ADRs that touch the area you're about to work in.
 
 If any of these files don't exist, **proceed silently**. Don't flag their absence; don't suggest creating them upfront. The `/domain-modeling` skill (reached via `/grill-with-docs` and `/improve-codebase-architecture`) creates or extends them lazily when terms or decisions actually get resolved.
 
 ## File structure
 
-IB Examiner operates as a single-context repository:
+Criterion operates as a single-context repository:
 
 ```
 /
 ├── CONTEXT.md          ← Domain glossary and canonical terms
 ├── PRODUCT.md          ← Product rules, ECF protocol, and evaluation guarantees
-├── DESIGN.md           ← Obsidian Scholar design system tokens and aesthetics
-├── docs/adr/           ← Architectural decision records
-│   ├── 0001-dual-document-manifest-schema.md
-│   └── 0002-indexeddb-local-first.md
+├── DESIGN.md           ← Subject Report design system tokens and aesthetics
+├── docs/adr/           ← Architectural decision records (NNNN-slug.md)
 └── src/
     ├── app/            ← Next.js App Router routes (mock, learn, results)
-    ├── components/     ← React 19 UI (canvas, socratic, telemetry)
+    ├── components/     ← React 19 UI (exam, canvas, socratic, assessment, ingest)
     ├── lib/            ← Gemini client, schemas, sample manifests
     └── types/          ← Exam manifest & grading type definitions
 ```
@@ -48,4 +46,4 @@ If the concept you need isn't in the glossary yet, that's a signal: either you'r
 
 If your output contradicts an existing ADR, surface it explicitly rather than silently overriding:
 
-> _Contradicts ADR-0001 (dual-document manifest schema), but worth reopening because…_
+> _Contradicts ADR-0003 (intra-question ECF and subpart evaluation), but worth reopening because…_

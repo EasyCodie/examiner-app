@@ -44,7 +44,7 @@ Bias toward caution over speed. Keep diffs surgical, uphold hard boundaries, and
 - **Product Rules**: Read [`PRODUCT.md`](PRODUCT.md) when touching evaluation logic, Socratic tutoring tiers, or session workflows.
 - **Design System**: Read [`DESIGN.md`](DESIGN.md) when editing or creating UI components ("Subject Report" system).
 - **Architecture (ADRs)**: Read [`docs/adr/`](docs/adr/) before proposing architectural changes or adding major dependencies.
-- **Local Issue Tracker**: Read [`docs/agents/issue-tracker.md`](docs/agents/issue-tracker.md) and [`docs/agents/triage-labels.md`](docs/agents/triage-labels.md) for specs and tickets under `.scratch/<feature-slug>/`.
+- **Local Issue Tracker**: Read [`docs/agents/issue-tracker.md`](docs/agents/issue-tracker.md) for specs and tickets under `.scratch/<feature-slug>/`.
 - **Domain Docs Guide**: Read [`docs/agents/domain.md`](docs/agents/domain.md) when exploring or extending domain docs.
 
 ### Verification Loop
@@ -59,8 +59,9 @@ Execute verification gates until all pass:
 ### Agent Skills Routing
 
 The skill suite in `.agents/skills/` orchestrates engineering workflows:
-- **Router**: `/ask-matt` (route any engineering situation to the right skill).
-- **Spec & Planning**: `/grill-with-docs` (interview & ADR trail), `/to-spec` (discussion to spec), `/to-tickets` (spec to tracer-bullet tickets), `/wayfinder` (multi-session roadmap).
-- **Implementation & Seams**: `/implement` (ticket execution with TDD), `/tdd` (red-green-refactor loop), `/codebase-design` (deep module interface design).
-- **UI & Aesthetics**: `/impeccable` (audit and polish UI to Subject Report standards).
-- **Review & Quality**: `/code-review` (standards and spec diff review), `/diagnosing-bugs` (tight red feedback loop for regressions), `/triage` (ticket state machine).
+- **Spec & Planning**: `/grill-with-docs` (interview & ADR trail; drives `/grilling` and `/domain-modeling`).
+- **Architecture & Seams**: `/improve-codebase-architecture` (find deepening opportunities), `/codebase-design` (deep module interface design).
+- **Debugging**: `/diagnosing-bugs` (tight red feedback loop for regressions).
+- **UI & Aesthetics**: `/impeccable` (audit and polish UI to Subject Report standards), `/imagegen-frontend-web` (image-first web design).
+- **Research & Handoff**: `/scrapling-official` (web scraping), `/handoff` (compact the session for a fresh agent).
+- **Review**: `/code-review` (Claude Code built-in; diff review against standards and spec).
