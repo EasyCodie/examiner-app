@@ -10,18 +10,18 @@ web
 High school students preparing for official International Baccalaureate (IB) Diploma Programme examinations (e.g. Mathematics AA HL/SL, Economics HL/SL). They operate under high academic stakes during intense revision periods, requiring authentic exam simulation, rigorous method-level feedback, and targeted syllabus weakness remediation.
 
 ## Product Purpose
-Deliver an examiner-grade revision and assessment environment that eliminates model hallucinations through dual-document ingestion (pairing official exam papers with official markschemes into immutable JSON manifests). It provides students with authentic timed mock exam conditions, granular method/accuracy marking with Error Carried Forward (ECF) protection, and sub-second Socratic tutoring without premature rubric leaks.
+Deliver an examiner-grade revision and assessment environment that eliminates model hallucinations through dual-document ingestion (pairing each exam paper with its markscheme into an immutable JSON manifest). It provides students with authentic timed mock exam conditions, granular method/accuracy marking with Error Carried Forward (ECF) protection, and Socratic tutoring without premature rubric leaks.
 
 ## Positioning
-Unlike generic AI study chatbots or broad flashcard tools, Criterion anchors evaluations to verified, official IB markschemes and command terms. Its core differentiator is the Error Carried Forward (ECF) grading protocol—modeled after official Senior Examiner conventions—which awards downstream method marks even when an early algebraic calculation slip occurred, preventing double penalization.
+Unlike generic AI study chatbots or broad flashcard tools, Criterion anchors evaluations to the paper's own markscheme and IB command terms. Its core differentiator is the Error Carried Forward (ECF) grading protocol—modeled after official Senior Examiner conventions—which awards downstream method marks even when an early algebraic calculation slip occurred, preventing double penalization.
 
 ## Operating Context
 - **Timed Mock Exam Mode**: Strict countdown timer matching official IB exam durations, autosaving to IndexedDB.
   - *STEM Subjects*: High-resolution drawing canvas overlaid on rendered exam booklets, supporting stylus/touch input, ballpoint/highlighter strokes, and composite page flattening for vision-based grading.
   - *Humanities Subjects*: Split-screen prompt viewer and structured essay composer with word count, scaffolded insertion templates, and an inline economic/scientific diagram sketchpad.
 - **Senior Examiner Evaluation**: High reasoning effort assessment pass (`thinkingBudget: 8192`) providing granular mark breakdowns (`M1`, `A1`, `R1`, `AG`), simulated margin annotations, and IB 1–7 grade boundary predictions.
-- **Socratic Learn Mode**: Collaborative AI dialogue with dedicated reasoning budget (`thinkingBudget: 2048`) structured across a 4-tier pedagogical scaffold (Tier 1: Command Term Anchor, Tier 2: Formula Booklet/Model Clue, Tier 3: Diagnostic Clue, Tier 4: Unlock Official Markscheme).
-- **Google AI Studio Telemetry Drawer**: Slide-out workbench allowing students and power users to inspect system prompts, tune reasoning budgets, and view structured JSON schemas.
+- **Socratic Learn Mode**: Collaborative AI dialogue with dedicated reasoning budget (`thinkingBudget: 2048`) structured across a 4-tier pedagogical scaffold (Tier 1: Command Term Anchor, Tier 2: Formula Clue, or Concept Clue for subjects without a formula booklet, Tier 3: Diagnostic Clue, Tier 4: Markscheme Walkthrough).
+- **Settings Drawer**: Slide-out panel where each student adds their own Gemini API key and tunes the examiner's and tutor's reasoning budgets.
 
 ## Capabilities and Constraints
 - Dual-document PDF upload pipeline with structured schema enforcement (`responseSchema`).
@@ -35,7 +35,8 @@ Unlike generic AI study chatbots or broad flashcard tools, Criterion anchors eva
 ## Brand Commitments
 - Rigorous, authoritative academic tone: "Oxford Scholar meets modern aerospace precision."
 - Strict adherence to official IB Diploma terminology (Command Terms: *Find, Show that, Calculate, Determine, Justify, Evaluate, Explain*).
-- Visual authority guided by the "Obsidian Scholar" design system: deep obsidian backgrounds, hairline white borders, Metallic Amber for human actions/grades, and Royal Cobalt for AI intelligence.
+- Visual authority guided by the "Subject Report" design system (see DESIGN.md): the script is a numbered examiner's document on white stock inside a graphite shell, with hierarchy from scale and ruled lines, student work in blue-black ink, and examiner ultramarine reserved for the examiner and the AI tutor.
+- Neutral "IB-style" wording: IB command terms and conventions are used, but bundled papers are labelled as specimens and the product never claims to be official, verified, or affiliated with the International Baccalaureate.
 
 ## Evidence on Hand
 - Bundled full specimen paper manifests in `src/lib/samplePapers.ts` (Mathematics AA HL Paper 1 and Economics HL Paper 1).
@@ -43,7 +44,7 @@ Unlike generic AI study chatbots or broad flashcard tools, Criterion anchors eva
 - End-to-end verified ECF and endpoint test scripts in `scratch/`.
 
 ## Product Principles
-1. **Authoritative Ground Truth First**: Every evaluation must derive strictly from the compiled manifest and official markscheme; never allow ungrounded model hallucinations.
+1. **Authoritative Ground Truth First**: Every evaluation must derive strictly from the compiled manifest and its markscheme; never allow ungrounded model hallucinations.
 2. **Fairness Through Error Carried Forward**: A student should never be penalized twice for an upstream calculation error if subsequent reasoning and methodology are correct.
 3. **Scaffold Before Answering**: In learning mode, never expose final answers or markscheme solutions prematurely; guide students step-by-step through command terms and formula clues.
 4. **Subject-Appropriate Interaction**: Match the input medium to the subject discipline (ink canvas for quantitative math/sciences, split-screen essay and diagram editor for humanities).

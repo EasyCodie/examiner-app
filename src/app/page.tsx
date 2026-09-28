@@ -1,547 +1,509 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import Image from 'next/image';
-import { ExamManifest, ExamSession } from '@/types/exam';
+import { ExamManifest, ExamSession, InProgressExamSession } from '@/types/exam';
 import {
-  saveManifest,
+  getAllManifests,
   getAllExamSessions,
+  getInProgressSession,
   deleteExamSession,
   clearAllExamSessions,
+  getAiConfig,
 } from '@/lib/storage';
-import { BUNDLED_MATH_AA_HL, BUNDLED_ECONOMICS_HL, MAY_2021_MATH_AA_HL_P1 } from '@/lib/samplePapers';
 import { useAppShell } from '@/components/common/AppShell';
-import { SpikeMark } from '@/components/common/SpikeMark';
-import {
-  ArrowRight,
-  Clock,
-  History,
-  ChevronRight,
-  Trash2,
-  Sparkles,
-  ShieldCheck,
-  FileCode,
-  Compass,
-  FileUp,
-  FileCheck,
-} from 'lucide-react';
+import { MathRenderer } from '@/components/common/MathRenderer';
+import { ReportDialog } from '@/components/common/ReportDialog';
+import { CriterionMark } from '@/components/common/CriterionMark';
+import { formatClock } from '@/components/exam/ExamPageHead';
+import { MarkCodeKey } from '@/components/assessment/MarkCodeKey';
+import { STORAGE_ERROR_MESSAGE } from '@/components/common/StorageErrorNotice';
+import { CountUp, motionDelay, prefersReducedMotion, useRevealOnView } from '@/components/common/motion';
+
+/** Sample marking for the first viewport: one slip, carried forward. */
+const SAMPLE_LINES: { working: string; code: string; outcome: 'tick' | 'cross'; note: string }[] = [
+  { working: '$u = 2x^2 + 1,\\quad du = 4x\\,dx$', code: 'M1', outcome: 'tick', note: 'substitution' },
+  { working: '$= \\tfrac14\\int_1^{8} \\sqrt{u}\\,du$', code: 'A1', outcome: 'cross', note: 'upper limit is 9' },
+  { working: '$= \\tfrac14 \\cdot \\tfrac23 \\left[u^{3/2}\\right]_1^{8}$', code: 'M1', outcome: 'tick', note: 'integrates' },
+  { working: '$= \\tfrac16\\left(16\\sqrt2 - 1\\right)$', code: 'A1FT', outcome: 'tick', note: 'from their 8' },
+];
+
+const Tick: React.FC<{ outcome: 'tick' | 'cross'; delay: number }> = ({ outcome, delay }) => (
+  <svg
+    viewBox="0 0 12 12"
+    className="draw-stroke w-3.5 h-3.5 shrink-0"
+    style={motionDelay(delay)}
+    aria-label={outcome === 'tick' ? 'awarded' : 'not awarded'}
+  >
+    {outcome === 'tick' ? (
+      <path d="M1.5 6.5l3 3 6-7" pathLength={1} fill="none" stroke="currentColor" strokeWidth="1.8" />
+    ) : (
+      <>
+        <path d="M2 2l8 8" pathLength={1} fill="none" stroke="currentColor" strokeWidth="1.8" />
+        <path d="M10 2l-8 8" pathLength={1} fill="none" stroke="currentColor" strokeWidth="1.8" style={motionDelay(delay + 140)} />
+      </>
+    )}
+  </svg>
+);
+
+/**
+ * The sample marking plays as one sitting: the candidate writes, the examiner
+ * rules the margin, marks each line, underlines the slip, carries it forward, and totals.
+ */
+const SAMPLE_TIMING = {
+  questionRule: 260,
+  working: (i: number) => 460 + i * 200,
+  margin: 1260,
+  mark: [1460, 1760, 2060, 2840],
+  slipUnderline: 1920,
+  carry: [2200, 2360, 2580],
+  total: 3160,
+};
 
 export default function HomePage() {
-  const router = useRouter();
-  const { setHeaderInfo } = useAppShell();
+  const { setHeaderInfo, openAiStudio, onAiKeySaved } = useAppShell();
 
-  // Session History State
+  const [papers, setPapers] = useState<ExamManifest[]>([]);
   const [pastSessions, setPastSessions] = useState<ExamSession[]>([]);
+  const [unfinished, setUnfinished] = useState<{ manifest: ExamManifest; session: InProgressExamSession }[]>([]);
+  const [pendingDelete, setPendingDelete] = useState<ExamSession | 'all' | null>(null);
+  // Sessions being crossed out before they leave the table
+  const [striking, setStriking] = useState<string[]>([]);
+  // Bumped to play the sample marking again
+  const [sampleRun, setSampleRun] = useState(0);
+  const revealOnView = useRevealOnView<HTMLTableElement>();
+  const [storageError, setStorageError] = useState(false);
+  // Unknown until the saved config is read, so the key callout never flashes for someone who has a key
+  const [hasKey, setHasKey] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    getAiConfig()
+      .then((cfg) => setHasKey(Boolean(cfg.apiKey)))
+      .catch(() => setHasKey(null));
+    return onAiKeySaved(() => setHasKey(true));
+  }, [onAiKeySaved]);
 
   useEffect(() => {
     setHeaderInfo({});
     getAllExamSessions().then(setPastSessions);
+    getAllManifests().then(async (all) => {
+      setPapers(all);
+      const found = await Promise.all(
+        all.map(async (manifest) => {
+          const session = await getInProgressSession(manifest.id);
+          return session ? { manifest, session } : null;
+        })
+      );
+      setUnfinished(found.filter((x): x is { manifest: ExamManifest; session: InProgressExamSession } => x !== null));
+    }).catch(() => setStorageError(true));
   }, [setHeaderInfo]);
 
-  const handleLaunchSpecimen = async (specimenManifest: ExamManifest, mode: 'mock' | 'learn' = 'mock') => {
-    await saveManifest(specimenManifest);
-    if (mode === 'learn') {
-      router.push(`/learn/${specimenManifest.id}`);
-    } else {
-      router.push(`/mock/${specimenManifest.id}`);
-    }
+  const confirmDelete = async () => {
+    const target = pendingDelete;
+    if (!target) return;
+    setPendingDelete(null);
+    const ids = target === 'all' ? pastSessions.map((s) => s.id) : [target.id];
+    // The strike runs the full width of each row
+    ids.forEach((id) => {
+      const row = document.querySelector<HTMLTableRowElement>(`tr[data-session-row="${id}"]`);
+      row?.style.setProperty('--row-w', `${row.offsetWidth}px`);
+    });
+    setStriking(ids);
+    const struckThrough = new Promise((resolve) =>
+      setTimeout(resolve, prefersReducedMotion() ? 0 : 520 + Math.min(ids.length - 1, 10) * 60)
+    );
+    await Promise.all([target === 'all' ? clearAllExamSessions() : deleteExamSession(target.id), struckThrough]);
+    setPastSessions((prev) => prev.filter((s) => !ids.includes(s.id)));
+    setStriking([]);
   };
 
+  const hasSessions = pastSessions.length > 0 || unfinished.length > 0;
+  const firstPaper = papers[0];
+
   return (
-    <div className="flex-1 w-full bg-[#181715] text-[#faf9f5]">
-      {/* ============================================================ */}
-      {/* 1. EDITORIAL HERO SECTION (Claude 6/6 Split + Macro Spacing)  */}
-      {/* ============================================================ */}
-      <section className="py-20 sm:py-28 px-4 sm:px-8 max-w-7xl mx-auto">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-10 items-center">
-          {/* Left Column (Editorial Voice & Restrained Stack) */}
-          <div className="lg:col-span-7 space-y-6">
-            <div className="eyebrow-pill bg-[#252320] border-white/10 text-[#cc785c] animate-hero-eyebrow">
-              <SpikeMark className="w-3 h-3 text-[#cc785c]" />
-              <span>Official IB Exam Standards</span>
-              <span className="text-[#a09d95]">• Step-by-Step Marking</span>
-            </div>
-
-            <h1 className="display-xl font-serif-display font-normal text-[#faf9f5] tracking-[-1.5px] leading-[1.05] animate-hero-headline">
-              Meet your Senior Examiner.
-            </h1>
-
-            <p className="body-md text-[#d6cfc5] max-w-xl text-base sm:text-lg leading-relaxed animate-hero-sub">
-              Practice real International Baccalaureate past papers with step-by-step method marking, follow-through protection, and guided tutor hints.
-            </p>
-
-            <div className="flex flex-wrap items-center gap-4 pt-2 animate-hero-actions">
-              <button
-                type="button"
-                onClick={() => handleLaunchSpecimen(MAY_2021_MATH_AA_HL_P1, 'mock')}
-                className="claude-btn-pill-primary active:scale-[0.98] group"
-              >
-                <span>Start Specimen Exam</span>
-                <span className="btn-icon-bubble">
-                  <ArrowRight className="w-3.5 h-3.5" />
-                </span>
-              </button>
-
-              <Link
-                href="/ingest"
-                className="claude-btn-pill-secondary active:scale-[0.98] group"
-              >
-                <FileUp className="w-4 h-4 text-[#cc785c]" />
-                <span>Add Your Own Past Paper</span>
-                <span className="btn-icon-bubble">
-                  <ArrowRight className="w-3.5 h-3.5" />
-                </span>
+    <div className="flex-1 w-full shell-surface">
+      {/* 1. The mechanism, demonstrated */}
+      <section className="max-w-[1280px] mx-auto px-6 pt-14 pb-20 lg:pt-20 lg:pb-24 grid gap-14 lg:grid-cols-[minmax(0,1fr)_minmax(0,600px)] items-center">
+        <div className="space-y-7">
+          <h1 className="font-serif text-[44px] sm:text-[60px] leading-[1.02] font-semibold text-shell-ink text-balance tracking-[-0.01em]">
+            Every mark, given the way an examiner gives it.
+          </h1>
+          <p className="text-[18px] sm:text-[19px] leading-relaxed text-shell-muted max-w-[52ch]">
+            Sit IB-style papers against the clock. Your working is marked line by line against the markscheme: method
+            marks, accuracy marks, and error carried forward, so one slip costs you once.
+          </p>
+          <div className="flex flex-wrap gap-3 pt-1">
+            {firstPaper ? (
+              <Link href={`/mock/${firstPaper.id}`} className="btn btn-slip">
+                Sit a timed paper
               </Link>
-            </div>
-          </div>
-
-          {/* Right Column (Double-Bezel Hardware Chrome + Real Examination Window) */}
-          <div className="lg:col-span-5 animate-hero-card">
-            <div className="double-bezel-outer-dark">
-              <div className="double-bezel-inner-dark overflow-hidden flex flex-col">
-                {/* Tactile Real Examination Visual Window */}
-                <div className="relative h-48 sm:h-52 w-full overflow-hidden border-b border-white/10 bg-[#1f1e1b]">
-                  <Image
-                    src="/images/ib_exam_hero.jpg"
-                    alt="Authentic International Baccalaureate examination paper booklet with examiner annotations"
-                    fill
-                    priority
-                    className="object-cover object-center transform hover:scale-[1.02] transition duration-700 ease-[cubic-bezier(0.32,0.72,0,1)]"
-                    sizes="(max-width: 768px) 100vw, 500px"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#181715] via-transparent to-transparent opacity-85 pointer-events-none" />
-                  <div className="absolute bottom-3 left-4 right-4 flex items-center justify-between">
-                    <span className="text-[10px] font-mono-code px-2.5 py-0.5 rounded-full bg-[#181715]/90 backdrop-blur-sm text-[#faf9f5] border border-white/15">
-                      Authentic Specimen Booklet
-                    </span>
-                    <span className="text-[10px] font-mono-code px-2.5 py-0.5 rounded-full bg-[#cc785c] text-white font-medium shadow-xs">
-                      Verified Markscheme
-                    </span>
-                  </div>
-                </div>
-
-                {/* Interactive Rubric & Code Inspector */}
-                <div className="p-5 space-y-3 bg-[#181715]">
-                  <div className="flex items-center justify-between border-b border-white/10 pb-2.5">
-                    <div className="flex items-center gap-2">
-                      <div className="w-2.5 h-2.5 rounded-full bg-[#c64545]" />
-                      <div className="w-2.5 h-2.5 rounded-full bg-[#d4a017]" />
-                      <div className="w-2.5 h-2.5 rounded-full bg-[#5db872]" />
-                      <span className="text-xs font-mono-code text-[#a09d96] ml-2 flex items-center gap-1.5">
-                        <FileCode className="w-3.5 h-3.5 text-[#cc785c]" />
-                        math_aa_hl_markscheme.json
-                      </span>
-                    </div>
-                    <span className="text-[10px] font-mono-code uppercase px-2 py-0.5 rounded-full bg-[#252320] text-[#5db8a6] border border-white/10">
-                      Multimodal OCR
-                    </span>
-                  </div>
-
-                  <div className="font-mono-code text-xs space-y-1 text-[#a09d96] leading-relaxed overflow-x-auto bg-[#1f1e1b] p-3 rounded-xl border border-white/5 shadow-inner">
-                    <p className="text-[#a09d96]">{'// Step-by-step method marks & follow-through'}</p>
-                    <p>
-                      <span className="text-[#cc785c]">const</span> <span className="text-[#faf9f5]">evaluation</span> = &#123;
-                    </p>
-                    <p className="pl-4">
-                      <span className="text-[#faf9f5]">question</span>: <span className="text-[#5db8a6]">&quot;Question 12(b)&quot;</span>,
-                    </p>
-                    <p className="pl-4">
-                      <span className="text-[#faf9f5]">markCodes</span>: [
-                    </p>
-                    <p className="pl-8 text-[#faf9f5]">
-                      &#123; <span className="text-[#e8a55a]">code</span>: <span className="text-[#5db8a6]">&quot;M1&quot;</span>, <span className="text-[#e8a55a]">type</span>: <span className="text-[#5db8a6]">&quot;Method&quot;</span>, <span className="text-[#e8a55a]">marks</span>: <span className="text-[#cc785c]">2</span> &#125;,
-                    </p>
-                    <p className="pl-8 text-[#faf9f5]">
-                      &#123; <span className="text-[#e8a55a]">code</span>: <span className="text-[#5db8a6]">&quot;A1&quot;</span>, <span className="text-[#e8a55a]">type</span>: <span className="text-[#5db872]">&quot;Accuracy&quot;</span>, <span className="text-[#e8a55a]">marks</span>: <span className="text-[#cc785c]">1</span> &#125;,
-                    </p>
-                    <p className="pl-4">],</p>
-                    <p className="pl-4">
-                      <span className="text-[#faf9f5]">ecfProtection</span>: <span className="text-[#5db872]">true</span>, <span className="text-[#faf9f5]">predictedGrade</span>: <span className="text-[#cc785c]">7</span>
-                    </p>
-                    <p>&#125;;</p>
-                  </div>
-
-                  <div className="flex items-center justify-between text-[11px] font-mono-code text-[#a09d96] pt-0.5">
-                    <span>Marking Criteria</span>
-                    <span className="text-[#5db8a6] font-semibold flex items-center gap-1.5">
-                      <span className="w-1.5 h-1.5 rounded-full bg-[#5db8a6] animate-pulse" />
-                      Gemini 2.5 Flash
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ============================================================ */}
-      {/* DEDICATED TRUST & ACCREDITATION STRIP                        */}
-      {/* ============================================================ */}
-      <div className="w-full border-y border-white/10 bg-[#1f1e1b] py-5 px-4 sm:px-8">
-        <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-around gap-6 text-xs text-[#a09d95] font-mono-code">
-          <div className="flex items-center gap-2.5">
-            <div className="w-6 h-6 rounded-full bg-[#5db872]/15 flex items-center justify-center">
-              <ShieldCheck className="w-3.5 h-3.5 text-[#5db872] shrink-0" />
-            </div>
-            <span>Official Markschemes • Exact Criteria</span>
-          </div>
-          <div className="flex items-center gap-2.5">
-            <div className="w-6 h-6 rounded-full bg-[#cc785c]/15 flex items-center justify-center">
-              <Sparkles className="w-3.5 h-3.5 text-[#cc785c] shrink-0" />
-            </div>
-            <span>Method Marks • Follow-Through Protection</span>
-          </div>
-          <div className="flex items-center gap-2.5">
-            <div className="w-6 h-6 rounded-full bg-[#e8a55a]/15 flex items-center justify-center">
-              <Clock className="w-3.5 h-3.5 text-[#e8a55a] shrink-0" />
-            </div>
-            <span>Timed Exam Mode • Built-in Canvas</span>
-          </div>
-        </div>
-      </div>
-
-      {/* ============================================================ */}
-      {/* 2. DUAL-DOCUMENT INGESTION STUDIO TEASER                      */}
-      {/* ============================================================ */}
-      <section className="py-20 px-4 sm:px-8 max-w-5xl mx-auto">
-        <div className="double-bezel-outer-cream">
-          <div className="double-bezel-inner-cream p-7 sm:p-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
-            <div className="space-y-2 max-w-xl">
-              <div className="eyebrow-pill bg-[#cc785c]/10 text-[#cc785c] border-[#cc785c]/20">
-                <FileCheck className="w-3 h-3 text-[#cc785c]" />
-                <span>Add Past Papers</span>
-              </div>
-              <h2 className="display-sm font-serif-display font-normal text-[#faf9f5]">
-                Have past exam papers you want to practice?
-              </h2>
-              <p className="body-md text-[#d6cfc5] text-xs sm:text-sm leading-relaxed">
-                Upload any IB Question Paper and Markscheme PDF. We will turn them into an interactive exam with full method marks and helpful tutor hints.
-              </p>
-            </div>
-
-            <Link
-              href="/ingest"
-              className="claude-btn-pill-primary shrink-0 group"
-            >
-              <span>Add Past Papers</span>
-              <span className="btn-icon-bubble">
-                <ArrowRight className="w-3.5 h-3.5" />
-              </span>
+            ) : (
+              <Link href="#papers" className="btn btn-slip">
+                Sit a timed paper
+              </Link>
+            )}
+            <Link href="/ingest" className="btn btn-quiet-shell">
+              Add your own paper
             </Link>
           </div>
         </div>
-      </section>
 
-      {/* ============================================================ */}
-      {/* 3. AUTHENTIC SPECIMEN PAPERS (Surface Mode: Claude Dark)     */}
-      {/* ============================================================ */}
-      <section id="specimens-section" className="py-20 sm:py-28 px-4 sm:px-8 max-w-5xl mx-auto space-y-8">
-        <div className="space-y-2 text-center sm:text-left">
-          <div className="eyebrow-pill bg-[#252320] border-white/10 text-[#cc785c]">
-            <SpikeMark className="w-3 h-3 text-[#cc785c]" />
-            <span>Exam Catalog</span>
-          </div>
-          <h2 className="display-md font-serif-display font-normal text-[#faf9f5]">
-            Practice Past Papers
-          </h2>
-          <p className="body-md text-[#a09d95] text-sm sm:text-base max-w-xl leading-relaxed">
-            Ready-to-practice past papers with complete markschemes, diagrams, and formulas.
-          </p>
-        </div>
-
-        {/* Featured May 2021 Math AA HL P1 in Dark Double-Bezel Tray */}
-        <div className="double-bezel-outer-dark transition-spring hover:-translate-y-0.5">
-          <div className="double-bezel-inner-dark p-6 sm:p-9 space-y-5">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-              <span className="text-[11px] font-mono-code uppercase font-semibold text-[#cc785c] bg-[#cc785c]/15 px-3 py-1 rounded-full border border-[#cc785c]/30 flex items-center gap-1.5">
-                <SpikeMark className="w-3 h-3 text-[#cc785c]" />
-                Official Past Paper • 12 Questions (Section A &amp; B)
-              </span>
-              <span className="text-xs font-mono-code text-[#a09d96]">
-                120 mins • 110 marks • Higher Level
-              </span>
+        <figure className="space-y-3">
+          <div className="script-sheet paper-surface px-6 sm:px-9 py-7 sm:py-8">
+            <div className="relative flex items-baseline justify-between pb-2.5">
+              <p className="font-serif text-[18px] font-semibold text-ink tabular">1.</p>
+              <p className="font-serif text-[14px] font-semibold text-ink">[Maximum mark: 6]</p>
+              <span
+                aria-hidden="true"
+                className="animate-rule-draw absolute inset-x-0 bottom-0 h-px bg-ink"
+                style={motionDelay(SAMPLE_TIMING.questionRule)}
+              />
+            </div>
+            <div className="mt-3 font-serif text-[16px] leading-relaxed text-ink">
+              <MathRenderer content={'Find the exact value of $\\displaystyle\\int_0^2 x\\sqrt{2x^2+1}\\,dx$.'} lightMode={true} />
             </div>
 
-            <div className="space-y-2">
-              <h3 className="font-serif-display text-2xl sm:text-3xl font-normal text-[#faf9f5]">
-                Mathematics: Analysis &amp; Approaches HL (May 2021 TZ1)
-              </h3>
-              <p className="text-xs sm:text-sm text-[#a09d96] max-w-2xl leading-relaxed">
-                Complete 12-question exam covering rational curves, piecewise functions, integration, Maclaurin expansions, complex numbers, and proof by induction.
-              </p>
-            </div>
-
-            <div className="flex items-center gap-4 pt-3 border-t border-white/10 text-xs font-mono-code text-[#a09d96]">
-              <span>M1/A1/R1 Mark Codes</span>
-              <span>•</span>
-              <span>Cartesian Graph Integration</span>
-              <span>•</span>
-              <span className="text-[#5db872]">Follow-Through Protected</span>
-            </div>
-
-            <div className="flex flex-wrap items-center gap-4 pt-2">
-              <button
-                type="button"
-                onClick={() => handleLaunchSpecimen(MAY_2021_MATH_AA_HL_P1, 'mock')}
-                className="claude-btn-pill-primary text-xs active:scale-[0.98] group"
-              >
-                <span>Start Timed Exam</span>
-                <span className="btn-icon-bubble">
-                  <ArrowRight className="w-3.5 h-3.5" />
-                </span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => handleLaunchSpecimen(MAY_2021_MATH_AA_HL_P1, 'learn')}
-                className="claude-btn-pill-dark text-xs active:scale-[0.98] group"
-              >
-                <Compass className="w-3.5 h-3.5 text-[#cc785c]" />
-                <span>Step-by-Step Practice</span>
-                <span className="btn-icon-bubble">
-                  <ArrowRight className="w-3.5 h-3.5" />
-                </span>
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* 2-up Grid of Secondary Bundles in Double-Bezel Trays */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-          <div className="double-bezel-outer-cream transition-spring hover:-translate-y-0.5">
-            <div className="double-bezel-inner-cream p-6 flex flex-col justify-between space-y-5 h-full">
-              <div className="space-y-2">
-                <div className="flex items-center justify-between text-xs font-mono-code text-[#a09d95]">
-                  <span className="text-[#5db8a6] font-semibold">STEM Track</span>
-                  <span>120m • 50 marks</span>
-                </div>
-                <h4 className="font-serif-display text-xl text-[#faf9f5] font-normal">
-                  Mathematics: Analysis &amp; Approaches HL
-                </h4>
-                <p className="text-xs text-[#a09d95] leading-relaxed">
-                  Paper 1 • Calculus, Vectors, Complex Roots &amp; Mathematical Induction.
-                </p>
-              </div>
-
-              <div className="flex items-center gap-3 pt-3 border-t border-white/10">
-                <button
-                  type="button"
-                  onClick={() => handleLaunchSpecimen(BUNDLED_MATH_AA_HL, 'mock')}
-                  className="claude-btn-pill-primary text-xs h-9 pl-4 pr-1.5 py-0 gap-2 group"
-                >
-                  <span>Timed Exam</span>
-                  <span className="btn-icon-bubble w-6 h-6">
-                    <ArrowRight className="w-3 h-3 text-white" />
-                  </span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleLaunchSpecimen(BUNDLED_MATH_AA_HL, 'learn')}
-                  className="claude-btn-pill-secondary text-xs h-9 pl-4 pr-1.5 py-0 gap-2 group"
-                >
-                  <span>Guided Practice</span>
-                  <span className="btn-icon-bubble w-6 h-6">
-                    <ArrowRight className="w-3 h-3 text-white" />
-                  </span>
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <div className="double-bezel-outer-cream transition-spring hover:-translate-y-0.5">
-            <div className="double-bezel-inner-cream p-6 flex flex-col justify-between space-y-5 h-full">
-              <div className="space-y-2">
-                <div className="flex items-center justify-between text-xs font-mono-code text-[#a09d95]">
-                  <span className="text-[#e8a55a] font-semibold">Humanities Track</span>
-                  <span>75m • 50 marks</span>
-                </div>
-                <h4 className="font-serif-display text-xl text-[#faf9f5] font-normal">
-                  Economics Higher Level (HL)
-                </h4>
-                <p className="text-xs text-[#a09d95] leading-relaxed">
-                  Paper 1 • Extended response essay with an interactive diagram sketchpad.
-                </p>
-              </div>
-
-              <div className="flex items-center gap-3 pt-3 border-t border-white/10">
-                <button
-                  type="button"
-                  onClick={() => handleLaunchSpecimen(BUNDLED_ECONOMICS_HL, 'mock')}
-                  className="claude-btn-pill-primary text-xs h-9 pl-4 pr-1.5 py-0 gap-2 group"
-                >
-                  <span>Timed Exam</span>
-                  <span className="btn-icon-bubble w-6 h-6">
-                    <ArrowRight className="w-3 h-3 text-white" />
-                  </span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleLaunchSpecimen(BUNDLED_ECONOMICS_HL, 'learn')}
-                  className="claude-btn-pill-secondary text-xs h-9 pl-4 pr-1.5 py-0 gap-2 group"
-                >
-                  <span>Guided Practice</span>
-                  <span className="btn-icon-bubble w-6 h-6">
-                    <ArrowRight className="w-3 h-3 text-white" />
-                  </span>
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ============================================================ */}
-      {/* 4. PAST SESSIONS TABLE                                        */}
-      {/* ============================================================ */}
-      {pastSessions.length > 0 && (
-        <section id="history-section" className="py-20 px-4 sm:px-8 max-w-5xl mx-auto">
-          <div className="flex items-center justify-between mb-5">
-            <div className="flex items-center gap-2.5">
-              <div className="w-7 h-7 rounded-full bg-[#252320] border border-white/10 flex items-center justify-center text-[#a09d95]">
-                <History className="w-3.5 h-3.5" />
-              </div>
-              <h3 className="font-serif-display text-xl font-normal text-[#faf9f5]">
-                Past Exam Attempts ({pastSessions.length})
-              </h3>
-            </div>
-
-            <button
-              type="button"
-              onClick={async () => {
-                await clearAllExamSessions();
-                setPastSessions([]);
-              }}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-mono-code text-[#a09d95] hover:text-[#c64545] hover:bg-[#c64545]/10 transition-spring active:scale-[0.98]"
-            >
-              <Trash2 className="w-3.5 h-3.5" />
-              <span>Clear History</span>
-            </button>
-          </div>
-
-          <div className="double-bezel-outer-cream">
-            <div className="double-bezel-inner-cream overflow-hidden divide-y divide-white/10">
-              {pastSessions.map((sess) => {
-                const res = sess.gradingResults;
+            <ol key={sampleRun} className="relative mt-5 border-t border-paper-rule">
+              {/* The examiner rules the margin before marking */}
+              <span
+                aria-hidden="true"
+                className="animate-rule-draw-y absolute top-0 bottom-0 right-[9.5rem] w-px bg-examiner/40"
+                style={motionDelay(SAMPLE_TIMING.margin)}
+              />
+              {SAMPLE_LINES.map((line, i) => {
+                const markAt = SAMPLE_TIMING.mark[i];
+                const isSlip = i === 1;
                 return (
-                  <div
-                    key={sess.id}
-                    className="p-4 sm:p-5 flex items-center justify-between gap-4 hover:bg-[#2c2a26] transition-fluid group"
-                  >
-                    <div className="space-y-1 min-w-0 flex-1">
-                      <span className="text-[10px] font-mono-code text-[#a09d95]">
-                        {new Date(sess.startedAt).toLocaleDateString()}
+                  <li key={i} className="grid grid-cols-[minmax(0,1fr)_9.5rem] border-b border-paper-rule">
+                    <div
+                      className="animate-ink-in py-2.5 pr-4 text-student text-[16px] overflow-x-auto"
+                      style={motionDelay(SAMPLE_TIMING.working(i))}
+                    >
+                      <span className="relative inline-block">
+                        <MathRenderer content={line.working} lightMode={true} />
+                        {isSlip && (
+                          // The examiner underlines the slip
+                          <svg
+                            aria-hidden="true"
+                            viewBox="0 0 100 6"
+                            preserveAspectRatio="none"
+                            className="draw-stroke absolute left-0 -bottom-1.5 w-full h-1.5 text-examiner overflow-visible"
+                            style={motionDelay(SAMPLE_TIMING.slipUnderline)}
+                          >
+                            <path
+                              d="M0 3 Q 6.25 0 12.5 3 T 25 3 T 37.5 3 T 50 3 T 62.5 3 T 75 3 T 87.5 3 T 100 3"
+                              pathLength={1}
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="1.4"
+                              vectorEffect="non-scaling-stroke"
+                            />
+                          </svg>
+                        )}
                       </span>
-                      <h4 className="text-xs font-medium text-[#faf9f5] line-clamp-1">
-                        {sess.paperTitle}
-                      </h4>
                     </div>
-
-                    <div className="flex items-center gap-4 shrink-0">
-                      {res ? (
-                        <div className="text-right">
-                          <span className="text-xs font-mono-code font-bold text-[#cc785c] block">
-                            Grade {res.predictedGrade}
-                          </span>
-                          <span className="text-[10px] font-mono-code text-[#a09d95]">
-                            {res.totalMarksAwarded}/{res.totalPossibleMarks} ({res.percentage}%)
-                          </span>
-                        </div>
-                      ) : (
-                        <span className="text-[10px] font-mono-code text-[#e8a55a]">
-                          In Progress
-                        </span>
+                    <div className="relative pl-3 py-2.5 text-examiner">
+                      {/* Error carried forward: the slip in line 2 is followed down to the mark it earns in line 4 */}
+                      {i === 1 && (
+                        <span
+                          aria-hidden="true"
+                          className="animate-rule-draw-y absolute left-[3px] top-1/2 -bottom-px w-[1.5px] bg-ecf [animation-duration:170ms] [animation-timing-function:linear]"
+                          style={motionDelay(SAMPLE_TIMING.carry[0])}
+                        />
                       )}
-
-                      <div className="flex items-center gap-1.5">
-                        <button
-                          type="button"
-                          onClick={async (e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            await deleteExamSession(sess.id);
-                            setPastSessions((prev) => prev.filter((s) => s.id !== sess.id));
-                          }}
-                          className="p-1.5 rounded-full text-[#a09d95] hover:text-[#c64545] hover:bg-[#c64545]/10 transition-spring active:scale-[0.95]"
-                          title="Delete session"
+                      {i === 2 && (
+                        <span
+                          aria-hidden="true"
+                          className="animate-rule-draw-y absolute left-[3px] top-0 -bottom-px w-[1.5px] bg-ecf [animation-duration:230ms] [animation-timing-function:linear]"
+                          style={motionDelay(SAMPLE_TIMING.carry[1])}
+                        />
+                      )}
+                      {i === 3 && (
+                        <svg
+                          aria-hidden="true"
+                          viewBox="0 0 10 20"
+                          className="draw-stroke absolute left-[2.75px] top-0 w-2.5 h-1/2 text-ecf overflow-visible"
+                          preserveAspectRatio="none"
+                          style={motionDelay(SAMPLE_TIMING.carry[2])}
                         >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
-
-                        <Link
-                          href={res ? `/results/${sess.id}` : `/mock/${sess.paperId}`}
-                          className="w-8 h-8 rounded-full bg-[#252320] border border-white/10 flex items-center justify-center text-[#faf9f5] hover:text-[#cc785c] hover:border-[#cc785c]/40 transition-spring active:scale-[0.95] shadow-2xs"
-                          title="View session results"
-                        >
-                          <ChevronRight className="w-4 h-4" />
-                        </Link>
+                          <path d="M1 0 V20 H9 M6 17 L9 20 L6 23" pathLength={1} fill="none" stroke="currentColor" strokeWidth="1.5" vectorEffect="non-scaling-stroke" />
+                        </svg>
+                      )}
+                      <div className="animate-ink-in flex items-center gap-2" style={motionDelay(markAt)}>
+                        <span className="tabular font-sans text-[14px] font-bold">{line.code}</span>
+                        <Tick outcome={line.outcome} delay={markAt + 140} />
+                        <span className={`font-serif italic text-[13px] leading-tight ${i === 3 ? 'text-ecf' : ''}`}>
+                          {line.note}
+                        </span>
                       </div>
                     </div>
-                  </div>
+                  </li>
                 );
               })}
-            </div>
+            </ol>
+            <p
+              key={`total-${sampleRun}`}
+              className="animate-ink-in mt-3 text-right font-sans text-[15px] font-bold text-examiner tabular"
+              style={motionDelay(SAMPLE_TIMING.total)}
+            >
+              <CountUp value={3} delay={SAMPLE_TIMING.total + 120} duration={420} /> / 4
+            </p>
+          </div>
+          <figcaption className="text-[14px] leading-relaxed text-shell-muted max-w-[60ch]">
+            Sample marking. The wrong limit costs one accuracy mark; the method after it still scores, because the error is
+            carried forward.{' '}
+            <button
+              type="button"
+              onClick={() => setSampleRun((n) => n + 1)}
+              className="min-h-9 text-shell-ink underline underline-offset-4 decoration-shell-line hover:decoration-shell-ink transition-colors"
+            >
+              Mark it again
+            </button>
+          </figcaption>
+        </figure>
+      </section>
+
+      {/* First visit: nothing is marked without the student's own key */}
+      {hasKey === false && (
+        <section aria-labelledby="gemini-key-heading" className="max-w-[1280px] mx-auto px-6 py-16 border-t border-shell-line grid gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]">
+          <div className="space-y-3">
+            <h2 id="gemini-key-heading" className="font-serif text-[32px] font-semibold text-shell-ink">
+              Add your free Gemini key
+            </h2>
+            <p className="text-[16px] leading-relaxed text-shell-muted max-w-[42ch]">
+              You can sit a paper without one, but the examiner and the tutor use Google&rsquo;s Gemini with your own key.
+              It takes about a minute.
+            </p>
+          </div>
+          <div className="space-y-6">
+            <ol className="border-t-2 border-shell-ink">
+              {[
+                <>
+                  Open{' '}
+                  <a
+                    href="https://aistudio.google.com/apikey"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="underline underline-offset-2 hover:text-shell-muted"
+                  >
+                    Google AI Studio
+                  </a>{' '}
+                  and sign in with a Google account.
+                </>,
+                <>Choose Create API key, then copy the key.</>,
+                <>Paste it into Settings and choose Test and save. It stays in this browser.</>,
+              ].map((step, i) => (
+                <li key={i} className="flex items-baseline gap-5 py-3.5 border-b border-shell-line">
+                  <span className="font-serif text-[20px] font-semibold text-shell-ink tabular w-5 shrink-0">{i + 1}</span>
+                  <span className="text-[16px] leading-relaxed text-shell-ink">{step}</span>
+                </li>
+              ))}
+            </ol>
+            <button type="button" onClick={() => openAiStudio('apiKey')} className="btn btn-slip">
+              Add your key
+            </button>
           </div>
         </section>
       )}
 
-      {/* ============================================================ */}
-      {/* 5. PRE-FOOTER FULL-BLEED CORAL CALLOUT CARD (Claude Signature)*/}
-      {/* ============================================================ */}
-      <section className="py-20 sm:py-24 px-4 sm:px-8 max-w-5xl mx-auto">
-        <div className="p-1.5 rounded-[2.25rem] bg-[#cc785c]/15 border border-[#cc785c]/25 shadow-2xl">
-          <div className="claude-card-coral rounded-[calc(2.25rem-6px)] p-8 sm:p-12 flex flex-col sm:flex-row items-center justify-between gap-8 shadow-inner">
-            <div className="space-y-2.5 text-center sm:text-left">
-              <div className="eyebrow-pill bg-white/20 text-white border-white/25">
-                <Sparkles className="w-3 h-3 text-white" />
-                <span>Official Standards</span>
-              </div>
-              <h2 className="display-md font-serif-display font-normal text-white">
-                Prepare for your IB exams with confidence.
-              </h2>
-              <p className="text-sm text-white/90 max-w-lg leading-relaxed">
-                Practise with official markscheme standards, receive full credit for your working steps, and get step-by-step guidance whenever you need it.
-              </p>
-            </div>
+      {/* 2. Returning students: sessions first */}
+      {storageError && (
+        <section role="alert" aria-labelledby="storage-heading" className="max-w-[1280px] mx-auto px-6 py-16 border-t border-shell-line">
+          <h2 id="storage-heading" className="font-serif text-[32px] font-semibold text-shell-ink">
+            Your saved work couldn&rsquo;t be opened
+          </h2>
+          <p className="mt-3 max-w-[62ch] text-[16px] leading-relaxed text-shell-muted">{STORAGE_ERROR_MESSAGE}</p>
+          <button type="button" onClick={() => window.location.reload()} className="mt-5 btn btn-quiet-shell">
+            Reload
+          </button>
+        </section>
+      )}
 
-            <div className="shrink-0">
-              <button
-                type="button"
-                onClick={() => handleLaunchSpecimen(MAY_2021_MATH_AA_HL_P1, 'mock')}
-                className="claude-btn-pill-secondary font-semibold active:scale-[0.98] group"
-              >
-                <span>Start Practice Exam</span>
-                <span className="btn-icon-bubble">
-                  <ArrowRight className="w-3.5 h-3.5 text-[#181715]" />
-                </span>
+      {hasSessions && (
+        <section id="sessions" aria-labelledby="sessions-heading" className="max-w-[1280px] mx-auto px-6 py-16 border-t border-shell-line scroll-mt-16">
+          <div className="flex flex-wrap items-baseline justify-between gap-4">
+            <h2 id="sessions-heading" className="font-serif text-[32px] font-semibold text-shell-ink">
+              Your sessions
+            </h2>
+            {pastSessions.length > 0 && (
+              <button type="button" onClick={() => setPendingDelete('all')} className="btn btn-sm btn-quiet-shell">
+                Clear history
               </button>
-            </div>
+            )}
           </div>
+
+          <table ref={revealOnView} className="mt-6 w-full border-collapse">
+            <thead>
+              <tr className="border-t-2 border-b border-shell-ink text-left text-[13px] text-shell-muted">
+                <th scope="col" className="py-2 pr-4 font-semibold">Paper</th>
+                <th scope="col" className="py-2 pr-4 font-semibold">Date</th>
+                <th scope="col" className="py-2 pr-4 font-semibold">Result</th>
+                <th scope="col" className="py-2 font-semibold"><span className="sr-only">Actions</span></th>
+              </tr>
+            </thead>
+            <tbody>
+              {unfinished.map(({ manifest, session }, i) => (
+                <tr
+                  key={`unfinished-${manifest.id}`}
+                  className="reveal-item border-b border-shell-line align-middle"
+                  style={{ '--i': i } as React.CSSProperties}
+                >
+                  <th scope="row" className="py-3 pr-4 text-left">
+                    <span className="block text-[15px] font-semibold text-shell-ink">{manifest.title}</span>
+                    <span className="block text-[13px] text-shell-muted">{manifest.subtitle}</span>
+                  </th>
+                  <td className="py-3 pr-4 tabular text-[14px] text-shell-muted whitespace-nowrap">
+                    {new Date(session.savedAt).toLocaleDateString([], { day: 'numeric', month: 'short' })}
+                  </td>
+                  <td className="py-3 pr-4 tabular text-[14px] text-shell-ink whitespace-nowrap">
+                    Unfinished, {formatClock(session.timeRemainingSeconds)} left
+                  </td>
+                  <td className="py-2 text-right">
+                    <Link href={`/mock/${manifest.id}`} className="btn btn-sm btn-slip">
+                      Resume
+                    </Link>
+                  </td>
+                </tr>
+              ))}
+              {pastSessions.map((sess, i) => {
+                const res = sess.gradingResults;
+                const strikeIndex = striking.indexOf(sess.id);
+                return (
+                  <tr
+                    key={sess.id}
+                    data-session-row={sess.id}
+                    className="reveal-item border-b border-shell-line align-middle"
+                    style={{ '--i': unfinished.length + i } as React.CSSProperties}
+                  >
+                    <th scope="row" className="relative py-3 pr-4 text-left">
+                      <span className="block text-[15px] font-semibold text-shell-ink">{sess.paperTitle}</span>
+                      {strikeIndex >= 0 && (
+                        <span aria-hidden="true" className="strike-rule" style={motionDelay(Math.min(strikeIndex, 10) * 60)} />
+                      )}
+                    </th>
+                    <td className="py-3 pr-4 tabular text-[14px] text-shell-muted whitespace-nowrap">
+                      {new Date(sess.submittedAt || sess.startedAt).toLocaleDateString([], { day: 'numeric', month: 'short' })}
+                    </td>
+                    <td className="py-3 pr-4 tabular text-[14px] whitespace-nowrap">
+                      {res ? (
+                        <span className="text-shell-ink">
+                          <span className="font-semibold">Grade {res.predictedGrade}</span>
+                          <span className="text-shell-muted"> · {res.totalMarksAwarded}/{res.totalPossibleMarks}</span>
+                        </span>
+                      ) : (
+                        <span className="text-shell-muted">Not yet marked</span>
+                      )}
+                    </td>
+                    <td className="py-2 text-right whitespace-nowrap">
+                      <Link href={`/results/${sess.id}`} className="btn btn-sm btn-quiet-shell">
+                        {res ? 'Open report' : 'Mark it'}
+                      </Link>
+                      <button
+                        type="button"
+                        onClick={() => setPendingDelete(sess)}
+                        className="ml-2 min-h-9 px-2 text-[14px] text-shell-muted hover:text-shell-ink underline underline-offset-4 decoration-shell-line"
+                      >
+                        Delete
+                        <span className="sr-only"> session for {sess.paperTitle}</span>
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </section>
+      )}
+
+      {/* 3. The papers */}
+      <section id="papers" aria-labelledby="papers-heading" className="max-w-[1280px] mx-auto px-6 py-16 border-t border-shell-line scroll-mt-16">
+        <div className="flex flex-wrap items-baseline justify-between gap-4">
+          <h2 id="papers-heading" className="font-serif text-[32px] font-semibold text-shell-ink">
+            Papers
+          </h2>
+          <Link href="/ingest" className="text-[15px] font-medium text-shell-ink underline underline-offset-4 decoration-shell-line hover:decoration-shell-ink">
+            Add a paper and its markscheme
+          </Link>
         </div>
+
+        <table ref={revealOnView} className="mt-6 w-full border-collapse">
+          <thead>
+            <tr className="border-t-2 border-b border-shell-ink text-left text-[13px] text-shell-muted">
+              <th scope="col" className="py-2 pr-4 font-semibold">Paper</th>
+              <th scope="col" className="py-2 pr-4 font-semibold text-right">Time</th>
+              <th scope="col" className="py-2 pr-4 font-semibold text-right">Marks</th>
+              <th scope="col" className="py-2 pr-4 font-semibold text-right">Questions</th>
+              <th scope="col" className="py-2 font-semibold"><span className="sr-only">Start</span></th>
+            </tr>
+          </thead>
+          <tbody>
+            {papers.map((p, i) => (
+              <tr key={p.id} className="reveal-item border-b border-shell-line align-middle" style={{ '--i': i } as React.CSSProperties}>
+                <th scope="row" className="py-4 pr-4 text-left">
+                  <span className="block font-serif text-[18px] font-semibold text-shell-ink">{p.title}</span>
+                  <span className="block text-[14px] text-shell-muted">{p.subtitle}</span>
+                </th>
+                <td className="py-4 pr-4 text-right tabular text-[15px] text-shell-ink whitespace-nowrap">{p.durationMinutes} min</td>
+                <td className="py-4 pr-4 text-right tabular text-[15px] text-shell-ink">{p.totalMarks}</td>
+                <td className="py-4 pr-4 text-right tabular text-[15px] text-shell-ink">{p.questions.length}</td>
+                <td className="py-3 text-right whitespace-nowrap">
+                  <Link href={`/mock/${p.id}`} className="btn btn-sm btn-slip">
+                    Timed exam
+                    <span className="sr-only">: {p.title}, {p.subtitle}</span>
+                  </Link>
+                  <Link href={`/learn/${p.id}`} className="ml-2 btn btn-sm btn-quiet-shell">
+                    Guided practice
+                    <span className="sr-only">: {p.title}, {p.subtitle}</span>
+                  </Link>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </section>
 
-      {/* ============================================================ */}
-      {/* 6. DARK NAVY FOOTER (Claude Footer Standard)                 */}
-      {/* ============================================================ */}
-      <footer className="bg-[#181715] text-[#a09d96] border-t border-white/10 py-12 px-4 sm:px-8">
-        <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-6">
-          <div className="flex items-center gap-2.5">
-            <SpikeMark className="w-4 h-4 text-[#cc785c]" />
-            <span className="font-serif-display text-base text-[#faf9f5] font-normal">
-              Criterion
-            </span>
-            <span className="text-xs text-[#a09d96]">
-              • Interactive Past Paper Practice
-            </span>
-          </div>
-
-          <p className="text-xs text-[#a09d96] font-mono-code text-center sm:text-right">
-            Built for International Baccalaureate Diploma students.
+      {/* 4. The key to the marks */}
+      <section aria-labelledby="key-heading" className="max-w-[1280px] mx-auto px-6 py-16 border-t border-shell-line grid gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]">
+        <div className="space-y-3">
+          <h2 id="key-heading" className="font-serif text-[32px] font-semibold text-shell-ink">
+            How your script is marked
+          </h2>
+          <p className="text-[16px] leading-relaxed text-shell-muted max-w-[42ch]">
+            Every question is marked against its markscheme with the same codes an IB examiner writes in the margin.
           </p>
         </div>
+        <MarkCodeKey variant="full" />
+      </section>
+
+      <footer className="border-t border-shell-line">
+        <div className="max-w-[1280px] mx-auto px-6 py-8 flex flex-wrap items-center justify-between gap-4 text-[14px] text-shell-muted">
+          <span className="flex items-center gap-2 text-shell-ink">
+            <CriterionMark className="w-4 h-4" />
+            Criterion
+          </span>
+          <span>IB-style practice papers and marking. Not affiliated with or endorsed by the International Baccalaureate.</span>
+        </div>
       </footer>
+
+      <ReportDialog
+        open={pendingDelete !== null}
+        onClose={() => setPendingDelete(null)}
+        title={pendingDelete === 'all' ? 'Clear all session history?' : 'Delete this session?'}
+      >
+        <p className="text-[16px] leading-relaxed text-ink">
+          {pendingDelete === 'all'
+            ? `This deletes ${pastSessions.length} ${pastSessions.length === 1 ? 'session' : 'sessions'} and their reports from this device. It cannot be undone.`
+            : 'This deletes the session and its report from this device. It cannot be undone.'}
+        </p>
+        <div className="flex flex-wrap justify-end gap-3 pt-1">
+          <button type="button" onClick={() => setPendingDelete(null)} className="btn btn-quiet-paper" autoFocus>
+            Keep
+          </button>
+          <button type="button" onClick={confirmDelete} className="btn btn-destructive">
+            {pendingDelete === 'all' ? 'Clear history' : 'Delete session'}
+          </button>
+        </div>
+      </ReportDialog>
     </div>
   );
 }

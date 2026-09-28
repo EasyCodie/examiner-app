@@ -1,7 +1,7 @@
 import { GoogleGenAI } from '@google/genai';
 
 export function getGeminiClient(customApiKey?: string): GoogleGenAI | null {
-  const key = customApiKey || process.env.GEMINI_API_KEY;
+  const key = customApiKey?.trim();
   if (!key) {
     return null;
   }
@@ -25,26 +25,8 @@ export const FALLBACK_MODELS = [
   'gemini-3.8-flash',
 ];
 
-export async function generateWithTimeout<T>(
-  promise: Promise<T>,
-  timeoutMs: number,
-  modelName: string
-): Promise<T> {
-  let timer: NodeJS.Timeout | undefined;
-  const timeoutPromise = new Promise<never>((_, reject) => {
-    timer = setTimeout(() => {
-      reject(new Error(`Model ${modelName} timed out after ${timeoutMs / 1000}s`));
-    }, timeoutMs);
-  });
-  return Promise.race([promise, timeoutPromise]).finally(() => {
-    if (timer) clearTimeout(timer);
-  });
-}
-
-export interface GenerateConfigOptions {
-  model?: string;
-  systemInstruction?: string;
-  responseSchema?: Record<string, unknown>;
-  thinkingBudget?: number; // 0 for minimal reasoning (Socratic), 4096-16384 for high reasoning (Grading)
-  temperature?: number;
+/** True when Gemini refused a request because the API key itself is not valid. */
+export function isInvalidKeyError(err: unknown): boolean {
+  const message = err instanceof Error ? err.message : String(err);
+  return /API_KEY_INVALID|API key not valid/i.test(message);
 }

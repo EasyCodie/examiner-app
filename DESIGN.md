@@ -1,281 +1,417 @@
+---
+name: Criterion
+description: IB exam simulation and method-level marking, set as an examiner's subject report on a graphite desk.
+colors:
+  shell: "#15181c"
+  shell-raised: "#1c2127"
+  shell-line: "#2e343c"
+  shell-ink: "#e9ecef"
+  shell-muted: "#a4adb8"
+  paper: "#ffffff"
+  paper-tint: "#f4f6f8"
+  paper-rule: "#d9dde2"
+  paper-rule-strong: "#9aa3ae"
+  ruling: "#e6e9ed"
+  ink: "#111418"
+  ink-muted: "#4b5563"
+  ink-hover: "#2a3038"
+  slip-hover: "#dfe3e8"
+  student: "#1a2238"
+  examiner: "#2743d6"
+  examiner-on-shell: "#9db0ff"
+  awarded: "#0e7a4f"
+  awarded-on-shell: "#5cc99a"
+  lost: "#c8321e"
+  lost-deep: "#a8281a"
+  lost-on-shell: "#ff8a73"
+  ecf: "#8a5a00"
+  ecf-on-shell: "#e8b45a"
+  selection: "#cdd5e0"
+typography:
+  display:
+    fontFamily: "Source Serif 4, Georgia, serif"
+    fontSize: "60px"
+    fontWeight: 600
+    lineHeight: 1.02
+    letterSpacing: "-0.01em"
+    fontFeature: "\"lnum\""
+  headline:
+    fontFamily: "Source Serif 4, Georgia, serif"
+    fontSize: "44px"
+    fontWeight: 600
+    lineHeight: 1.08
+    fontFeature: "\"lnum\""
+  section:
+    fontFamily: "Source Serif 4, Georgia, serif"
+    fontSize: "32px"
+    fontWeight: 600
+    lineHeight: 1.15
+    fontFeature: "\"lnum\""
+  question-number:
+    fontFamily: "Source Serif 4, Georgia, serif"
+    fontSize: "28px"
+    fontWeight: 600
+    lineHeight: 1
+    fontFeature: "\"lnum\", \"tnum\""
+  title:
+    fontFamily: "Source Serif 4, Georgia, serif"
+    fontSize: "24px"
+    fontWeight: 600
+    lineHeight: 1.25
+  prompt:
+    fontFamily: "Source Serif 4, Georgia, serif"
+    fontSize: "18px"
+    fontWeight: 400
+    lineHeight: 1.65
+  script:
+    fontFamily: "Source Serif 4, Georgia, serif"
+    fontSize: "17px"
+    fontWeight: 400
+    lineHeight: "28px"
+  body:
+    fontFamily: "Public Sans, -apple-system, Segoe UI, sans-serif"
+    fontSize: "16px"
+    fontWeight: 400
+    lineHeight: 1.625
+  control:
+    fontFamily: "Public Sans, -apple-system, Segoe UI, sans-serif"
+    fontSize: "15px"
+    fontWeight: 600
+    lineHeight: 1
+  clock:
+    fontFamily: "Public Sans, -apple-system, Segoe UI, sans-serif"
+    fontSize: "20px"
+    fontWeight: 600
+    lineHeight: 1
+    fontFeature: "\"tnum\", \"lnum\""
+  mark-code:
+    fontFamily: "Public Sans, -apple-system, Segoe UI, sans-serif"
+    fontSize: "15px"
+    fontWeight: 700
+    lineHeight: 1.2
+    fontFeature: "\"tnum\", \"lnum\""
+  caption:
+    fontFamily: "Public Sans, -apple-system, Segoe UI, sans-serif"
+    fontSize: "13px"
+    fontWeight: 400
+    lineHeight: 1.4
+  label:
+    fontFamily: "Public Sans, -apple-system, Segoe UI, sans-serif"
+    fontSize: "12px"
+    fontWeight: 600
+    lineHeight: 1
+    letterSpacing: "0.06em"
+  code:
+    fontFamily: "JetBrains Mono, ui-monospace, monospace"
+    fontSize: "0.9em"
+    fontWeight: 400
+rounded:
+  none: "0px"
+  report: "2px"
+spacing:
+  gutter-sm: "12px"
+  gutter: "20px"
+  row: "44px"
+  row-compact: "36px"
+  page-head: "48px"
+  app-header: "56px"
+  ruling: "28px"
+  sheet-pad: "40px"
+  sheet-pad-wide: "56px"
+  tool-rail: "152px"
+  notice-sheet: "560px"
+  script-sheet: "816px"
+  report-sheet: "1080px"
+  container: "1440px"
+components:
+  button-slip:
+    backgroundColor: "{colors.paper}"
+    textColor: "{colors.ink}"
+    typography: "{typography.control}"
+    rounded: "{rounded.report}"
+    padding: "0 18px"
+    height: "{spacing.row}"
+  button-slip-hover:
+    backgroundColor: "{colors.slip-hover}"
+  button-ink:
+    backgroundColor: "{colors.ink}"
+    textColor: "{colors.paper}"
+    typography: "{typography.control}"
+    rounded: "{rounded.report}"
+    padding: "0 18px"
+    height: "{spacing.row}"
+  button-ink-hover:
+    backgroundColor: "{colors.ink-hover}"
+  button-quiet-shell:
+    backgroundColor: "transparent"
+    textColor: "{colors.shell-ink}"
+    typography: "{typography.control}"
+    rounded: "{rounded.report}"
+    padding: "0 18px"
+    height: "{spacing.row}"
+  button-quiet-paper:
+    backgroundColor: "{colors.paper}"
+    textColor: "{colors.ink}"
+    typography: "{typography.control}"
+    rounded: "{rounded.report}"
+    padding: "0 18px"
+    height: "{spacing.row}"
+  button-quiet-paper-hover:
+    backgroundColor: "{colors.paper-tint}"
+  button-destructive:
+    backgroundColor: "{colors.lost}"
+    textColor: "{colors.paper}"
+    typography: "{typography.control}"
+    rounded: "{rounded.report}"
+    padding: "0 18px"
+    height: "{spacing.row}"
+  button-destructive-hover:
+    backgroundColor: "{colors.lost-deep}"
+  button-compact:
+    padding: "0 12px"
+    height: "{spacing.row-compact}"
+  script-sheet:
+    backgroundColor: "{colors.paper}"
+    textColor: "{colors.ink}"
+    rounded: "{rounded.report}"
+    padding: "{spacing.sheet-pad}"
+    width: "{spacing.script-sheet}"
+  report-dialog:
+    backgroundColor: "{colors.paper}"
+    textColor: "{colors.ink}"
+    rounded: "{rounded.report}"
+    padding: "28px"
+    width: "480px"
+  page-head:
+    backgroundColor: "{colors.shell}"
+    textColor: "{colors.shell-ink}"
+    height: "{spacing.page-head}"
+  contents-item:
+    textColor: "{colors.shell-muted}"
+    height: "{spacing.row}"
+  contents-item-current:
+    textColor: "{colors.shell-ink}"
+  tool-rail:
+    backgroundColor: "{colors.shell-raised}"
+    textColor: "{colors.shell-muted}"
+    width: "{spacing.tool-rail}"
+  tool-rail-active:
+    backgroundColor: "{colors.paper}"
+    textColor: "{colors.ink}"
+  mark-code:
+    textColor: "{colors.examiner}"
+    typography: "{typography.mark-code}"
+---
+
+# Design System: Criterion
+
 ## Overview
 
-Claude.com Dark Mode (Obsidian Scholar) is an authoritative, literary dark workspace. The base atmosphere is a **warm obsidian canvas** (`{colors.canvas}`: #181715) paired with elevated warm-dark card surfaces (`{colors.surface-card}`: #252320). Headlines run a **slab-serif display** ("Copernicus" / Tiempos Headline) at weight 400 with negative letter-spacing in warm ivory (`{colors.ink}`: #faf9f5), paired with **StyreneB / Inter** body sans (`{colors.body}`: #d6cfc5).
+**Creative North Star: "The Subject Report"**
 
-Brand voltage comes from the **obsidian + coral pairing**: signature Anthropic warm coral (`{colors.primary}`: #cc785c) powers primary CTAs, active indicators, and glowing telemetry. Companion accents include teal (`{colors.accent-teal}`: #5db8a6) for STEM criteria and amber (`{colors.accent-amber}`: #e8a55a) for humanities and ECF.
+Criterion is set as the documents an IB examiner actually produces: the candidate's script, the markscheme's margin codes, the subject report and its grade-boundary table. A graphite shell is the desk at night; on it lies bright white script stock printed in report black. Hierarchy comes from scale and hairline rules alone: numbered questions, ruled tables, a right-hand margin column for marks. Nothing floats on a dashboard.
+
+The system runs on two surfaces and a handful of inks. Paper carries the work (questions, working, the marked report). The shell carries the apparatus around it (page head, contents strip, tool rail, home and navigation). Colour is spent on meaning: blue-black for the candidate's ink, ultramarine for the examiner, and green, red and ochre for awarded, lost and carried-forward marks. Every state also has a glyph or a word, because the colour is never the only signal.
+
+Density is that of a printed paper: generous sheet margins, a 28px ruling for answers, tabular numerals wherever marks, times or grades appear. Motion is the physical grammar of a marked paper: rules draw, ink writes in, numbers tick, sheets are laid on the desk. Nothing floats, fades up, pulses or glows. Criterion is desktop web only; layouts are specified at 1440 wide and do not target phones.
 
 **Key Characteristics:**
-- Warm obsidian canvas (`{colors.canvas}`: #181715) with crisp warm-ivory display text (`{colors.ink}`: #faf9f5).
-- Coral primary CTA (`{colors.primary}`: #cc785c).
-- Slab-serif display headlines via Copernicus / Tiempos Headline at weight 400 with negative letter-spacing.
-- Elevated obsidian cards (`{colors.surface-card}`: #252320) with subtle hairline borders (`rgba(255, 255, 255, 0.08)`).
-- Math and formula rendering: High-contrast ivory KaTeX glyphs (`#faf9f5`) on deep obsidian surfaces.
-- Anthropic radial-spike mark as the brand wordmark prefix.
-- Section rhythm `{spacing.section}` (96px).
+- Graphite shell (desk) holding white script stock (paper); two surfaces, never a stack of cards.
+- Hierarchy from Source Serif 4 scale and hairline or 2px rules; boxes are rare.
+- Examiner ultramarine is reserved for the examiner and the AI marker.
+- Every mark outcome and phase is a glyph plus a word, with colour as a third signal.
+- Square 2px report corners; one lifted material (the sheet).
+- Rules draw; ink writes in; nothing glows, floats or fades up.
 
 ## Colors
 
-### Brand & Accent
-- **Coral / Primary** (`{colors.primary}`: #cc785c): The signature Anthropic warm coral.
-- **Coral Active** (`{colors.primary-active}`: #b86247): The press / hover-darker variant.
-- **Coral Disabled** (`{colors.primary-disabled}`: #3d3b36): Desaturated dark disabled state.
-- **Accent Teal** (`{colors.accent-teal}`: #5db8a6): STEM syllabus track, method marks, and active dots.
-- **Accent Amber** (`{colors.accent-amber}`: #e8a55a): Humanities syllabus track, Error Carried Forward badges.
+A near-monochrome report printed in black on white, lying on graphite, with four reserved marking inks.
 
-### Surface
-- **Canvas** (`{colors.canvas}`: #181715): Dominant Claude obsidian canvas floor.
-- **Surface Soft** (`{colors.surface-soft}`: #1f1e1b): Drawer headers, section dividers, and subtle bands.
-- **Surface Card** (`{colors.surface-card}`: #252320): Interactive cards, dialog panels, question trays.
-- **Surface Strong** (`{colors.surface-cream-strong}`: #2c2a26): Emphasized cards, active tabs.
-- **Surface Dark** (`{colors.surface-dark}`: #141413): Deepest product surface.
-- **Surface Dark Elevated** (`{colors.surface-dark-elevated}`: #252320): Elevated cards inside dark bands.
-- **Surface Dark Soft** (`{colors.surface-dark-soft}`: #1f1e1b): Code block backgrounds.
-- **Hairline** (`{colors.hairline}`: rgba(255, 255, 255, 0.08)): 1px border tone on dark surfaces.
-- **Hairline Soft** (`{colors.hairline-soft}`: rgba(255, 255, 255, 0.05)): Barely-visible divider.
+### Primary
+- **Report Black** (ink): all printed text on paper, 2px heading rules, the selected row of a marks table, and the solid primary action on paper.
+- **Script Stock White** (paper): the script sheet, the report sheet, dialogs, and the primary action in the shell (the paper slip).
 
-### Text
-- **Ink** (`{colors.ink}`: #faf9f5): All headlines and primary display text.
-- **Body Strong** (`{colors.body-strong}`: #f3f3ee): Emphasized paragraphs and lead text.
-- **Body** (`{colors.body}`: #d6cfc5): Default running text.
-- **Muted** (`{colors.muted}`: #a09d95): Subheadings, breadcrumbs, and tags.
-- **Muted Soft** (`{colors.muted-soft}`: #85827a): Captions, fine-print, and copyright lines.
-- **On Primary** (`{colors.on-primary}`: #ffffff): Text on coral buttons.
-- **On Dark** (`{colors.on-dark}`: #faf9f5): Warm ivory on dark surfaces.
-- **On Dark Soft** (`{colors.on-dark-soft}`: #a09d95): Secondary labels on dark surfaces.
+### Secondary
+- **Examiner Ultramarine** (examiner): mark codes (M1, A1, R1), italic examiner comments, the margin rule of the marked column (at 40% opacity), and the sample marking on home. It means "the examiner wrote this" and nothing else.
+- **Examiner Ultramarine, lifted** (examiner-on-shell): the same role where it sits on graphite, such as the full Mark Code key on home.
 
-### Semantic
-- **Success** (`{colors.success}`: #5db872): Green status dots, available indicators.
-- **Warning** (`{colors.warning}`: #d4a017): Warning callouts.
-- **Error** (`{colors.error}`: #c64545): Validation errors.
+### Tertiary
+- **Awarded Green** (awarded / awarded-on-shell): a mark given, a topic secure. Always with a tick glyph and a word ("Awarded", "Secure").
+- **Lost Red** (lost / lost-on-shell): a mark not shown, a topic that needs work, the last minute on the clock, save errors, destructive actions. Always with a cross glyph and a word.
+- **ECF Ochre** (ecf / ecf-on-shell): error carried forward, and the final-five-minutes phase. Always with an arrow glyph or the words "ECF" / "Error carried forward".
+
+### Neutral
+- **Graphite Desk** (shell): the page background everywhere outside paper.
+- **Raised Graphite** (shell-raised): the docked tool rail and inline code on the shell; the only step up from the desk.
+- **Graphite Hairline** (shell-line): dividers, quiet-button borders, the resting rule under the page head.
+- **Shell Ink** (shell-ink) and **Shell Muted** (shell-muted): text on graphite, primary and secondary.
+- **Paper Tint** (paper-tint): hover on paper rows, the grade-boundary cell under the predicted grade, inline code on paper.
+- **Paper Rule** (paper-rule) and **Strong Paper Rule** (paper-rule-strong): table row rules; borders of ruled working areas and quiet-paper buttons.
+- **Ruling Grey** (ruling): the 28px lines of a ruled working area only.
+- **Muted Ink** (ink-muted): captions, secondary text, pending states on paper.
+- **Blue-Black Ballpoint** (student): the candidate's own words and strokes: essay text, typed working, the default pen.
+- **Highlighter Grey** (selection): text selection on both surfaces.
+
+### Named Rules
+**The Examiner's Pen Rule.** Ultramarine is reserved for the examiner and the AI marker. It is never a link colour, a focus ring, a selected state or a brand accent. If the examiner did not write it, it is not blue.
+
+**The Two Inks Rule.** Candidates write in blue-black, black or pencil grey (the only pen palette). Red, green, ochre and ultramarine belong to marking and are never offered as pen colours.
+
+**The Surface Variant Rule.** Every role colour that can appear on graphite has an -on-shell variant; use the plain token on paper and the -on-shell token on the shell, never the other way round.
 
 ## Typography
 
-### Font Family
-The system runs **Copernicus** (or **Tiempos Headline** as substitute) as the slab-serif display face for headlines, and **StyreneB** (or **Inter** as substitute) as the humanist sans for body, navigation, and UI labels. **JetBrains Mono** handles code blocks. The fallback stack walks `Tiempos Headline, Garamond, "Times New Roman", serif` for display and `Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif` for body.
+**Display / Document Font:** Source Serif 4 (with Georgia, serif), optical-size axis enabled, italic loaded.
+**UI Font:** Public Sans (with -apple-system, Segoe UI, sans-serif).
+**Code Font:** JetBrains Mono (with ui-monospace), code views only.
 
-The display/body split is editorial:
-- Copernicus serif (weight 400, negative tracking) → h1, h2, h3, hero display
-- StyreneB sans (weight 400-500) → body, navigation, buttons, captions, labels
-- JetBrains Mono → all code blocks and terminal text
+**Character:** Source Serif 4 is the printed paper: question numbers, prompts, report headings, examiner comments in italic. Public Sans is the documentation sans of the apparatus: controls, labels, the clock and every numeral that must line up.
 
 ### Hierarchy
+- **Display** (600, 60px, 1.02, -0.01em): the home headline only.
+- **Headline** (600, 44px results title; 40px on the cover and ingest sheets; 1.08 to 1.1): the title of a sheet.
+- **Section** (600, 32px on the shell; the predicted-grade heading at 36px): section heads on home and in the report.
+- **Question Number** (600, 28px, leading 1; 24px in compact pages): "1." at the head of each question, beside the right-aligned "[Maximum mark: n]" at 15px serif semibold.
+- **Title** (600, 24px): dialog titles, "Question by question", review heads.
+- **Prompt** (400, 18px, 1.65, max 62 to 68ch): question text on the script; 16px in compact pages and the review.
+- **Script** (400, 17px on a 28px line): the candidate's typed answer, set on the ruling in student ink.
+- **Body** (400, 16px, 1.625, max 62 to 70ch): explanatory prose in Public Sans.
+- **Control** (600, 15px): button labels; 14px in compact buttons, toolbar items and the contents strip.
+- **Clock** (600, 20px, tabular): the exam clock in the page head.
+- **Mark Code** (700, 15px, tabular): M1 / A1 / R1 codes in the margin column, in examiner ink.
+- **Caption** (400, 13px): table captions, save status, word counts, part detail.
+- **Label** (600, 12px, 0.06em, uppercase): the exam phase name in the page head. It is the only uppercase tracked text in the system.
 
-| Token | Size | Weight | Line Height | Letter Spacing | Use |
-|---|---|---|---|---|---|
-| `{typography.display-xl}` | 64px | 400 | 1.05 | -1.5px | Homepage h1 ("Meet your thinking partner")  -  Copernicus serif |
-| `{typography.display-lg}` | 48px | 400 | 1.1 | -1px | Section heads  -  Copernicus |
-| `{typography.display-md}` | 36px | 400 | 1.15 | -0.5px | Sub-section heads, model names  -  Copernicus |
-| `{typography.display-sm}` | 28px | 400 | 1.2 | -0.3px | Pricing tier names, callout headlines  -  Copernicus |
-| `{typography.title-lg}` | 22px | 500 | 1.3 | 0 | Pricing plan size labels  -  StyreneB |
-| `{typography.title-md}` | 18px | 500 | 1.4 | 0 | Feature card titles, intro paragraphs |
-| `{typography.title-sm}` | 16px | 500 | 1.4 | 0 | Connector tile titles, list labels |
-| `{typography.body-md}` | 16px | 400 | 1.55 | 0 | Default running-text  -  StyreneB |
-| `{typography.body-sm}` | 14px | 400 | 1.55 | 0 | Footer body, fine-print |
-| `{typography.caption}` | 13px | 500 | 1.4 | 0 | Badge labels, captions |
-| `{typography.caption-uppercase}` | 12px | 500 | 1.4 | 1.5px | Category tags, "NEW" badges |
-| `{typography.code}` | 14px | 400 | 1.6 | 0 | Code blocks  -  JetBrains Mono |
-| `{typography.button}` | 14px | 500 | 1.0 | 0 | Standard button labels |
-| `{typography.nav-link}` | 14px | 500 | 1.4 | 0 | Top-nav menu items |
+### Named Rules
+**The Lining Figures Rule.** Every mark, time, grade and percentage uses tabular lining numerals; serif figures are forced to lining so they never bounce as old-style.
 
-### Principles
-Display sizes use weight 400 (regular), never bold. Negative letter-spacing (-0.3 to -1.5px) is essential  -  Copernicus without it reads as off-brand. The serif character is what gives Anthropic its literary, considered voice; switching to a sans-serif display would make Claude feel like every other AI tool.
+**The 12px Floor Rule.** No text is set below 12px.
 
-Body type stays at weight 400 for paragraphs, weight 500 for labels and emphasized phrases. The sans body is humanist (StyreneB)  -  never geometric. Inter is an acceptable substitute because of its similar humanist proportions; Helvetica or Arial would be too neutral and break the warm-editorial feel.
-
-### Note on Font Substitutes
-If Copernicus / Tiempos Headline is unavailable, **Cormorant Garamond** at weight 500 with -0.02em letter-spacing is the closest open-source approximation. **EB Garamond** is a fallback. For StyreneB, **Inter** is the closest match  -  both are humanist sans designed for screen reading. **Söhne** is another close alternative if licensed.
+**The Mono Is Code Rule.** JetBrains Mono appears only for code and machine identifiers (inline code, a paper reference). Prose, labels and headings are never monospace.
 
 ## Layout
 
-### Spacing System
-- **Base unit:** 4px.
-- **Tokens:** `{spacing.xxs}` 4px · `{spacing.xs}` 8px · `{spacing.sm}` 12px · `{spacing.md}` 16px · `{spacing.lg}` 24px · `{spacing.xl}` 32px · `{spacing.xxl}` 48px · `{spacing.section}` 96px.
-- **Section padding:** `{spacing.section}` (96px)  -  modern-SaaS rhythm.
-- **Card internal padding:** `{spacing.xl}` (32px) for feature cards, pricing tier cards, model comparison cards; `{spacing.lg}` (24px) for code-window cards and connector tiles.
-- **Callout / CTA bands:** `{spacing.xxl}` (48px) inside coral callout cards; 64px inside the larger dark CTA band.
+The exam room is a three-column grid at 1440: a flexible left column that docks the tool rail against the sheet, the 816px script sheet, and a flexible right column (`1fr 816px 1fr`, 32px gap). The rail sits outside the sheet and never over it; below 1280 it docks as a horizontal bar at the bottom of the window, with space reserved under the sheet so it never covers a question.
 
-### Grid & Container
-- **Max content width:** ~1200px centered.
-- **Editorial body:** Single 12-column grid; hero often uses 6/6 split (h1 left, illustration right).
-- **Feature card grids:** 3-up at desktop, 2-up at tablet, 1-up at mobile.
-- **Connector tile grids:** 4-up or 6-up at desktop, 2-up at tablet, 1-up at mobile.
-- **Pricing grid:** 3-up at desktop (Free / Pro / Team / Enterprise often), 1-up at mobile.
+The shell is framed by a 56px app header (Criterion mark, paper title, main navigation, a Timed exam / Guided practice segmented control) or, during a session, by the 48px exam page head with a 4px rule band beneath it and a 44px contents strip. Both are sticky. The outer container is 1440px with 12px gutters, widening to 20px.
 
-### Whitespace Philosophy
-The cream canvas + serif display + generous internal padding create an editorial pacing  -  Claude reads like a long-form magazine column rather than a marketing template. Whitespace between bands stays uniform at 96px; whitespace inside cards is generous (32px), letting type breathe.
+Sheets come in three widths: 816px for a script or submission sheet, 1080px for the examiner's report, and 560px for single notices (missing paper, errors). Sheet padding runs from 24px on narrow windows to 40px (script) and 48 to 56px (report, ingest). Inside a sheet, a running head (paper title or "Examiner's report" on the left, page or date on the right) sits above a 1px ink rule. Humanities papers use a 5:7 split: the question sheet (sticky) beside the answer sheet.
+
+Vertical rhythm on paper is set by the 28px ruling and by rules between sections; section spacing on the report is 48px.
 
 ## Elevation & Depth
 
-| Level | Treatment | Use |
-|---|---|---|
-| Flat | No shadow, no border | Body sections, top nav, hero bands |
-| Soft hairline | 1px `{colors.hairline}` border | Inputs, sub-nav, occasionally on cards |
-| Cream card | `{colors.surface-card}` background  -  no shadow | Feature cards, content cards |
-| Dark surface card | `{colors.surface-dark}` background  -  no shadow | Code editor mockups, model showcase cards |
-| Subtle drop shadow | Faint shadow at low alpha | Hover-elevated states (the system uses `0 1px 3px rgba(20,20,19,0.08)` rarely) |
+Depth is almost entirely tonal: graphite desk, raised graphite for the tool rail, white paper. Exactly two things cast shadows, and both are paper: the script sheet resting on the desk, and a dialog lifted above a dimmed desk.
 
-The elevation philosophy is **color-block first, shadow rare**. Most depth comes from the cream-vs-dark surface contrast. Shadows are minimal. The dark surface mockups have their own internal product chrome (code editor scrollbars, line numbers, syntax highlighting) which adds detail without needing external shadows.
+### Shadow Vocabulary
+- **Sheet** (`box-shadow: 0 1px 2px rgba(0,0,0,0.35), 0 12px 32px -16px rgba(0,0,0,0.6)`): every script, report, notice and sample sheet.
+- **Dialog** (`box-shadow: 0 24px 64px -24px rgba(0,0,0,0.7)`; backdrop `rgba(10,12,15,0.72)`): the native report dialog only.
 
-### Decorative Depth
-- The Anthropic spike-mark glyph (4-spoke radial asterisk) appears as a small black mark in the brand wordmark and inline as a content marker.
-- Code editor mockups carry their own internal depth: syntax-highlighted text in muted blues / oranges / grays, line numbers in `{colors.muted-soft}`, status bars at the bottom in `{colors.surface-dark-elevated}`.
-- Some hero illustrations use simple line-art with coral and dark-navy strokes on cream  -  minimal, hand-drawn-feeling, never photorealistic.
+### Named Rules
+**The Paper Only Rule.** Only paper casts a shadow. Controls, rows, rails and the shell are flat; no hover lift, no glow.
 
 ## Shapes
 
-### Border Radius Scale
-
-| Token | Value | Use |
-|---|---|---|
-| `{rounded.xs}` | 4px | Reserved for badge accents and tiny dropdowns |
-| `{rounded.sm}` | 6px | Small inline buttons, dropdown items |
-| `{rounded.md}` | 8px | Standard CTA buttons, text inputs, category tabs |
-| `{rounded.lg}` | 12px | Content cards (feature, pricing, code-window, model-comparison) |
-| `{rounded.xl}` | 16px | Hero illustration container, the larger marquee components |
-| `{rounded.pill}` | 9999px | Badge pills, "NEW" tags |
-| `{rounded.full}` | 9999px / 50% | Avatar substitutes, icon buttons |
-
-### Photography & Illustrations
-Claude's hero rarely uses photography. Instead it uses:
-- Simple line-art illustrations with coral + dark-navy strokes on the cream canvas
-- Code editor mockups (the dominant "hero" treatment on developer-focused pages)
-- Terminal output mockups with monospace text on dark
-- Model comparison cards (Opus / Sonnet / Haiku) with abstract geometric thumbnails
-
-When photography is used (rare  -  mostly testimonials), avatars crop to perfect circles at 40px diameter.
+The form language is square and printed. Buttons, sheets and dialogs take a 2px report corner, just enough to read as cut stock; everything else (table rows, the tool rail, segmented controls, working areas, scrollbar thumbs) is fully square. Structure comes from rules: 2px ink rules open a table or a key, 1px ink rules close it, and paper-rule hairlines separate rows. The margin column is set off by a single vertical ultramarine hairline. Status glyphs are drawn inline as 8 to 12px square-and-stroke SVG marks (filled square, open square, half-filled square, tick, cross, arrow, padlock), matching the rules rather than an icon set.
 
 ## Components
 
-### Top Navigation
-
-**`top-nav`**  -  Cream nav bar pinned to the top of every page. 64px tall, `{colors.canvas}` background. Carries the Anthropic spike-mark + "Claude" wordmark at left, primary horizontal menu (Product, Solutions, Use Cases, Pricing, Research, Company) center-left, right-side cluster with "Sign in" text-link, "Try Claude" `{component.button-primary}` (coral). Menu items in `{typography.nav-link}` (StyreneB 14px / 500).
-
 ### Buttons
+Square report controls: firm, quiet, never glossy.
+- **Shape:** 2px corners, 44px minimum height, 18px side padding, 8px gap for a leading 16px icon.
+- **Slip (primary in the shell):** a white paper slip with report-black text; hover steps to the slip-hover grey. Used for "Sit a timed paper", and for "Hand in" once the final five minutes begin.
+- **Ink (primary on paper):** solid report black with white text; hover lifts to ink-hover.
+- **Quiet shell / quiet paper:** transparent with a graphite hairline on the shell (hover brightens the border to shell-muted); white with a strong paper-rule border on paper (hover fills paper-tint).
+- **Destructive:** lost red with white text, deepening on hover; only for confirmed destructive actions (clear working, start again).
+- **Compact:** 36px tall, 12px padding, 14px label, for the page head and inline confirmations.
+- **Focus:** a 2px outline at 2px offset, paper-white on the shell and report black on paper. Disabled drops to 45% opacity.
+- **Transition:** background, border and colour over 160ms on the expo-out curve.
 
-**`button-primary`**  -  The signature coral CTA. Background `{colors.primary}` (#cc785c), text `{colors.on-primary}` (white), type `{typography.button}` (StyreneB 14px / 500), padding 12px × 20px, height 40px, rounded `{rounded.md}` (8px). Active state `button-primary-active` darkens to `{colors.primary-active}` (#a9583e).
+### Segmented Control and Navigation
+- **App header:** Criterion mark and 15px semibold wordmark; paper title in shell-muted after a hairline divider; nav links at 14px medium, shell-muted resting, shell-ink on hover and when current.
+- **Mode control:** square segments inside one graphite hairline border, divided by hairlines; the active segment is a white paper slip with ink text.
 
-**`button-secondary`**  -  Cream button with hairline outline. Background `{colors.canvas}`, text `{colors.ink}`, 1px hairline border, same padding + height + radius as primary.
+### Script Sheet
+The signature surface: white stock with the sheet shadow and 2px corners. A running head over a 1px ink rule; each question opens with its 28px serif number on the left and "[Maximum mark: n]" in the right margin; subparts list their letter, prompt and "[n]" on a three-column baseline grid.
 
-**`button-secondary-on-dark`**  -  Used over `{colors.surface-dark}` cards. Background `{colors.surface-dark-elevated}` (#252320), text `{colors.on-dark}`. Stays dark  -  the system never inverts to a light secondary on dark surfaces.
+### Ruled Working Area
+A bordered answer box (strong paper-rule, square) ruled every 28px in ruling grey. Typed answers sit on the ruling in 17px serif student ink; the drawing canvas uses it for handwritten working, with a compact quiet-paper Clear control that confirms inline before a destructive clear.
 
-**`button-text-link`**  -  Inline text button, no background. Used for "Sign in" in the top nav and inline CTA links.
+### Exam Page Head
+48px graphite band. Left: mark and paper title. Centre: the phase glyph and phase label. Right: the clock (20px tabular; ochre in the final five minutes, lost red in the last minute), a Hide / Show text toggle, "Saved hh:mm", the formula booklet and Hand in. Beneath it, a full-width rule band carries one pattern per phase, redrawn at every phase change:
+- Before you begin: 2px dotted, shell-muted.
+- Reading time: 2px dashed, shell-ink.
+- Writing: 2px solid, shell-ink.
+- Final five minutes: 4px double, ecf-on-shell.
+- Pens down: 2px long dashes (24px on, 12px off), lost-on-shell.
+Each phase also has its own glyph (dashed square, open square, filled square, half-filled square, crossed square).
 
-**`button-icon-circular`**  -  36px circular icon button. Background `{colors.canvas}`, hairline border, ink-color icon. Used for carousel arrows, share, "view more".
+### Contents Strip
+The paper's contents as one unbroken, horizontally scrolling row of 44px question items: an 8px square (filled when there is working, open when not), the question label in 14px semibold, and "[marks]" at 12px. The current question turns shell-ink and gets a single 2px now-marker rule that draws in beneath it; it scrolls into view as the current question changes.
 
-**`text-link`**  -  Inline body links in `{colors.primary}` (the coral). Underlined on press; the coral inline link is one of the system's most distinctive small details.
+### Tool Rail
+A 152px raised-graphite column with a hairline border, docked beside the sheet. Items are 44px rows with an icon and a 14px label; the active tool becomes a white slip with ink text. Groups (tools, pen colours, size, undo/redo, shortcuts) are separated by hairlines. Pen colours are shown as square swatches with their names.
 
-### Cards & Containers
+### Report Dialog
+A native modal dialog on white stock, 480px wide, 2px corners, with the dialog shadow and a dimmed graphite backdrop. A 24px serif title, then content and actions at 20px spacing. The browser handles the focus trap and Esc, which can be turned off when dismissal would be unsafe (pens down).
 
-**`hero-band`**  -  Cream-canvas hero with a 6-6 grid: h1 + sub-headline + button row on the left, hero illustration card or product mockup card on the right. Vertical padding `{spacing.section}` (96px).
+### Mark Code Badge and Key
+- **Badge:** the code in 15px bold tabular examiner ink, followed by the outcome as a glyph and word in 13px semibold: tick "Awarded" (awarded green), cross "Not shown" (lost red), arrow "ECF" (ochre).
+- **Key, full:** a definition list held level like a map legend: 2px shell-ink top rule, hairline rows, the code at 17px bold in examiner-on-shell beside its meaning at 16px.
+- **Key, compact:** a single line of code and short meaning pairs at 13px, set beside any marking.
 
-**`hero-illustration-card`**  -  A larger card holding the hero's right-side artifact  -  sometimes a coral-stroke line illustration on cream background, sometimes a dark code editor mockup. Background `{colors.canvas}` or `{colors.surface-dark}` depending on context, rounded `{rounded.xl}` (16px).
+### Grade Boundary Table
+The report's verdict: "Predicted grade n" as a serif heading, then a seven-column table of grades 7 to 1 opened by a 2px ink rule. The predicted grade's cell inverts to report black with white serif figures at 34px (others at 20px), and its boundary percentage sits on paper-tint. A serif sentence states the score and the marks to the next grade.
 
-**`feature-card`**  -  Used in 3-up feature grids. Background `{colors.surface-card}` (#efe9de  -  slightly darker cream), rounded `{rounded.lg}` (12px), internal padding `{spacing.xl}` (32px). Carries a small icon at top, an `{typography.title-md}` headline, and a body description in `{typography.body-md}`.
+### Examiner Review
+A 260px sticky marks table (question, glyph, "n / max"; the selected row inverts to report black) beside the selected question. The candidate's working sits in a two-column band between a 2px and a 1px ink rule; the right-hand 17rem margin column, set off by an ultramarine hairline, lists mark codes with italic serif examiner notes in ultramarine. Error carried forward gets its own ochre-ruled band with a plain explanation.
 
-**`product-mockup-card-dark`**  -  Dark navy card showing actual Claude product chrome (chat interface, code editor, agent controls). Background `{colors.surface-dark}`, rounded `{rounded.lg}`, internal padding `{spacing.xl}` (32px). Carries text labels in `{colors.on-dark}` and product UI fragments below.
+### Scaffold Ladder
+The tutor's help steps as a ruled ordered list under a 2px ink rule: 48px rows with a serif step numeral, a 14px semibold title and 13px detail, and a trailing glyph (open square, tick when used, padlock when locked). The current step inverts to report black. The markscheme rung stays locked, labelled "Unlocks after step 3", until the three earlier steps are used.
 
-**`code-window-card`**  -  A specialized dark card showing a code editor with line numbers, syntax-highlighted code in `{typography.code}` (JetBrains Mono), and sometimes a "Run" button or terminal output panel below. Background `{colors.surface-dark}` with `{colors.surface-dark-soft}` for the inner code block, rounded `{rounded.lg}`, padding `{spacing.lg}` (24px). The signature visual element of Claude Code product pages.
+### Inputs / File Fields
+A file field is a real input inside a square 132px drop zone: dashed strong paper-rule at rest, paper-tint on hover or drag, and, once a file is chosen, an ink border ruled round it in one pass of the pen. Focus shows a 2px ink outline. Text areas are ruled working areas.
 
-**`model-comparison-card`**  -  Used on the homepage's "Which problem are you up against?" section comparing Opus / Sonnet / Haiku. Background `{colors.canvas}` with hairline border, rounded `{rounded.lg}`, internal padding `{spacing.xl}` (32px). Carries the model name, a short capability blurb, and a `{component.text-link}` to learn more.
+### Motion
+Everything moves the way something moves on an examiner's desk: a rule is drawn, ink is written, a tally is totted up, a sheet is laid down or turned. Nothing floats, fades up, scales in, bounces, pulses or glows. Curve is expo-out throughout (`--ease-out-expo`). Only `transform`, `clip-path`, `mask` and `background-size` animate, so motion stays on the compositor. Sequences are timed with a `--d` start delay (`motionDelay(ms)` in `src/components/common/motion.tsx`).
 
-**`pricing-tier-card`**  -  Standard tier card. Background `{colors.canvas}` with hairline border, rounded `{rounded.lg}`, padding `{spacing.xl}` (32px). Carries the plan name in `{typography.title-lg}` (StyreneB), price in `{typography.display-sm}` (Copernicus serif!), feature checklist in `{typography.body-md}`, and a `{component.button-primary}` at the bottom.
-
-**`pricing-tier-card-featured`**  -  The featured tier (typically "Pro" or "Team"). Background flips to `{colors.surface-dark}`, text inverts to `{colors.on-dark}`. The dark surface IS the featured-tier signal.
-
-**`callout-card-coral`**  -  A full-bleed coral card carrying a major call-to-action. Background `{colors.primary}` (#cc785c), text `{colors.on-primary}` (white), rounded `{rounded.lg}`, padding `{spacing.xxl}` (48px). The coral surface IS the voltage; the CTA inside uses an inverted button style (cream/canvas button on coral).
-
-**`connector-tile`**  -  Used on the connectors page's integration grid. Background `{colors.canvas}` with hairline border, rounded `{rounded.lg}`, padding 20px. Each tile carries a logo at top, a `{typography.title-sm}` connector name, and a short description.
-
-### Inputs & Forms
-
-**`text-input`**  -  Standard text input. Background `{colors.canvas}`, text `{colors.ink}`, type `{typography.body-md}`, rounded `{rounded.md}` (8px), padding 10px × 14px, height 40px. 1px hairline border in `{colors.hairline}`.
-
-**`text-input-focused`**  -  Focus state. Border thickens or shifts to `{colors.primary}` (coral) for emphasis. Carries a 3px coral-at-15%-alpha outer ring.
-
-**`cookie-consent-card`**  -  Bottom-right floating dark cookie banner. Background `{colors.surface-dark}`, text `{colors.on-dark}`, rounded `{rounded.lg}`, padding `{spacing.lg}` (24px). One of the few places dark surface appears at small scale on cream pages.
-
-### Tags / Badges
-
-**`badge-pill`**  -  Small pill label used for category tags. Background `{colors.surface-card}`, text `{colors.ink}`, type `{typography.caption}` (13px / 500), rounded `{rounded.pill}`, padding 4px × 12px.
-
-**`badge-coral`**  -  Coral-fill badge for "NEW", "BETA", featured highlights. Background `{colors.primary}`, text `{colors.on-primary}`, type `{typography.caption-uppercase}` (12px / 500 / 1.5px tracking), rounded `{rounded.pill}`, padding 4px × 12px.
-
-### Tab / Filter
-
-**`category-tab`** + **`category-tab-active`**  -  Used in sub-nav rows on solutions / connectors pages. Inactive: transparent background, `{colors.muted}` text. Active: `{colors.surface-card}` background, `{colors.ink}` text. Padding 8px × 14px, rounded `{rounded.md}`.
-
-### CTA / Footer
-
-**`cta-band-coral`**  -  A pre-footer "Try Claude" CTA card. Full-width coral fill, white type, rounded `{rounded.lg}`, padding 64px. Carries an h2 in `{typography.display-sm}` (still serif!), a sub-line, and a cream-button CTA.
-
-**`cta-band-dark`**  -  Alternative pre-footer band on developer-focused pages. Background `{colors.surface-dark}`, text `{colors.on-dark}`, rounded `{rounded.lg}`, padding 64px. Often pairs with a code-window card.
-
-**`footer`**  -  Dark navy footer that closes every page. Background `{colors.surface-dark}` (#181715), text `{colors.on-dark-soft}`. 4-column link list at desktop covering Product / Company / Resources / Legal. Vertical padding 64px. The Anthropic spike-mark + "Anthropic" wordmark sits at the top in `{colors.on-dark}`. The footer never inverts.
+- **Sheet feed** (620ms, clip from the top, shadow included): every script, report and notice sheet arrives on the desk. Dialogs feed in at 360ms over a dimming desk. The clip drops once the sheet is down.
+- **Page turn** (460ms): in the timed exam and guided practice, the next page is revealed from the fore-edge and the previous one from the spine (`data-turn="forward" | "back"`).
+- **Drawer** (420ms): settings and the formula booklet slide in from the right edge like a folder pulled across.
+- **Rule draw** (520ms, from the left; `-y` variant draws down): phase rules, the examiner's margin rule, the ochre ECF band rules, the hairline of the sample script, and a chosen PDF ruled round in one pass (across, down, back, up).
+- **Travelling now-marker** (420ms): the contents strip's current-page rule moves to the new page instead of jumping.
+- **Ink in** (420ms, 240ms fast; left-to-right clip): examiner marks into the margin, staggered 120ms per line; student lines; changed labels. Table rows ink in 55ms apart as the table scrolls into view (`useRevealOnView`).
+- **Pen stroke** (380ms, `pathLength=1`): ticks, crosses and ECF arrows are stroked just after the code beside them is written. The Criterion mark's tick signs itself on load and again under the pointer.
+- **Write down** (length-scaled, 500 to 2200ms): a soft pen edge travels down a fresh tutor reply or the examiner's comment. Only replies that have just arrived are written; history is simply there.
+- **Tally** (700 to 900ms, expo-out count): the sample total, the report score and percentage, and the paper summary tick to their value. The predicted grade climbs the boundary table from 1 and settles. Screen readers get the final value only.
+- **Wipe** (300ms, `background-size`): a selected slip, tab, tool or question row fills from the left in paper or report black, driven by its ARIA state.
+- **Highlighter pass** (700ms): a formula the tutor points to in the booklet is swept in selection blue.
+- **Strike-through** (420ms): a deleted session is ruled out in red before the row leaves.
+- **Work in progress** (1500ms loop): a short rule draws and undraws while the examiner marks, the tutor thinks, a paper is read or a script is handed in. It is the only loop in the app.
+- **State transitions** (160 to 220ms): colour and border only. Buttons press down 1px.
+- **Reduced motion:** every animation, delay and transition collapses to an instant state change. Tallies show their value at once, and the work-in-progress rule holds still at 40%.
 
 ## Do's and Don'ts
 
-### Do
-- Anchor every page on the cream canvas. Pure white reads as "any other AI tool"; the warm tint is the brand differentiator.
-- Use Copernicus serif for every display headline. Pair with StyreneB sans body. Negative letter-spacing on display sizes is non-negotiable.
-- Reserve `{colors.primary}` (coral) for primary CTAs and full-bleed `{component.callout-card-coral}` moments. Don't paint accent moments coral elsewhere.
-- Use `{component.product-mockup-card-dark}` and `{component.code-window-card}` to show actual Claude product chrome. Don't paint marketing illustrations of code when you can show real code.
-- Pair `{component.feature-card}` (cream) with `{component.product-mockup-card-dark}` (navy) in alternating bands. The cream-to-dark rhythm is the brand's pacing mechanism.
-- Use the Anthropic spike-mark glyph as the brand wordmark prefix. Never invert the mark to white-on-dark within the wordmark itself.
-- Apply `{spacing.section}` (96px) between major bands.
+### Do:
+- **Do** put the work on white script stock (with the sheet shadow) and the apparatus on the graphite shell.
+- **Do** make the primary action a paper slip in the shell and solid report black on paper.
+- **Do** build hierarchy with Source Serif 4 scale and rules: 2px ink to open a table or section, 1px ink to close it, paper-rule hairlines between rows.
+- **Do** set every mark, time, grade and percentage in tabular lining numerals.
+- **Do** pair every status colour with a glyph and a word (tick Awarded, cross Not shown, arrow ECF, the per-phase rule pattern and glyph).
+- **Do** use the -on-shell variant of any role colour placed on graphite.
+- **Do** give primary actions, nav items, tool rows and question items a 44px minimum target.
+- **Do** focus in report black on paper and in paper-white on the shell (2px outline, 2px offset).
+- **Do** keep the tool rail outside the sheet and dock it below the sheet on narrower windows; never cover a question.
+- **Do** honour reduced motion with instant state changes.
 
-### Don't
-- Don't use cool grays or pure white for canvas. Cream is the brand.
-- Don't bold serif display weight. Copernicus at 700 reads as bombastic; the system stays at 400.
-- Don't use cool blue or saturated cyan as a brand accent. The coral is the brand voltage.
-- Don't put coral everywhere. The coral is scarce on individual elements and generous only on full-bleed coral callout cards.
-- Don't use Inter for display headlines. The serif character is the brand voice.
-- Don't repeat the same surface mode in two consecutive bands. The pacing alternates: cream → cream-card → dark-mockup → cream → coral-callout → dark-footer.
-- Don't add hover state styling beyond what the system already encodes  -  primary darkens on press; nothing else changes.
-
-## Responsive Behavior
-
-### Breakpoints
-
-| Name | Width | Key Changes |
-|---|---|---|
-| Mobile | < 768px | Hamburger nav; hero h1 64→32px; hero-illustration-card stacks below content; feature grids 1-up; connector tiles 2-up; pricing 1-up; footer 4 cols → 1 |
-| Tablet | 768-1024px | Top nav stays horizontal but tightens; feature cards 2-up; connector tiles 3-up; pricing 2-up |
-| Desktop | 1024-1440px | Full top-nav with all menu items; 3-up feature cards; 4-up or 6-up connector tiles; 3-up pricing tiers |
-| Wide | > 1440px | Same as desktop with more outer breathing room; max content width caps at 1200px |
-
-### Touch Targets
-- `{component.button-primary}` at minimum 40 × 40px.
-- `{component.button-icon-circular}` at exactly 36 × 36  -  slightly under WCAG 44 but visually centered.
-- `{component.text-input}` height is 40px.
-- Connector tile entire card area is tappable; effective tap area >> 44px.
-
-### Collapsing Strategy
-- Top nav collapses to hamburger at < 768px; menu opens as a full-screen cream sheet.
-- Hero band's 6-6 grid collapses to single-column on mobile  -  h1 + sub-head + buttons first, then the illustration / mockup card below.
-- Feature grids reduce columns rather than scaling cards down.
-- Pricing tier cards collapse 4 → 2 → 1; featured-tier dark surface stays visually distinct at every breakpoint.
-- Code-window cards retain code legibility at every breakpoint by allowing horizontal scroll within the card rather than wrapping code lines.
-
-### Image Behavior
-- Code blocks inside dark mockups stay at fixed font-size; horizontal scroll on mobile rather than wrapping.
-- Hero illustrations scale proportionally; line-art strokes thin slightly on mobile.
-- Avatar photos in testimonials crop to circles at every breakpoint.
-
-## Iteration Guide
-
-1. Focus on ONE component at a time. Reference its YAML key (`{component.feature-card}`, `{component.code-window-card}`).
-2. Variants of an existing component (`-active`, `-disabled`, `-focused`) live as separate entries in `components:`.
-3. Use `{token.refs}` everywhere  -  never inline hex.
-4. Never document hover. Default and Active/Pressed states only.
-5. Display headlines stay Copernicus serif 400 with negative tracking. Body stays StyreneB / Inter 400. The split is unbreakable.
-6. Cream + coral + dark navy is the trinity. Don't introduce a fourth surface tone (no purple cards, no green sections).
-7. When in doubt about emphasis: bigger Copernicus serif before bolder weight.
-
-## Known Gaps
-
-- Copernicus and StyreneB are licensed Anthropic typefaces and not available as public web fonts. Substitutes (Tiempos Headline / Cormorant Garamond / EB Garamond for serif; Inter / Söhne for sans) are documented in the typography section.
-- The Anthropic radial-spike-mark is a brand glyph rendered as inline SVG; it's not formalized as a system token here. Treat it as a logo asset.
-- Animation and transition timings (chat message reveal, code block typewriter effect on the homepage, agentic-flow diagram animations) are not in scope.
-- Form validation states beyond `{component.text-input-focused}` are not extracted  -  error / success states would need a sign-up or feedback flow to confirm.
-- The actual Claude product surface (claude.ai chat interface) shares some tokens with the marketing site but adds many product-specific components (chat bubbles, message tools, file upload chips, conversation history sidebar) that are out of scope for this marketing-surface document.
-- The "agent" / "computer use" demo cards on certain pages display animated Claude controlling a browser  -  the static screenshot doesn't fully capture the animation chrome.
+### Don't:
+- **Don't** use examiner ultramarine for anything the examiner or AI marker did not write: not links, focus, selection, brand accents or pen colours.
+- **Don't** use pills or fully rounded shapes; corners are 2px or square.
+- **Don't** add glow, coloured shadows, hover lifts or shadows on anything but paper.
+- **Don't** nest boxed cards inside a sheet; inside paper, structure comes from rules and ruled working areas.
+- **Don't** set prose, labels or headings in monospace.
+- **Don't** set text below 12px.
+- **Don't** use uppercase tracked labels as kickers or eyebrows above headings; the phase label is the only uppercase tracked text.
+- **Don't** signal state by colour alone.
+- **Don't** animate by floating, fading up from below or pulsing; rules draw and ink writes in.

@@ -1,357 +1,523 @@
-/* Cormorant Garamond (Serif Display), Inter (Humanist Sans), JetBrains Mono (Code/Math) */
-@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
-
 @import "tailwindcss";
 @import "katex/dist/katex.min.css";
 
-@theme {
-  --font-serif: 'Cormorant Garamond', 'Tiempos Headline', Garamond, 'Times New Roman', serif;
-  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  --font-mono: 'JetBrains Mono', monospace;
+/* ============================================================ */
+/* CRITERION: SUBJECT REPORT SYSTEM                             */
+/* Graphite shell, white script stock, report-black print.      */
+/* Examiner ultramarine is reserved for the examiner / AI only. */
+/* ============================================================ */
+/* Faces are self-hosted by next/font in layout.tsx: Public Sans (documentation sans:
+   UI, labels, numerals), Source Serif 4 (question text & prose), JetBrains Mono (code views only) */
+@theme inline {
+  --font-serif: var(--font-source-serif), Georgia, serif;
+  --font-sans: var(--font-public-sans), -apple-system, 'Segoe UI', sans-serif;
+  --font-mono: var(--font-jetbrains-mono), ui-monospace, monospace;
 }
 
+@theme {
+
+  /* Shell (dark desk) */
+  --color-shell: #15181c;
+  --color-shell-raised: #1c2127;
+  --color-shell-line: #2e343c;
+  --color-shell-ink: #e9ecef;
+  --color-shell-muted: #a4adb8;
+
+  /* Paper (script stock) */
+  --color-paper: #ffffff;
+  --color-paper-tint: #f4f6f8;
+  --color-paper-rule: #d9dde2;
+  --color-paper-rule-strong: #9aa3ae;
+  --color-ink: #111418;
+  --color-ink-muted: #4b5563;
+  --color-ink-hover: #2a3038;
+  --color-slip-hover: #dfe3e8;
+  --color-ruling: #e6e9ed;
+  --color-selection: #cdd5e0;
+
+  /* Ink roles */
+  --color-student: #1a2238;
+  --color-examiner: #2743d6;
+  --color-examiner-on-shell: #9db0ff;
+  --color-awarded: #0e7a4f;
+  --color-awarded-on-shell: #5cc99a;
+  --color-lost: #c8321e;
+  --color-lost-on-shell: #ff8a73;
+  --color-lost-deep: #a8281a;
+  --color-ecf: #8a5a00;
+  --color-ecf-on-shell: #e8b45a;
+
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@layer components {
+  /* Buttons: square-cornered report controls, 44px targets, no glow */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 44px;
+    padding: 0 18px;
+    border: 1px solid transparent;
+    border-radius: 2px;
+    font-family: var(--font-sans);
+    font-size: 15px;
+    font-weight: 600;
+    line-height: 1;
+    white-space: nowrap;
+    cursor: pointer;
+    text-decoration: none;
+    transition: background-color 160ms var(--ease-out-expo), border-color 160ms var(--ease-out-expo), color 160ms var(--ease-out-expo),
+      transform 90ms var(--ease-out-expo);
+  }
+  /* Pressed: the control gives under the finger, then springs back flat */
+  .btn:active:not(:disabled) {
+    transform: translateY(1px);
+  }
+  .btn:disabled {
+    cursor: not-allowed;
+    opacity: 0.45;
+  }
+  .btn-sm {
+    min-height: 36px;
+    padding: 0 12px;
+    font-size: 14px;
+  }
+  /* Primary in the shell: a paper slip */
+  .btn-slip {
+    background-color: var(--color-paper);
+    color: var(--color-ink);
+  }
+  .btn-slip:hover:not(:disabled) {
+    background-color: var(--color-slip-hover);
+  }
+  /* Primary on paper: solid report black */
+  .btn-ink {
+    background-color: var(--color-ink);
+    color: var(--color-paper);
+  }
+  .btn-ink:hover:not(:disabled) {
+    background-color: var(--color-ink-hover);
+  }
+  .btn-quiet-shell {
+    background-color: transparent;
+    border-color: var(--color-shell-line);
+    color: var(--color-shell-ink);
+  }
+  .btn-quiet-shell:hover:not(:disabled) {
+    border-color: var(--color-shell-muted);
+  }
+  .btn-quiet-paper {
+    background-color: var(--color-paper);
+    border-color: var(--color-paper-rule-strong);
+    color: var(--color-ink);
+  }
+  .btn-quiet-paper:hover:not(:disabled) {
+    background-color: var(--color-paper-tint);
+  }
+  .btn-destructive {
+    background-color: var(--color-lost);
+    color: var(--color-paper);
+  }
+  .btn-destructive:hover:not(:disabled) {
+    background-color: var(--color-lost-deep);
+  }
+
+  /* Focus: ink on paper, paper on shell. Never examiner blue. */
+  .shell-surface :focus-visible,
+  .btn-slip:focus-visible,
+  .btn-quiet-shell:focus-visible {
+    outline: 2px solid var(--color-paper);
+    outline-offset: 2px;
+  }
+  .paper-surface :focus-visible,
+  .btn-ink:focus-visible,
+  .btn-quiet-paper:focus-visible {
+    outline: 2px solid var(--color-ink);
+    outline-offset: 2px;
+  }
+
+  /* The script sheet */
+  .script-sheet {
+    background-color: var(--color-paper);
+    color: var(--color-ink);
+    border-radius: 2px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.35), 0 12px 32px -16px rgba(0, 0, 0, 0.6);
+  }
+
+  /* Ruled working area: 28px ruling */
+  .ruled {
+    background-image: linear-gradient(to bottom, var(--color-ruling) 1px, transparent 1px);
+    background-size: 100% 28px;
+  }
+
+  /* Report label: small sans, tracked, never below 12px */
+  .report-label {
+    font-family: var(--font-sans);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  .tabular {
+    font-variant-numeric: tabular-nums lining-nums;
+  }
+  /* Report numerals: serif figures always line up, never bounce as old-style */
+  .font-serif {
+    font-variant-numeric: lining-nums;
+  }
+
+  /* Native dialog primitive */
+  .report-dialog {
+    margin: auto;
+    padding: 0;
+    border: 0;
+    border-radius: 2px;
+    background: var(--color-paper);
+    color: var(--color-ink);
+    max-width: min(480px, calc(100vw - 32px));
+    width: 100%;
+    box-shadow: 0 24px 64px -24px rgba(0, 0, 0, 0.7);
+  }
+  .report-dialog::backdrop {
+    background: rgba(10, 12, 15, 0.72);
+  }
+}
+
+/* ============================================================ */
+/* MOTION: rules draw, ink writes in, numbers tick, paper is    */
+/* laid on the desk. Nothing floats, fades up, pulses or glows. */
+/* Delays come from --d so a sequence is authored in markup.    */
+/* ============================================================ */
+
+/* A rule draws across from the left */
+@keyframes rule-draw {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+.animate-rule-draw {
+  transform-origin: left center;
+  animation: rule-draw 520ms var(--ease-out-expo) both;
+  animation-delay: var(--d, 0ms);
+}
+
+/* A margin rule draws down from the top */
+@keyframes rule-draw-y {
+  from {
+    transform: scaleY(0);
+  }
+  to {
+    transform: scaleY(1);
+  }
+}
+.animate-rule-draw-y {
+  transform-origin: center top;
+  animation: rule-draw-y 520ms var(--ease-out-expo) both;
+  animation-delay: var(--d, 0ms);
+}
+
+/* Ink writes in from the left, like a pen stroke */
+@keyframes ink-in {
+  from {
+    clip-path: inset(0 100% 0 0);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+  }
+}
+.animate-ink-in {
+  animation: ink-in 420ms var(--ease-out-expo) backwards;
+  animation-delay: var(--d, 0ms);
+}
+.animate-ink-in-fast {
+  animation: ink-in 240ms var(--ease-out-expo) backwards;
+  animation-delay: var(--d, 0ms);
+}
+
+/* A drawn glyph (tick, cross, arrow, the Criterion mark's tick) is stroked by the pen.
+   Paths carry pathLength="1" so one dash covers any shape. */
+@keyframes stroke-draw {
+  from {
+    stroke-dashoffset: 1;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+@keyframes stroke-redraw {
+  from {
+    stroke-dashoffset: 1;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+.draw-stroke :is(path, line, polyline, rect) {
+  stroke-dasharray: 1 1;
+  animation: stroke-draw 380ms var(--ease-out-expo) both;
+  animation-delay: var(--d, 0ms);
+}
+/* Icon-set glyphs have no pathLength: a dash longer than any 24px stroke does the same job */
+@keyframes stroke-draw-icon {
+  from {
+    stroke-dashoffset: 40;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+.draw-icon :is(path, polyline) {
+  stroke-dasharray: 40 40;
+  animation: stroke-draw-icon 360ms var(--ease-out-expo) both;
+}
+
+/* The Criterion mark signs itself: the tick is written in once, and again under the pointer */
+.mark-tick {
+  stroke-dasharray: 1 1;
+  animation: stroke-draw 640ms var(--ease-out-expo) 180ms both;
+}
+:is(a, button):hover .mark-tick {
+  animation: stroke-redraw 520ms var(--ease-out-expo) both;
+}
+
+/* Paper is laid on the desk: a sheet feeds out top to bottom, shadow and all.
+   Every script, report and notice sheet arrives this way. `backwards` drops the
+   clip once the sheet is down, so nothing inside is ever clipped at rest. */
+@keyframes sheet-feed {
+  from {
+    clip-path: inset(0 -48px 100% -48px);
+  }
+  to {
+    clip-path: inset(-48px -48px -48px -48px);
+  }
+}
+/* Turning the page: the next page is revealed from the fore-edge, the previous one from the spine */
+@keyframes sheet-turn-forward {
+  from {
+    clip-path: inset(-48px -48px -48px 100%);
+  }
+  to {
+    clip-path: inset(-48px -48px -48px -48px);
+  }
+}
+@keyframes sheet-turn-back {
+  from {
+    clip-path: inset(-48px 100% -48px -48px);
+  }
+  to {
+    clip-path: inset(-48px -48px -48px -48px);
+  }
+}
+.script-sheet {
+  animation: sheet-feed 620ms var(--ease-out-expo) backwards;
+  animation-delay: var(--d, 0ms);
+}
+[data-turn='forward'] > .script-sheet {
+  animation: sheet-turn-forward 460ms var(--ease-out-expo) backwards;
+}
+[data-turn='back'] > .script-sheet {
+  animation: sheet-turn-back 460ms var(--ease-out-expo) backwards;
+}
+
+/* Dialogs are sheets too; the desk dims behind them */
+@keyframes backdrop-dim {
+  from {
+    opacity: 0;
+  }
+}
+.report-dialog[open] {
+  animation: sheet-feed 360ms var(--ease-out-expo) backwards;
+}
+.report-dialog[open]::backdrop,
+.drawer[open]::backdrop {
+  animation: backdrop-dim 240ms ease-out backwards;
+}
+/* Drawers come in from the edge they live on */
+@keyframes drawer-in {
+  from {
+    transform: translateX(100%);
+  }
+}
+.drawer[open] {
+  animation: drawer-in 420ms var(--ease-out-expo) backwards;
+}
+
+/* The active slip wipes across its segment, the way a highlighter crosses a line.
+   The fill is a background image sized 0 to 100%; the state lives in ARIA. */
+.wipe {
+  background-image: linear-gradient(var(--wipe, var(--color-paper)), var(--wipe, var(--color-paper)));
+  background-repeat: no-repeat;
+  background-position: left center;
+  background-size: 0% 100%;
+  transition: background-size 300ms var(--ease-out-expo), color 220ms var(--ease-out-expo), background-color 160ms var(--ease-out-expo);
+}
+.wipe:is([aria-current='page'], [aria-current='step'], [aria-current='true'], [aria-pressed='true'], [aria-selected='true']) {
+  background-size: 100% 100%;
+}
+
+/* A highlighter pass across a line (a formula the tutor points to) */
+@keyframes highlighter-pass {
+  from {
+    background-size: 0% 100%;
+  }
+  to {
+    background-size: 100% 100%;
+  }
+}
+.highlighter-pass {
+  background-image: linear-gradient(var(--color-selection), var(--color-selection));
+  background-repeat: no-repeat;
+  background-position: left center;
+  animation: highlighter-pass 700ms var(--ease-out-expo) 250ms both;
+}
+
+/* Underline rules draw under a link on hover and stay under the current page */
+.rule-link {
+  position: relative;
+}
+.rule-link::after {
+  content: '';
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: 9px;
+  height: 1px;
+  background: currentColor;
+  transform: scaleX(0);
+  transform-origin: right center;
+  transition: transform 360ms var(--ease-out-expo);
+}
+.rule-link:hover::after,
+.rule-link[aria-current='page']::after {
+  transform: scaleX(1);
+  transform-origin: left center;
+}
+
+/* Work in progress: a pen stroke drawn along a hairline, lifted, drawn again.
+   Only ever shown while something is actually being done. */
+@keyframes rule-working {
+  0% {
+    transform: scaleX(0);
+    transform-origin: left center;
+  }
+  48% {
+    transform: scaleX(1);
+    transform-origin: left center;
+  }
+  52% {
+    transform: scaleX(1);
+    transform-origin: right center;
+  }
+  100% {
+    transform: scaleX(0);
+    transform-origin: right center;
+  }
+}
+.rule-working {
+  position: relative;
+  height: 2px;
+  overflow: hidden;
+}
+.rule-working::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: currentColor;
+  animation: rule-working 1500ms var(--ease-out-expo) infinite;
+}
+
+/* Handwriting down the page: a soft pen edge travels from the first line to the last */
+@property --write {
+  syntax: '<length-percentage>';
+  inherits: false;
+  initial-value: 100%;
+}
+@keyframes write-down {
+  from {
+    --write: -2em;
+  }
+  to {
+    --write: 100%;
+  }
+}
+.animate-write-down {
+  -webkit-mask-image: linear-gradient(to bottom, #000 var(--write), transparent calc(var(--write) + 1.75em));
+  mask-image: linear-gradient(to bottom, #000 var(--write), transparent calc(var(--write) + 1.75em));
+  animation: write-down var(--write-duration, 700ms) cubic-bezier(0.33, 0.8, 0.45, 1) backwards;
+  animation-delay: var(--d, 0ms);
+}
+
+/* Rows of a table ink in as the table comes into view, top to bottom.
+   useRevealOnView marks the container; until then the rows wait on their first frame. */
+.reveal-item {
+  animation: ink-in 460ms var(--ease-out-expo) backwards;
+  animation-delay: calc(80ms + min(var(--i, 0), 10) * 55ms);
+}
+[data-reveal]:not([data-revealed]) .reveal-item {
+  animation-play-state: paused;
+}
+
+/* A deleted session is struck through in red before it leaves the table */
+.strike-rule {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  width: var(--row-w, 100%);
+  height: 1.5px;
+  background: var(--color-lost-on-shell);
+  pointer-events: none;
+  animation: rule-draw 420ms var(--ease-out-expo) both;
+  animation-delay: var(--d, 0ms);
+  transform-origin: left center;
+}
+
+/* Graphite desk: native controls and scrollbars render dark */
 :root {
-  /* ============================================================ */
-  /* CLAUDE.COM DESIGN SYSTEM TOKENS (from DESIGN.md)             */
-  /* ============================================================ */
-
-  /* Brand & Accent */
-  --primary: #cc785c;              /* Signature Anthropic Warm Coral */
-  --primary-active: #b86247;       /* Press / hover-darker variant */
-  --primary-disabled: #3d3b36;     /* Dark disabled state */
-  --accent-teal: #5db8a6;          /* Secondary product surface accent */
-  --accent-amber: #e8a55a;         /* Companion warm tone for ECF & badges */
-
-  /* Surface - Permanent Claude Dark Mode */
-  --canvas: #181715;               /* Dominant Claude obsidian canvas */
-  --surface-soft: #1f1e1b;         /* Subtle section dividers & bands */
-  --surface-card: #252320;         /* Elevated feature cards & dialogs */
-  --surface-cream-strong: #2c2a26; /* Highlighted cards & active tabs */
-  --surface-dark: #141413;         /* Deepest surface */
-  --surface-dark-elevated: #252320;/* Elevated cards inside dark bands */
-  --surface-dark-soft: #1f1e1b;    /* Code block backgrounds */
-  --hairline: rgba(255, 255, 255, 0.08); /* 1px border tone on dark */
-  --hairline-soft: rgba(255, 255, 255, 0.05); /* Barely-visible divider */
-
-  /* Text - Permanent Claude Dark Mode */
-  --ink: #faf9f5;                  /* Headlines & primary text */
-  --body-strong: #f3f3ee;          /* Emphasized paragraphs & lead text */
-  --body: #d6cfc5;                 /* Default running text */
-  --muted: #a09d95;                /* Subheadings & breadcrumbs */
-  --muted-soft: #85827a;           /* Captions & fine-print */
-  --on-primary: #ffffff;           /* Text on coral buttons */
-  --on-dark: #faf9f5;              /* Cream-tinted white on dark surfaces */
-  --on-dark-soft: #a09d95;         /* Secondary labels on dark surfaces */
-
-  /* Semantic Status */
-  --success: #5db872;              /* Full marks / correct */
-  --warning: #d4a017;              /* Warning callouts */
-  --error: #c64545;                /* Lost marks / error */
-
-  /* Examination Evaluation Semantics (Claude Palette) */
-  --mark-method: #5db8a6;          /* Method mark (Teal) */
-  --mark-accuracy: #5db872;        /* Accuracy mark (Green) */
-  --mark-reasoning: #7c6fcd;       /* Reasoning mark (Purple) */
-  --mark-ecf: #e8a55a;             /* Error Carried Forward (Amber) */
-  --mark-error: #c64545;           /* Forfeited marks (Red) */
-
-  /* Backward Compatibility Mappings */
-  --background: #181715;
-  --foreground: #faf9f5;
-  --card: #252320;
-  --card-foreground: #faf9f5;
-  --border: rgba(255, 255, 255, 0.08);
-  --cursor-primary: #cc785c;
-  --cursor-primary-active: #b86247;
-  --cursor-canvas: #181715;
-  --cursor-canvas-soft: #1f1e1b;
-  --cursor-surface-card: #252320;
-  --cursor-surface-strong: #2c2a26;
-  --cursor-hairline: rgba(255, 255, 255, 0.08);
-  --cursor-text-strong: #faf9f5;
-  --cursor-text-body: #d6cfc5;
-  --cursor-text-muted: #a09d95;
+  color-scheme: dark;
 }
 
 body {
-  background-color: var(--canvas);
-  color: var(--ink);
+  background-color: var(--color-shell);
+  color: var(--color-shell-ink);
   font-family: var(--font-sans);
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
 }
 
-/* ============================================================ */
-/* CLAUDE.COM TYPOGRAPHY SCALE (from DESIGN.md)                 */
-/* ============================================================ */
-
-.font-serif-display {
-  font-family: var(--font-serif);
-  font-weight: 400;
-  letter-spacing: -0.025em;
-}
-
-.display-xl {
-  font-family: var(--font-serif);
-  font-size: clamp(36px, 5vw, 64px);
-  font-weight: 400;
-  line-height: 1.05;
-  letter-spacing: -1.5px;
-  color: var(--ink);
-}
-
-.display-lg {
-  font-family: var(--font-serif);
-  font-size: clamp(28px, 4vw, 48px);
-  font-weight: 400;
-  line-height: 1.1;
-  letter-spacing: -1px;
-  color: var(--ink);
-}
-
-.display-md {
-  font-family: var(--font-serif);
-  font-size: clamp(24px, 3vw, 36px);
-  font-weight: 400;
-  line-height: 1.15;
-  letter-spacing: -0.5px;
-  color: var(--ink);
-}
-
-.display-sm {
-  font-family: var(--font-serif);
-  font-size: 28px;
-  font-weight: 400;
-  line-height: 1.2;
-  letter-spacing: -0.3px;
-  color: var(--ink);
-}
-
-.title-lg {
-  font-family: var(--font-sans);
-  font-size: 22px;
-  font-weight: 500;
-  line-height: 1.3;
-  color: var(--ink);
-}
-
-.title-md {
-  font-family: var(--font-sans);
-  font-size: 18px;
-  font-weight: 500;
-  line-height: 1.4;
-  color: var(--ink);
-}
-
-.title-sm {
-  font-family: var(--font-sans);
-  font-size: 16px;
-  font-weight: 500;
-  line-height: 1.4;
-  color: var(--ink);
-}
-
-.body-md {
-  font-family: var(--font-sans);
-  font-size: 16px;
-  font-weight: 400;
-  line-height: 1.55;
-  color: var(--body);
-}
-
-.body-sm {
-  font-family: var(--font-sans);
-  font-size: 14px;
-  font-weight: 400;
-  line-height: 1.55;
-  color: var(--muted);
-}
-
-.caption {
-  font-family: var(--font-sans);
-  font-size: 13px;
-  font-weight: 500;
-  line-height: 1.4;
-}
-
-.caption-uppercase {
-  font-family: var(--font-sans);
-  font-size: 12px;
-  font-weight: 500;
-  line-height: 1.4;
-  letter-spacing: 1.5px;
-  text-transform: uppercase;
-}
-
-.font-mono-code {
-  font-family: var(--font-mono);
-}
-
-/* ============================================================ */
-/* CLAUDE.COM BUTTONS & COMPONENTS (from DESIGN.md)             */
-/* ============================================================ */
-
-.claude-btn-primary,
-.examon-btn-primary,
-.cursor-btn-primary {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  background-color: var(--primary);
-  color: var(--on-primary);
-  font-family: var(--font-sans);
-  font-size: 14px;
-  font-weight: 500;
-  height: 40px;
-  min-height: 40px;
-  padding: 0 20px;
-  border-radius: 8px;
-  transition: background-color 0.15s ease, transform 0.1s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.15s ease;
-  cursor: pointer;
-  border: none;
-  text-decoration: none;
-  white-space: nowrap;
-}
-
-.claude-btn-primary:hover,
-.examon-btn-primary:hover,
-.cursor-btn-primary:hover {
-  background-color: var(--primary-active);
-}
-
-.claude-btn-primary:active,
-.examon-btn-primary:active,
-.cursor-btn-primary:active {
-  background-color: var(--primary-active);
-  transform: scale(0.98);
-}
-
-.claude-btn-secondary,
-.examon-btn-outline,
-.cursor-btn-secondary {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  background-color: var(--canvas);
-  color: var(--ink);
-  border: 1px solid var(--hairline);
-  font-family: var(--font-sans);
-  font-size: 14px;
-  font-weight: 500;
-  height: 40px;
-  min-height: 40px;
-  padding: 0 20px;
-  border-radius: 8px;
-  transition: background-color 0.15s ease, border-color 0.15s ease, transform 0.1s cubic-bezier(0.16, 1, 0.3, 1);
-  cursor: pointer;
-  text-decoration: none;
-  white-space: nowrap;
-}
-
-.claude-btn-secondary:hover,
-.examon-btn-outline:hover,
-.cursor-btn-secondary:hover {
-  background-color: #312e2a;
-  border-color: rgba(255, 255, 255, 0.15);
-}
-
-.claude-btn-secondary:active,
-.examon-btn-outline:active,
-.cursor-btn-secondary:active {
-  background-color: #3b3732;
-  transform: scale(0.98);
-}
-
-.claude-btn-secondary-on-dark {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  background-color: var(--surface-dark-elevated);
-  color: var(--on-dark);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  font-family: var(--font-sans);
-  font-size: 14px;
-  font-weight: 500;
-  height: 40px;
-  min-height: 40px;
-  padding: 0 20px;
-  border-radius: 8px;
-  transition: background-color 0.15s ease, transform 0.1s cubic-bezier(0.16, 1, 0.3, 1);
-  cursor: pointer;
-  text-decoration: none;
-  white-space: nowrap;
-}
-
-.claude-btn-secondary-on-dark:hover {
-  background-color: #312e2a;
-}
-
-.claude-btn-secondary-on-dark:active {
-  background-color: #3b3732;
-  transform: scale(0.98);
-}
-
-/* Claude Surfaces */
-.claude-card-cream {
-  background-color: var(--surface-card);
-  border: 1px solid var(--hairline);
-  border-radius: 12px;
-}
-
-.claude-card-dark {
-  background-color: var(--surface-dark);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 12px;
-  color: var(--on-dark);
-}
-
-.claude-card-coral {
-  background-color: var(--primary);
-  border-radius: 12px;
-  color: var(--on-primary);
-}
-
-/* Selection */
+/* Selection: highlighter on paper, paper on shell */
 ::selection {
-  background-color: rgba(204, 120, 92, 0.28);
-  color: #faf9f5;
+  background-color: var(--color-selection);
+  color: var(--color-ink);
 }
 
-/* Custom Minimal Scrollbar */
+/* Scrollbars: graphite rail */
 * {
   scrollbar-width: thin;
-  scrollbar-color: #3e3b35 #181715;
+  scrollbar-color: #3a414b transparent;
 }
 
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 8px;
+  height: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  background: var(--canvas);
+  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #3e3b35;
-  border-radius: 9999px;
+  background: #3a414b;
+  border-radius: 0;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #4f4b44;
-}
-
-/* Focus Ring */
-.focus-ring {
-  outline: none;
-}
-
-.focus-ring:focus-visible {
-  outline: 2px solid var(--primary);
-  outline-offset: 2px;
+  background: #4b5563;
 }
 
 /* KaTeX Harmonization */
@@ -366,331 +532,26 @@ body {
   padding: 6px 0;
 }
 
-/* ============================================================ */
-/* HIGH-END AGENCY VISUAL DESIGN TOKENS (from SKILL.md)         */
-/* ============================================================ */
-
-/* Fluid cubic-bezier timing tokens */
-.transition-fluid {
-  transition: all 500ms cubic-bezier(0.32, 0.72, 0, 1);
-}
-
-.transition-spring {
-  transition: all 400ms cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-/* Eyebrow Micro-Badges */
-.eyebrow-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  border-radius: 9999px;
-  padding: 4px 14px;
-  font-family: var(--font-mono);
-  font-size: 10px;
-  font-weight: 600;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-}
-
-/* Double-Bezel (Doppelrand) Architecture: Claude Obsidian Surface */
-.double-bezel-outer-cream,
-.double-bezel-outer-dark {
-  background-color: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 2rem;
-  padding: 6px;
-  box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.5);
-}
-
-.double-bezel-inner-cream,
-.double-bezel-inner-dark {
-  background-color: var(--surface-card);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: calc(2rem - 6px);
-  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.12), 0 2px 8px rgba(0, 0, 0, 0.2);
-}
-
-/* Button-in-Button Trailing Icon Pod Architecture */
-.claude-btn-pill-primary {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
-  background-color: var(--primary);
-  color: #ffffff;
-  font-family: var(--font-sans);
-  font-size: 13px;
-  font-weight: 500;
-  height: 44px;
-  padding: 0 8px 0 22px;
-  border-radius: 9999px;
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  box-shadow: 0 2px 6px rgba(169, 78, 50, 0.25), inset 0 1px 1px rgba(255, 255, 255, 0.3);
-  transition: all 300ms cubic-bezier(0.32, 0.72, 0, 1);
-  cursor: pointer;
-  text-decoration: none;
-  white-space: nowrap;
-}
-
-.claude-btn-pill-primary:hover {
-  background-color: var(--primary-active);
-  box-shadow: 0 4px 14px rgba(169, 78, 50, 0.35);
-}
-
-.claude-btn-pill-primary:active {
-  transform: scale(0.98);
-}
-
-.claude-btn-pill-secondary {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
-  background-color: var(--canvas);
-  color: var(--ink);
-  border: 1px solid var(--hairline);
-  font-family: var(--font-sans);
-  font-size: 13px;
-  font-weight: 500;
-  height: 44px;
-  padding: 0 8px 0 22px;
-  border-radius: 9999px;
-  box-shadow: 0 1px 3px rgba(20, 20, 19, 0.04), inset 0 1px 1px rgba(255, 255, 255, 0.8);
-  transition: all 300ms cubic-bezier(0.32, 0.72, 0, 1);
-  cursor: pointer;
-  text-decoration: none;
-  white-space: nowrap;
-}
-
-.claude-btn-pill-secondary:hover {
-  background-color: var(--surface-soft);
-  border-color: #d6cfc5;
-}
-
-.claude-btn-pill-secondary:active {
-  transform: scale(0.98);
-}
-
-.claude-btn-pill-dark {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
-  background-color: var(--surface-dark-elevated);
-  color: var(--on-dark);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  font-family: var(--font-sans);
-  font-size: 13px;
-  font-weight: 500;
-  height: 44px;
-  padding: 0 8px 0 22px;
-  border-radius: 9999px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2), inset 0 1px 1px rgba(255, 255, 255, 0.1);
-  transition: all 300ms cubic-bezier(0.32, 0.72, 0, 1);
-  cursor: pointer;
-  text-decoration: none;
-  white-space: nowrap;
-}
-
-.claude-btn-pill-dark:hover {
-  background-color: #312e2a;
-  border-color: rgba(255, 255, 255, 0.18);
-}
-
-.claude-btn-pill-dark:active {
-  transform: scale(0.98);
-}
-
-.btn-icon-bubble {
-  width: 28px;
-  height: 28px;
-  border-radius: 9999px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: transform 300ms cubic-bezier(0.32, 0.72, 0, 1);
-  flex-shrink: 0;
-}
-
-.claude-btn-pill-primary .btn-icon-bubble {
-  background-color: rgba(255, 255, 255, 0.2);
-  color: #ffffff;
-}
-
-.claude-btn-pill-primary:hover .btn-icon-bubble {
-  transform: translate(2px, -1px) scale(1.08);
-}
-
-.claude-btn-pill-secondary .btn-icon-bubble {
-  background-color: rgba(20, 20, 19, 0.06);
-  color: var(--ink);
-}
-
-.claude-btn-pill-secondary:hover .btn-icon-bubble {
-  transform: translate(2px, -1px) scale(1.08);
-}
-
-.claude-btn-pill-dark .btn-icon-bubble {
-  background-color: rgba(255, 255, 255, 0.12);
-  color: var(--on-dark);
-}
-
-.claude-btn-pill-dark:hover .btn-icon-bubble {
-  transform: translate(2px, -1px) scale(1.08);
-}
-
-/* ============================================================ */
-/* IMPECCABLE ANIMATE: PURPOSEFUL MOTION DESIGN SYSTEM         */
-/* ============================================================ */
-
-/* 1. Focal Entrance Sequence (Home Hero & Surfaces) */
-@keyframes heroEntrance {
-  0% {
-    opacity: 0;
-    transform: translateY(14px);
-  }
-  100% {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes heroCardEntrance {
-  0% {
-    opacity: 0;
-    transform: translateY(18px) scale(0.985);
-  }
-  100% {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-}
-
-.animate-hero-eyebrow {
-  animation: heroEntrance 500ms cubic-bezier(0.16, 1, 0.3, 1) 80ms both;
-}
-
-.animate-hero-headline {
-  animation: heroEntrance 600ms cubic-bezier(0.16, 1, 0.3, 1) 180ms both;
-}
-
-.animate-hero-sub {
-  animation: heroEntrance 600ms cubic-bezier(0.16, 1, 0.3, 1) 280ms both;
-}
-
-.animate-hero-actions {
-  animation: heroEntrance 600ms cubic-bezier(0.16, 1, 0.3, 1) 380ms both;
-}
-
-.animate-hero-card {
-  animation: heroCardEntrance 700ms cubic-bezier(0.16, 1, 0.3, 1) 220ms both;
-}
-
-/* 2. Tactile Feedback: Attach Snap */
-@keyframes attachSettle {
-  0% {
-    transform: scale(0.97);
-    opacity: 0.7;
-  }
-  60% {
-    transform: scale(1.015);
-    opacity: 1;
-  }
-  100% {
-    transform: scale(1);
-    opacity: 1;
-  }
-}
-
-.animate-attach-settle {
-  animation: attachSettle 280ms cubic-bezier(0.16, 1, 0.3, 1) both;
-}
-
-/* 3. Authoritative Senior Examiner Radar Scan */
-@keyframes beamScan {
-  0% {
-    transform: translateX(-100%);
-  }
-  100% {
-    transform: translateX(250%);
-  }
-}
-
-.animate-beam-scan {
-  animation: beamScan 2.4s cubic-bezier(0.4, 0, 0.2, 1) infinite;
-}
-
-/* 4. Examiner Stamp Reveal (Marking / Completed Milestones) */
-@keyframes stampReveal {
-  0% {
-    transform: scale(1.25);
-    opacity: 0;
-  }
-  70% {
-    transform: scale(0.96);
-    opacity: 1;
-  }
-  100% {
-    transform: scale(1);
-    opacity: 1;
-  }
-}
-
-.animate-stamp-reveal {
-  animation: stampReveal 240ms cubic-bezier(0.16, 1, 0.3, 1) both;
-}
-
-/* 5. Natural Message & Feedback Arrival */
-@keyframes messageEnter {
-  0% {
-    opacity: 0;
-    transform: translateY(8px);
-  }
-  100% {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.animate-message-enter {
-  animation: messageEnter 240ms cubic-bezier(0.16, 1, 0.3, 1) both;
-}
-
-/* 6. Subtle Breathing Status Pulse */
-@keyframes pulseSubtle {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.5;
-  }
-}
-
-.animate-pulse-subtle {
-  animation: pulseSubtle 2.2s ease-in-out infinite;
-}
-
-/* Subtle Fixed Paper Grain / Texture Overlay */
-body::before {
-  content: "";
-  position: fixed;
-  inset: 0;
-  z-index: 45;
-  pointer-events: none;
-  opacity: 0.025;
-  background-image: radial-gradient(#141413 0.75px, transparent 0.75px);
-  background-size: 16px 16px;
-}
-
-/* Reduced Motion Override (Section 6.B) */
+/* Reduced Motion Override (Section 6.B): every animation and transition collapses to an instant state change */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
   *::after {
     animation-duration: 0.01ms !important;
+    animation-delay: 0s !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+    transition-delay: 0s !important;
     scroll-behavior: auto !important;
+  }
+  .reveal-item,
+  .animate-write-down {
+    animation: none !important;
+  }
+  /* Work in progress still reads as a partly drawn rule, held still */
+  .rule-working::before {
+    animation: none !important;
+    transform: scaleX(0.4);
+    transform-origin: left center;
   }
 }

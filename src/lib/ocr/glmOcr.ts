@@ -43,21 +43,21 @@ export const ZAI_API_ENDPOINT = 'https://api.z.ai/api/paas/v4/layout_parsing';
 export const GLM_OCR_MODEL = 'glm-ocr';
 
 /**
- * Resolves the active Z.AI / GLM-OCR API key from request, environment, or config.
+ * Resolves the student's own Z.AI / GLM-OCR API key from the request. The server holds no key.
  */
 export function getZaiApiKey(customKey?: string): string | null {
-  const key = customKey || process.env.ZAI_API_KEY || process.env.GLM_API_KEY;
+  const key = customKey;
   if (!key || !key.trim()) return null;
   return key.trim();
 }
 
 /**
- * Normalizes input into a valid Z.AI file argument (URL or base64 Data URI).
+ * Normalizes input into a base64 Data URI for Z.AI. URLs are refused, so Z.AI is never asked to fetch one.
  */
 export function normalizeFileInput(input: string, mimeType = 'image/png'): string {
   const trimmed = input.trim();
-  if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
-    return trimmed;
+  if (/^[a-z][a-z0-9+.-]*:\/\//i.test(trimmed)) {
+    throw new Error('GLM-OCR accepts inline files only, not URLs.');
   }
   if (trimmed.startsWith('data:')) {
     return trimmed;
@@ -75,7 +75,7 @@ export async function parseWithGlmOcr(
 ): Promise<GlmOcrResponse> {
   const key = getZaiApiKey(apiKey);
   if (!key) {
-    throw new Error('Z.AI API Key is missing. Please configure ZAI_API_KEY in .env.local or via AI Studio Workbench.');
+    throw new Error('Z.AI API key is missing.');
   }
 
   const normalizedFile = normalizeFileInput(fileInput, mimeType);
@@ -94,6 +94,7 @@ export async function parseWithGlmOcr(
       'Content-Type': 'application/json',
     },
     body: JSON.stringify(payload),
+    signal: AbortSignal.timeout(60_000),
   });
 
   if (!response.ok) {

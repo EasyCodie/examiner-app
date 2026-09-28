@@ -1,254 +1,215 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import {
-  QuestionItem,
-  PedagogicalTier,
-  SocraticMessage,
-} from '@/types/exam';
+import { QuestionItem, PedagogicalTier, SocraticMessage } from '@/types/exam';
 import { MathRenderer } from '@/components/common/MathRenderer';
-import {
-  Send,
-  Sparkles,
-  Bot,
-  User,
-  Target,
-  BookOpen,
-  Stethoscope,
-  Unlock,
-  ChevronRight,
-} from 'lucide-react';
+import { BookOpen } from 'lucide-react';
 import { useAppShell } from '@/components/common/AppShell';
+import { ScaffoldLadder } from './ScaffoldLadder';
+import { MarkCodeKey } from '@/components/assessment/MarkCodeKey';
+
+export interface TutorFailure {
+  message: string;
+  needsKey: boolean;
+}
 
 interface SocraticSidebarProps {
   question: QuestionItem;
   currentTier: PedagogicalTier;
-  onSelectTier: (tier: PedagogicalTier) => void;
+  highestTierReached: PedagogicalTier | 0;
   isMarkschemeUnlocked: boolean;
-  onUnlockMarkscheme: () => void;
+  onAskTier: (tier: 1 | 2 | 3) => void;
+  onRequestReveal: () => void;
   messages: SocraticMessage[];
-  onSendMessage: (text: string, requestedTier: PedagogicalTier) => Promise<void>;
+  onSendMessage: (text: string) => Promise<void>;
   isLoading: boolean;
+  failure: TutorFailure | null;
+  onRetry: () => void;
+  /** True when the student's current working is sent along with each message. */
+  workingShared: boolean;
+  /** Called when the unsent message goes from empty to written, or back. */
+  onDraftChange: (hasDraft: boolean) => void;
 }
 
+/**
+ * One entry in the tutor feed. A reply that has just arrived is written down the
+ * page by the tutor's pen, at a pace set by its length; the student's own line
+ * inks in. Entries already on the page when the feed opens are simply there.
+ */
+const FeedEntry: React.FC<{ message: SocraticMessage; className: string; children: React.ReactNode }> = ({
+  message,
+  className,
+  children,
+}) => {
+  const [fresh] = useState(() => Date.now() - Date.parse(message.timestamp) < 4000);
+  if (!fresh) return <div className={className}>{children}</div>;
+  if (message.sender !== 'tutor') return <div className={`${className} animate-ink-in-fast`}>{children}</div>;
+  const duration = Math.min(2200, 450 + message.text.length * 5);
+  return (
+    <div
+      className={`${className} animate-write-down`}
+      style={{ '--write-duration': `${duration}ms` } as React.CSSProperties}
+    >
+      {children}
+    </div>
+  );
+};
+
+/** The Socratic tutor, writing in examiner ink beside the student's script. */
 export const SocraticSidebar: React.FC<SocraticSidebarProps> = ({
   question,
   currentTier,
-  onSelectTier,
+  highestTierReached,
   isMarkschemeUnlocked,
-  onUnlockMarkscheme,
+  onAskTier,
+  onRequestReveal,
   messages,
   onSendMessage,
   isLoading,
+  failure,
+  onRetry,
+  workingShared,
+  onDraftChange,
 }) => {
-  const { hasFormulaBooklet, openFormulaBooklet } = useAppShell();
+  const { hasFormulaBooklet, openFormulaBooklet, openAiStudio } = useAppShell();
   const [inputText, setInputText] = useState('');
-  const messagesContainerRef = useRef<HTMLDivElement>(null);
+  const feedRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (messagesContainerRef.current) {
-      messagesContainerRef.current.scrollTo({
-        top: messagesContainerRef.current.scrollHeight,
-        behavior: 'smooth',
-      });
-    }
-  }, [messages, isLoading]);
+    feedRef.current?.scrollTo({ top: feedRef.current.scrollHeight, behavior: 'smooth' });
+  }, [messages, isLoading, failure]);
 
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!inputText.trim() || isLoading) return;
     const msg = inputText.trim();
     setInputText('');
-    await onSendMessage(msg, currentTier);
-  };
-
-  const handleQuickAction = async (prompt: string, tier: PedagogicalTier) => {
-    onSelectTier(tier);
-    await onSendMessage(prompt, tier);
+    onDraftChange(false);
+    await onSendMessage(msg);
   };
 
   return (
-    <div className="double-bezel-outer-dark h-full">
-      <div className="double-bezel-inner-dark flex flex-col h-full overflow-hidden">
-        {/* Header */}
-        <div className="p-3 px-4 bg-[#252320] border-b border-white/10 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded-lg bg-[#cc785c]/15 flex items-center justify-center text-[#cc785c]">
-              <Bot className="w-3.5 h-3.5" />
-            </div>
-            <span className="text-xs font-medium text-[#faf9f5]">
-              Socratic Tutor
-            </span>
-          </div>
-
-          <span className="eyebrow-pill text-[10px] px-2 py-0.5 bg-[#181715] text-[#cc785c] border border-white/10">
-            Step {currentTier} Active
-          </span>
+    <section aria-label="Tutor" className="script-sheet paper-surface flex flex-col h-full min-h-0">
+      <div className="px-5 pt-5 pb-4 space-y-4 shrink-0">
+        <div className="flex items-baseline justify-between gap-3">
+          <h2 className="font-serif text-[22px] font-semibold text-examiner">Tutor</h2>
+          <p className="text-[14px] text-ink-muted">
+            Command term: <span className="font-semibold text-ink">{question.commandTerm}</span>
+          </p>
         </div>
+        <MarkCodeKey variant="compact" />
+        <ScaffoldLadder
+          currentTier={currentTier}
+          highestTierReached={highestTierReached}
+          isMarkschemeUnlocked={isMarkschemeUnlocked}
+          hasFormulaBooklet={hasFormulaBooklet}
+          disabled={isLoading}
+          onAskTier={onAskTier}
+          onRequestReveal={onRequestReveal}
+        />
+      </div>
 
-        {/* Quick Action Scaffolding Chips */}
-        <div className="p-2.5 bg-[#252320]/70 border-b border-white/10 flex items-center gap-1.5 overflow-x-auto text-[11px] font-mono-code">
-          <button
-            type="button"
-            disabled={isLoading}
-            onClick={() => handleQuickAction(`What does the command term "${question.commandTerm}" mean for this question?`, 1)}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#181715] hover:bg-[#34322d] text-[#a09d96] hover:text-[#faf9f5] border border-white/10 whitespace-nowrap transition-fluid disabled:opacity-40"
-          >
-            <Target className="w-3 h-3 text-[#5db8a6]" />
-            <span>Command Term Help</span>
-          </button>
-
-          <button
-            type="button"
-            disabled={isLoading}
-            onClick={() => handleQuickAction(`Which formula or concept applies to this step?`, 2)}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#181715] hover:bg-[#34322d] text-[#a09d96] hover:text-[#faf9f5] border border-white/10 whitespace-nowrap transition-fluid disabled:opacity-40"
-          >
-            <BookOpen className="w-3 h-3 text-[#e8a55a]" />
-            <span>Formula Clue</span>
-          </button>
-
-          <button
-            type="button"
-            disabled={isLoading}
-            onClick={() => handleQuickAction(`Can you check my current step and see if my working is on the right track?`, 3)}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#181715] hover:bg-[#34322d] text-[#a09d96] hover:text-[#faf9f5] border border-white/10 whitespace-nowrap transition-fluid disabled:opacity-40"
-          >
-            <Stethoscope className="w-3 h-3 text-[#5db8a6]" />
-            <span>Check My Working</span>
-          </button>
-
-          {!isMarkschemeUnlocked && (
-            <button
-              type="button"
-              disabled={isLoading}
-              onClick={onUnlockMarkscheme}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#cc785c]/15 hover:bg-[#cc785c]/25 text-[#cc785c] border border-[#cc785c]/30 whitespace-nowrap transition-fluid"
-            >
-              <Unlock className="w-3 h-3 text-[#cc785c]" />
-              <span>Reveal Markscheme</span>
-            </button>
-          )}
-        </div>
-
-        {/* Messages Feed */}
-        <div ref={messagesContainerRef} className="flex-1 p-4 overflow-y-auto space-y-4 select-text bg-[#181715]">
-          {messages.map((m) => {
-            const isTutor = m.sender === 'tutor';
-            return (
+      <div ref={feedRef} className="flex-1 min-h-[240px] overflow-y-auto px-5 py-4 space-y-5 select-text" aria-live="polite">
+        {messages.map((m) => {
+          const isTutor = m.sender === 'tutor';
+          return (
+            <FeedEntry key={m.id} message={m} className={isTutor ? 'pr-6' : 'pl-10'}>
+              <p className={`text-[12px] font-semibold mb-1 ${isTutor ? 'text-examiner' : 'text-ink-muted text-right'}`}>
+                {isTutor ? `Tutor${m.tierActive ? ` · step ${m.tierActive}` : ''}` : 'You'}
+                {m.unlockedMarkscheme && ' · markscheme'}
+              </p>
               <div
-                key={m.id}
-                className={`flex gap-2.5 animate-message-enter ${isTutor ? 'items-start' : 'items-start flex-row-reverse'}`}
+                className={`text-[15px] leading-relaxed ${
+                  isTutor ? 'text-examiner' : 'text-student bg-paper-tint px-3 py-2'
+                }`}
               >
-                <div
-                  className={`w-6 h-6 rounded-lg flex items-center justify-center shrink-0 mt-0.5 text-xs font-mono-code ${isTutor
-                      ? 'bg-[#252320] text-[#cc785c] border border-white/10'
-                      : 'bg-[#a9583e] text-white'
-                    }`}
-                >
-                  {isTutor ? <Bot className="w-3.5 h-3.5" /> : <User className="w-3.5 h-3.5" />}
+                <MathRenderer content={m.text} lightMode={true} />
+              </div>
+
+              {m.formulaQuote && (
+                <div className="mt-3 border border-paper-rule-strong px-3 py-2.5 space-y-1">
+                  <p className="text-[13px] font-semibold text-ink">{hasFormulaBooklet ? 'Formula clue' : 'Concept clue'}</p>
+                  <div className="text-[14px] text-examiner">
+                    <MathRenderer content={m.formulaQuote} lightMode={true} />
+                  </div>
                 </div>
+              )}
 
-                <div
-                  className={`max-w-[85%] rounded-2xl p-3.5 text-xs leading-relaxed ${isTutor
-                      ? 'bg-[#252320] border border-white/10 text-[#faf9f5] socratic-math'
-                      : 'bg-[#cc785c] text-white shadow-xs'
-                    }`}
+              {hasFormulaBooklet && isTutor && (m.formulaQuote || (m.tierActive === 2 && question.formulaBookletRef)) && (
+                <button
+                  type="button"
+                  onClick={() => openFormulaBooklet(m.formulaQuote || question.formulaBookletRef)}
+                  className="mt-2 btn btn-sm btn-quiet-paper"
                 >
-                  {/* Tier Badge if present */}
-                  {isTutor && m.tierActive && (
-                    <div className="flex items-center gap-2 mb-2 pb-1.5 border-b border-white/10 text-[10px] font-mono-code text-[#cc785c] font-semibold uppercase tracking-wider">
-                      <span>Step {m.tierActive} Hint</span>
-                      {m.unlockedMarkscheme && (
-                        <span className="bg-[#e8a55a]/20 text-[#e8a55a] border border-[#e8a55a]/30 px-1.5 py-0.5 rounded">
-                          Markscheme Unlocked
-                        </span>
-                      )}
-                    </div>
-                  )}
+                  <BookOpen className="w-4 h-4" aria-hidden="true" />
+                  Open in the formula booklet
+                  {question.formulaBookletRef ? ` (${question.formulaBookletRef.split(':')[0]})` : ''}
+                </button>
+              )}
 
-                  {/* Content with LaTeX Math */}
-                  <MathRenderer content={m.text} />
-
-                  {/* Formula Highlight Callout with LaTeX Math Rendering */}
-                  {m.formulaQuote && (
-                    <div className="mt-3 p-3 rounded-xl bg-[#181715] border border-[#5db8a6]/30 text-[11px] text-[#5db8a6]">
-                      <span className="font-semibold font-mono-code block text-[#5db8a6] mb-1">Formula Clue:</span>
-                      <MathRenderer content={m.formulaQuote} className="text-[#5db8a6] text-xs leading-relaxed" />
-                    </div>
-                  )}
-
-                  {/* Interactive Formula Booklet Citation Action Button */}
-                  {hasFormulaBooklet && isTutor && (m.formulaQuote || (m.tierActive === 2 && question.formulaBookletRef)) && (
-                    <button
-                      type="button"
-                      onClick={() => openFormulaBooklet(m.formulaQuote || question.formulaBookletRef)}
-                      className="mt-2.5 w-full flex items-center justify-between gap-2 px-3 py-2 rounded-xl bg-[#cc785c]/15 hover:bg-[#cc785c]/25 border border-[#cc785c]/30 text-[#cc785c] text-[11px] font-mono-code transition-all active:scale-[0.98] group cursor-pointer shadow-xs text-left"
-                    >
-                      <div className="flex items-center gap-2 min-w-0">
-                        <BookOpen className="w-3.5 h-3.5 shrink-0 group-hover:scale-110 transition-transform" />
-                        <span className="font-semibold truncate">
-                          View in Formula Booklet {question.formulaBookletRef ? `(${question.formulaBookletRef.split(':')[0]})` : ''}
-                        </span>
-                      </div>
-                      <ChevronRight className="w-3.5 h-3.5 shrink-0 text-[#cc785c]/70 group-hover:translate-x-0.5 transition-transform" />
-                    </button>
-                  )}
-
-                  {/* Diagnostic Step Highlight with LaTeX Math Rendering */}
-                  {m.diagnosticHighlight && (
-                    <div className="mt-3 p-3 rounded-xl bg-[#181715] border border-[#e8a55a]/30 text-[11px] text-[#e8a55a]">
-                      <span className="font-semibold font-mono-code block text-[#e8a55a] mb-1">Working Feedback:</span>
-                      <MathRenderer content={m.diagnosticHighlight} className="text-[#e8a55a] text-xs leading-relaxed" />
-                    </div>
-                  )}
+              {m.diagnosticHighlight && (
+                <div className="mt-3 border border-paper-rule-strong px-3 py-2.5 space-y-1">
+                  <p className="text-[13px] font-semibold text-ink">On your working</p>
+                  <div className="text-[14px] text-examiner">
+                    <MathRenderer content={m.diagnosticHighlight} lightMode={true} />
+                  </div>
                 </div>
-              </div>
-            );
-          })}
+              )}
+            </FeedEntry>
+          );
+        })}
 
-          {isLoading && (
-            <div className="flex items-center gap-2.5 animate-message-enter">
-              <div className="w-6 h-6 rounded-lg bg-[#252320] border border-white/10 flex items-center justify-center text-[#cc785c] shrink-0">
-                <Sparkles className="w-3.5 h-3.5 animate-spin" />
-              </div>
-              <div className="bg-[#252320] border border-white/10 rounded-xl p-2.5 text-xs text-[#a09d96] flex items-center gap-2 font-mono-code">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#cc785c] animate-ping" />
-                <span>Thinking...</span>
-              </div>
+        {isLoading && (
+          <div className="space-y-2">
+            <p className="text-[14px] text-ink-muted">The tutor is thinking…</p>
+            <div className="rule-working w-24 text-examiner" aria-hidden="true" />
+          </div>
+        )}
+
+        {failure && !isLoading && (
+          <div role="alert" className="border border-lost px-4 py-3 space-y-3">
+            <p className="text-[15px] leading-relaxed text-ink">
+              {failure.needsKey
+                ? 'The tutor needs a valid Gemini API key to reply.'
+                : failure.message}
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {failure.needsKey && (
+                <button type="button" onClick={() => openAiStudio('apiKey')} className="btn btn-sm btn-ink">
+                  Add an API key
+                </button>
+              )}
+              <button type="button" onClick={onRetry} className={`btn btn-sm ${failure.needsKey ? 'btn-quiet-paper' : 'btn-ink'}`}>
+                Try again
+              </button>
             </div>
-          )}
-        </div>
+          </div>
+        )}
+      </div>
 
-        {/* Working Snapshot Attached Indicator */}
-        <div className="px-3.5 py-1.5 bg-[#1f1e1b] border-t border-white/10 flex items-center justify-between text-[10px] font-mono-code text-[#a09d96]">
-          <span className="flex items-center gap-1.5 text-[#5db8a6]">
-            <span className="w-1.5 h-1.5 rounded-full bg-[#5db8a6] animate-pulse" />
-            Working snapshot attached
-          </span>
-          <span className="text-[#a09d96]/60">Gemini 2.5 Vision</span>
-        </div>
-
-        {/* Input Area */}
-        <form onSubmit={handleSend} className="p-3 bg-[#252320] border-t border-white/10 flex items-center gap-2">
+      <form onSubmit={handleSend} className="px-5 pt-3 pb-5 border-t border-paper-rule space-y-2 shrink-0">
+        <label htmlFor="tutor-input" className="sr-only">
+          Message the tutor
+        </label>
+        <div className="flex gap-2">
           <input
+            id="tutor-input"
             type="text"
             value={inputText}
-            onChange={(e) => setInputText(e.target.value)}
-            placeholder={`Ask about ${question.number} or explain your working...`}
+            onChange={(e) => {
+              setInputText(e.target.value);
+              onDraftChange(e.target.value.trim().length > 0);
+            }}
+            placeholder="Explain your step or ask a question"
             disabled={isLoading}
-            className="flex-1 bg-[#181715] border border-white/10 rounded-full px-4 py-2 text-xs text-[#faf9f5] placeholder:text-[#a09d96] outline-none focus:border-[#cc785c] transition-fluid"
+            className="flex-1 min-w-0 min-h-11 border border-paper-rule-strong bg-paper px-3 text-[15px] text-student placeholder:text-ink-muted"
           />
-          <button
-            type="submit"
-            disabled={!inputText.trim() || isLoading}
-            className="w-8 h-8 rounded-full bg-[#cc785c] hover:bg-[#d48469] flex items-center justify-center text-white disabled:opacity-30 transition-spring active:scale-90 shrink-0"
-            title="Send to Tutor"
-          >
-            <Send className="w-3.5 h-3.5" />
+          <button type="submit" disabled={!inputText.trim() || isLoading} className="btn btn-ink">
+            Send
           </button>
-        </form>
-      </div>
-    </div>
+        </div>
+        {workingShared && <p className="text-[13px] text-ink-muted">Your current working is sent with each message.</p>}
+      </form>
+    </section>
   );
 };

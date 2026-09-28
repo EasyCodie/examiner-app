@@ -1,10 +1,10 @@
 import { ExamManifest } from '@/types/exam';
-import { QUESTION_12_MATPLOTLIB_SVG } from '@/lib/graphRenderer';
+import { QUESTION_12_MATPLOTLIB_SVG } from '@/lib/graphs/q12Graph';
 
 export const BUNDLED_MATH_AA_HL: ExamManifest = {
   id: 'math-aa-hl-specimen',
   title: 'Mathematics: analysis and approaches HL',
-  subtitle: 'Paper 1 (Non-Calculator) - Authentic Examiner Specimen',
+  subtitle: 'Paper 1 (Non-Calculator) · IB-style specimen',
   subjectCode: 'MATH_AA_HL_P1',
   category: 'STEM',
   durationMinutes: 120,
@@ -197,7 +197,7 @@ export const BUNDLED_MATH_AA_HL: ExamManifest = {
 export const BUNDLED_ECONOMICS_HL: ExamManifest = {
   id: 'econ-hl-specimen',
   title: 'Economics Higher Level',
-  subtitle: 'Paper 1 (Extended Response) - Authentic Examiner Specimen',
+  subtitle: 'Paper 1 (Extended Response) · IB-style specimen',
   subjectCode: 'ECON_HL_P1',
   category: 'HUMANITIES',
   durationMinutes: 75,
@@ -300,8 +300,8 @@ export const BUNDLED_ECONOMICS_HL: ExamManifest = {
 
 export const MAY_2021_MATH_AA_HL_P1: ExamManifest = {
   id: 'math-aa-hl-may-2021',
-  title: 'Mathematics: analysis and approaches HL',
-  subtitle: 'Paper 1 (Non-Calculator) - May 2021 (TZ1)',
+  title: 'Mathematics: analysis and approaches HL, May 2021',
+  subtitle: 'Paper 1 (Non-Calculator) · Time zone 1',
   subjectCode: 'MATH_AA_HL_P1',
   category: 'STEM',
   durationMinutes: 120,
@@ -921,7 +921,7 @@ export const MAY_2021_MATH_AA_HL_P1: ExamManifest = {
 };
 
 export const ALL_BUNDLED_PAPERS: ExamManifest[] = [
-  MAY_2021_MATH_AA_HL_P1,
   BUNDLED_MATH_AA_HL,
+  MAY_2021_MATH_AA_HL_P1,
   BUNDLED_ECONOMICS_HL
 ];

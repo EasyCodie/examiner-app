@@ -15,12 +15,12 @@ We restructure the application into **Deep Modules** adhering to the [codebase-d
 
 1. **Manifest Ingestion Compiler (`src/lib/ingestion/compiler.ts`)**:
    - Presents a high-leverage in-process interface: `compileExamManifest(paperPdf, markschemePdf, options?)`.
-   - Encapsulates all dual-document GLM-OCR parsing, markscheme binary omission, prompt formulation, multi-model fallback racing, SVG diagram normalization, and schema validation.
+   - Encapsulates all dual-document GLM-OCR parsing, markscheme binary omission, prompt formulation, multi-model fallback under one overall deadline with aborted requests, SVG diagram normalization, and schema validation.
    - `src/app/api/ingest/route.ts` becomes a thin 25-line transport adapter extracting files from `FormData` and delegating to the compiler.
 
 2. **Socratic Tutoring Engine (`src/lib/socratic/tutor.ts`)**:
    - Presents a stateless turn-based interface: `consultSocraticTutor(input: SocraticConsultationInput)`.
-   - Encapsulates conversation history truncation (`slice(-6)`), image snapshot optimization, strict pedagogical tier guardrails (suppressing rubric leaks on Tiers 1–3), and automatic failover to the local simulation engine.
+   - Encapsulates conversation history truncation (`slice(-6)`), image snapshot optimization, and strict pedagogical tier guardrails: the server sets the active tier, and the markscheme enters the prompt only at Tier 4, so Tiers 1–3 cannot leak it. When no model gives a usable reply it throws `TutorUnavailableError` and the student is told to try again; there is no simulated tutor (amended September 2026).
    - `src/app/api/socratic/route.ts` becomes a thin transport adapter.
 
 3. **Session Submission Compiler (`src/lib/session/submissionCompiler.ts`)**:

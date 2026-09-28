@@ -150,6 +150,8 @@ export interface ExamSession {
   timeRemainingSeconds: number;
   durationSeconds: number;
   submissions: Record<string, QuestionSubmission>; // questionId -> submission
+  /** Question Evaluations saved as marking goes, in paper order; gradingResults is set once every question is marked. */
+  questionEvaluations?: QuestionEvaluation[];
   gradingResults?: {
     totalMarksAwarded: number;
     totalPossibleMarks: number;
@@ -168,6 +170,22 @@ export interface ExamSession {
   };
 }
 
+/**
+ * An Exam Session that has started but not been handed in. Autosaved while the
+ * candidate works so a reload or crash resumes the paper instead of losing it.
+ */
+export interface InProgressExamSession {
+  paperId: string;
+  startedAt: string;
+  savedAt: string;
+  phase: 'reading' | 'writing';
+  readingRemainingSeconds: number;
+  timeRemainingSeconds: number;
+  pageStrokes: Record<number, CanvasStroke[]>;
+  pageBoxStrokes: Record<number, Record<string, CanvasStroke[]>>;
+  humanitiesSubmissions: Record<string, QuestionSubmission>;
+}
+
 export type PedagogicalTier = 1 | 2 | 3 | 4;
 
 export interface SocraticMessage {
@@ -182,12 +200,8 @@ export interface SocraticMessage {
 }
 
 export interface AiStudioConfig {
-  modelName: string;
-  gradingReasoningEffort: 'high' | 'medium' | 'low';
-  socraticReasoningEffort: 'minimal' | 'low';
   thinkingBudgetGrading: number; // e.g. 16384 tokens
   thinkingBudgetSocratic: number; // e.g. 0 or 1024 tokens
-  temperature: number;
   apiKey?: string;
   zaiApiKey?: string;
   ocrProvider?: 'glm-ocr' | 'gemini';

@@ -4,11 +4,9 @@ import {
   BUNDLED_ECONOMICS_HL,
   MAY_2021_MATH_AA_HL_P1,
 } from '../src/lib/samplePapers';
-import {
-  calculatePredictedGrade,
-  synthesizeSyllabusBreakdown,
-  evaluateSingleQuestion,
-} from '../src/lib/assessment/evaluator';
+import { evaluateSingleQuestion } from '../src/lib/assessment/evaluator';
+import { MissingKeyError } from '../src/lib/aiKey';
+import { calculatePredictedGrade, synthesizeSyllabusBreakdown } from '../src/lib/assessment/aggregate';
 import { QuestionSubmission, QuestionEvaluation, QuestionGrading } from '../src/types/exam';
 
 async function runLockdownVerification() {
@@ -178,167 +176,69 @@ async function runLockdownVerification() {
       questionNumber: q1.number,
       timeSpentSeconds: 10,
     };
-    const { evaluation, isSimulated } = await evaluateSingleQuestion(q1, emptySub, []);
-    assert.strictEqual(isSimulated, false);
+    const evaluation = await evaluateSingleQuestion(q1, emptySub, []);
     assert.strictEqual(evaluation.marksAwarded, 0);
     assert.strictEqual(evaluation.ecfApplied, false);
     assert(evaluation.markBreakdown.every((m) => !m.awarded && m.marksAwarded === 0));
   });
 
-  await test('Simulated engine applies ECF when previous subpart had an upstream error', async () => {
-    const q1 = BUNDLED_MATH_AA_HL.questions[0];
+  await test('Attempted question without a key fails instead of inventing marks', async () => {
     const q2 = BUNDLED_MATH_AA_HL.questions[1];
-
-    // Mock an upstream evaluation with lost marks (e.g. calculation slip)
-    const prevEvaluations: QuestionGrading[] = [
-      {
-        questionId: q1.id,
-        questionNumber: q1.number,
-        marksAwarded: 2,
-        maxMarks: q1.totalMarks,
-        examinerNotes: 'Upstream algebraic calculation error.',
-        marginAnnotations: [],
-        markBreakdown: [],
-        ecfApplied: false,
-        syllabusSubtopic: q1.syllabusSubtopic,
-        subtopicMasteryScore: 40,
-        revisionRecommendation: 'Check factorization.',
-      },
-    ];
-
-    // Submission for Q2 with substantial work
     const sub2: QuestionSubmission = {
       questionId: q2.id,
       questionNumber: q2.number,
       canvasImageBase64: 'data:image/png;base64,' + 'A'.repeat(2500),
       timeSpentSeconds: 90,
     };
-
-    const { evaluation } = await evaluateSingleQuestion(q2, sub2, prevEvaluations);
-
-    // Verify ECF triggered
-    assert.strictEqual(evaluation.ecfApplied, true, 'ECF should be flagged as true');
-    assert(
-      evaluation.markBreakdown.some((m) => m.isEcfApplied && m.awarded),
-      'At least one method mark should be awarded under ECF'
-    );
-    assert(
-      evaluation.examinerNotes.includes('Error Carried Forward (ECF)'),
-      'Examiner notes must mention ECF protection'
-    );
-  });
-
-  // 5. SUBPART ATTEMPT ISOLATION TEST
-  console.log('\n--- 5. SUBPART ATTEMPT ISOLATION ---');
-  await test('Question 12 with work only in part (a) awards 0 marks for unattempted subparts', async () => {
-    const q12 = MAY_2021_MATH_AA_HL_P1.questions.find((q) => q.number === '12')!;
-    assert(q12, 'Question 12 should exist in specimen paper');
-
-    const sub: QuestionSubmission = {
-      questionId: q12.id,
-      questionNumber: q12.number,
-      canvasImageBase64: 'data:image/png;base64,' + 'A'.repeat(3000),
-      timeSpentSeconds: 150,
-    };
-
-    const { evaluation } = await evaluateSingleQuestion(q12, sub, []);
-    assert(evaluation.marksAwarded > 0, 'Part a should receive marks');
-    assert(evaluation.marksAwarded < q12.totalMarks, 'Cannot receive full marks without attempting later subparts');
-
-    // Verify later subparts (b, c) were marked unattempted
-    const laterSubparts = evaluation.markBreakdown.slice(3);
-    assert(
-      laterSubparts.every((m) => !m.awarded && m.marksAwarded === 0),
-      'Later unattempted subparts must receive 0 marks'
-    );
+    await assert.rejects(evaluateSingleQuestion(q2, sub2, []), MissingKeyError);
   });
 
   // 6. SOCRATIC SCAFFOLDING SECRECY & TIER UNLOCKING
   console.log('\n--- 6. SOCRATIC SCAFFOLDING SECRECY & TIER UNLOCKING ---');
-  const { generateSimulatedSocraticResponse } = await import('../src/app/api/socratic/route');
+  const { buildTutorPrompt, shapeTutorReply, TutorUnavailableError } = await import('../src/lib/socratic/tutor');
   const testQ = BUNDLED_MATH_AA_HL.questions[0];
+  const promptFor = (tier: 1 | 2 | 3 | 4) => buildTutorPrompt({ question: testQ, requestedTier: tier, userMessage: 'Help' });
 
-  test('Tier 1 anchors command term without revealing markscheme or mark codes', () => {
-    const t1 = generateSimulatedSocraticResponse(testQ, 1);
-    assert.strictEqual(t1.tierActive, 1);
-    assert.strictEqual(t1.unlockedMarkscheme, false);
-    assert(t1.text.includes(testQ.commandTerm), 'Must mention command term');
-    assert(!t1.text.includes(testQ.markschemeExcerpt), 'Must not leak markscheme in Tier 1');
+  test('Tiers 1-3 never send the markscheme or mark codes to the model', () => {
+    for (const tier of [1, 2, 3] as const) {
+      const prompt = promptFor(tier);
+      assert(prompt.includes(testQ.commandTerm), `Tier ${tier} prompt must carry the command term`);
+      assert(!prompt.includes(testQ.markschemeExcerpt), `Tier ${tier} prompt must not include the markscheme`);
+      testQ.markCodes.forEach((mc) => assert(!prompt.includes(mc.description), `Tier ${tier} prompt must not include mark code ${mc.code}`));
+    }
   });
 
-  test('Tier 2 references formula booklet without revealing markscheme', () => {
-    const t2 = generateSimulatedSocraticResponse(testQ, 2);
-    assert.strictEqual(t2.tierActive, 2);
-    assert.strictEqual(t2.unlockedMarkscheme, false);
-    assert(t2.formulaQuote, 'Must include formula quote');
-    assert(!t2.text.includes(testQ.markschemeExcerpt), 'Must not leak markscheme in Tier 2');
+  test('Tier 4 grounds the walkthrough in the markscheme and its mark codes', () => {
+    const prompt = promptFor(4);
+    assert(prompt.includes(testQ.markschemeExcerpt), 'Tier 4 prompt must include the markscheme');
+    testQ.markCodes.forEach((mc) => assert(prompt.includes(mc.description), `Tier 4 prompt must include mark code ${mc.code}`));
   });
 
-  test('Tier 3 gives diagnostic highlight without revealing markscheme', () => {
-    const t3 = generateSimulatedSocraticResponse(testQ, 3);
-    assert.strictEqual(t3.tierActive, 3);
-    assert.strictEqual(t3.unlockedMarkscheme, false);
-    assert(t3.diagnosticHighlight, 'Must include diagnostic highlight');
-    assert(!t3.text.includes(testQ.markschemeExcerpt), 'Must not leak markscheme in Tier 3');
+  test('Without working, the tutor is told there is none instead of an attached image', () => {
+    assert(promptFor(3).includes('has not written any working'), 'Blank snapshot must not be described as attached');
+    const withImage = buildTutorPrompt({ question: testQ, requestedTier: 3, studentSnapshotImageBase64: 'data:image/png;base64,AAAA' });
+    assert(withImage.includes('Handwritten working attached in image.'));
   });
 
-  test('Tier 4 explicitly unlocks markscheme criteria and discrete mark codes', () => {
-    const t4 = generateSimulatedSocraticResponse(testQ, 4);
+  test('The server sets the tier, whatever the model claims', () => {
+    const claimsUnlock = JSON.stringify({ text: 'Here is the markscheme', tierActive: 4, unlockedMarkscheme: true });
+    for (const tier of [1, 2, 3] as const) {
+      const reply = shapeTutorReply(claimsUnlock, tier);
+      assert.strictEqual(reply.tierActive, tier);
+      assert.strictEqual(reply.unlockedMarkscheme, false, `Tier ${tier} must never unlock the markscheme`);
+    }
+    const t4 = shapeTutorReply(JSON.stringify({ text: 'Walkthrough', tierActive: 1, unlockedMarkscheme: false }), 4);
     assert.strictEqual(t4.tierActive, 4);
     assert.strictEqual(t4.unlockedMarkscheme, true);
-    assert(t4.text.includes(testQ.markschemeExcerpt), 'Must reveal official markscheme excerpt');
-    testQ.markCodes.forEach((mc) => {
-      assert(t4.text.includes(mc.code), `Must list mark code ${mc.code}`);
-    });
+  });
+
+  test('A malformed model reply means the tutor is unavailable, not a crash', () => {
+    assert.throws(() => shapeTutorReply('{not json', 2), TutorUnavailableError);
+    assert.throws(() => shapeTutorReply(JSON.stringify({ tierActive: 2 }), 2), TutorUnavailableError);
   });
 
   // 7. SUBPART EVALUATION & DISCRETE SCORING
   console.log('\n--- 7. SUBPART EVALUATION & DISCRETE SCORING ---');
-  await test('Multi-part question yields structured subpartScores with marks and ECF status', async () => {
-    const q10 = MAY_2021_MATH_AA_HL_P1.questions.find((q) => q.number === '10') || MAY_2021_MATH_AA_HL_P1.questions[9];
-    assert(q10 && q10.subparts && q10.subparts.length > 0, 'Question 10 should have subparts');
-
-    const sub: QuestionSubmission = {
-      questionId: q10.id,
-      questionNumber: q10.number,
-      canvasImageBase64: 'data:image/png;base64,' + 'B'.repeat(3500),
-      timeSpentSeconds: 180,
-    };
-
-    const prevEvals: QuestionEvaluation[] = [
-      {
-        questionId: 'q9',
-        questionNumber: '9',
-        marksAwarded: 2,
-        maxMarks: 6,
-        examinerNotes: 'Upstream calculation error.',
-        marginAnnotations: [],
-        markBreakdown: [],
-        ecfApplied: false,
-        syllabusSubtopic: 'Calculus',
-        subtopicMasteryScore: 33,
-        revisionRecommendation: 'Review derivatives.',
-      },
-    ];
-
-    const { evaluation } = await evaluateSingleQuestion(q10, sub, prevEvals);
-    assert(evaluation.subpartScores, 'evaluation.subpartScores must be populated');
-
-    // Verify each subpart is present
-    q10.subparts.forEach((sp) => {
-      const spScore = evaluation.subpartScores![sp.partLetter];
-      assert(spScore, `Subpart score for ${sp.partLetter} must exist`);
-      assert.strictEqual(spScore.maxMarks, sp.totalMarks, `Subpart ${sp.partLetter} maxMarks should match subpart totalMarks`);
-      assert(typeof spScore.marksAwarded === 'number', `marksAwarded should be numeric for ${sp.partLetter}`);
-    });
-
-    // Verify subpartPartLetter is present in marginAnnotations
-    assert(
-      evaluation.marginAnnotations.some((a) => a.subpartPartLetter !== undefined),
-      'Margin annotations should anchor to subpart letters'
-    );
-  });
-
   test('QuestionEvaluation is type-assignable to QuestionGrading alias', () => {
     const testEval: QuestionEvaluation = {
       questionId: 'q1',
@@ -377,6 +277,7 @@ async function runLockdownVerification() {
       activePageNumber: 1,
       distinctQuestionPages: [1],
       timeRemainingSeconds: 3000,
+      startedAt: '2026-05-04T08:00:00.000Z',
     });
 
     assert.strictEqual(session.paperId, paper.id);
@@ -397,6 +298,7 @@ async function runLockdownVerification() {
       activePageNumber: 1,
       distinctQuestionPages: [1],
       timeRemainingSeconds: 2400,
+      startedAt: '2026-05-04T08:00:00.000Z',
       humanitiesSubmissions: {
         [q1.id]: {
           questionId: q1.id,
@@ -413,19 +315,11 @@ async function runLockdownVerification() {
     assert(submissions[q1.id]?.textResponse?.includes('macroeconomic essay'));
   });
 
-  await test('consultSocraticTutor delivers tier-appropriate guidance via deep module seam', async () => {
-    const testQ = BUNDLED_MATH_AA_HL.questions[0];
-    const result = await consultSocraticTutor({
-      question: testQ,
-      messages: [],
-      requestedTier: 1,
-      userMessage: 'How do I begin this question?',
-    });
-
-    assert(result.message, 'Result must contain a tutor message');
-    assert.strictEqual(result.message.tierActive, 1);
-    assert.strictEqual(result.message.unlockedMarkscheme, false);
-    assert(result.message.text.includes(testQ.commandTerm), 'Must anchor on command term');
+  await test('consultSocraticTutor without a key refuses instead of inventing a reply', async () => {
+    await assert.rejects(
+      consultSocraticTutor({ question: BUNDLED_MATH_AA_HL.questions[0], requestedTier: 1, userMessage: 'How do I begin?' }),
+      MissingKeyError
+    );
   });
 
   await test('examRepo exposes manifests, sessions, strokes, and config facets', async () => {
@@ -435,7 +329,7 @@ async function runLockdownVerification() {
     assert(examRepo.config && typeof examRepo.config.get === 'function');
 
     const config = await examRepo.config.get();
-    assert(config.modelName, 'Config must have modelName');
+    assert(config.thinkingBudgetGrading, 'Config must have thinkingBudgetGrading');
 
     const manifests = await examRepo.manifests.getAll();
     assert(manifests.length >= 2, 'Must include bundled sample papers');
@@ -448,7 +342,7 @@ async function runLockdownVerification() {
     const facadeManifests = await getAllManifests();
     assert.strictEqual(facadeManifests.length, manifests.length, 'Facade must return identical count');
     const facadeConfig = await getAiConfig();
-    assert.strictEqual(facadeConfig.modelName, config.modelName, 'Facade config must match repo');
+    assert.strictEqual(facadeConfig.thinkingBudgetGrading, config.thinkingBudgetGrading, 'Facade config must match repo');
   });
 
   await test('compileExamManifest validates inputs and handles pipeline execution', async () => {

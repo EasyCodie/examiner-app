@@ -29,6 +29,10 @@ interface DrawingCanvasProps {
   onBoxStrokesChange?: (boxStrokes: Record<string, CanvasStroke[]>) => void;
   onToolChange?: (canUndo: boolean, canRedo: boolean) => void;
   compact?: boolean;
+  /** Reading time: the script can be read but not written on. */
+  readOnly?: boolean;
+  /** When false, a finger scrolls the page and only pen or mouse writes (palm rejection). */
+  fingerDrawing?: boolean;
 }
 
 const calculateWorkingHeight = (marks: number, isCompact: boolean): number => {
@@ -51,6 +55,8 @@ export const DrawingCanvas = forwardRef<DrawingCanvasRef, DrawingCanvasProps>(({
   onBoxStrokesChange,
   onToolChange,
   compact = false,
+  readOnly = false,
+  fingerDrawing = false,
 }, ref) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRefs = useRef<Record<string, HTMLCanvasElement | null>>({});
@@ -99,6 +105,8 @@ export const DrawingCanvas = forwardRef<DrawingCanvasRef, DrawingCanvasProps>(({
   const [confirmClearBoxId, setConfirmClearBoxId] = useState<string | null>(null);
   const isDrawingRef = useRef(false);
   const currentStrokeRef = useRef<CanvasStroke | null>(null);
+  // A finger on the working area scrolls the page instead of drawing
+  const touchScrollRef = useRef<{ pointerId: number; lastY: number } | null>(null);
 
   // Sync with prop changes when parent provides structured boxStrokes
   useEffect(() => {
@@ -243,7 +251,20 @@ export const DrawingCanvas = forwardRef<DrawingCanvasRef, DrawingCanvasProps>(({
   };
 
   const handlePointerDown = (e: React.PointerEvent<HTMLCanvasElement>, boxId: string) => {
-    e.currentTarget.setPointerCapture(e.pointerId);
+    if (readOnly) return;
+    const capture = () => {
+      try {
+        e.currentTarget.setPointerCapture(e.pointerId);
+      } catch {
+        // pointer already released
+      }
+    };
+    if (e.pointerType === 'touch' && !fingerDrawing) {
+      capture();
+      touchScrollRef.current = { pointerId: e.pointerId, lastY: e.clientY };
+      return;
+    }
+    capture();
     isDrawingRef.current = true;
     activeBoxIdRef.current = boxId;
     const pos = getPointerPos(e, boxId);
@@ -292,6 +313,12 @@ export const DrawingCanvas = forwardRef<DrawingCanvasRef, DrawingCanvasProps>(({
   };
 
   const handlePointerMove = (e: React.PointerEvent<HTMLCanvasElement>, boxId: string) => {
+    const touchScroll = touchScrollRef.current;
+    if (touchScroll && touchScroll.pointerId === e.pointerId) {
+      window.scrollBy(0, touchScroll.lastY - e.clientY);
+      touchScroll.lastY = e.clientY;
+      return;
+    }
     if (!isDrawingRef.current || !currentStrokeRef.current) return;
     const pos = getPointerPos(e, boxId);
     const stroke = currentStrokeRef.current;
@@ -332,6 +359,10 @@ export const DrawingCanvas = forwardRef<DrawingCanvasRef, DrawingCanvasProps>(({
   };
 
   const handlePointerUp = (e: React.PointerEvent<HTMLCanvasElement>, boxId: string) => {
+    if (touchScrollRef.current?.pointerId === e.pointerId) {
+      touchScrollRef.current = null;
+      return;
+    }
     if (!isDrawingRef.current) return;
     try {
       e.currentTarget.releasePointerCapture(e.pointerId);
@@ -539,28 +570,17 @@ export const DrawingCanvas = forwardRef<DrawingCanvasRef, DrawingCanvasProps>(({
   return (
     <div
       ref={containerRef}
-      className={`relative w-full bg-white rounded-xl shadow-xl border border-slate-300 flex flex-col select-text text-slate-900 ${
-        compact ? 'p-5 sm:p-7 min-h-[760px]' : 'p-6 sm:p-10 min-h-[960px]'
+      className={`script-sheet paper-surface relative w-full flex flex-col select-text text-ink ${
+        compact ? 'px-5 sm:px-8 py-6 sm:py-8' : 'px-5 sm:px-12 py-8 sm:py-12'
       }`}
     >
-      {/* Clean Authentic Paper Header */}
-      <div
-        className={`border-b border-slate-300 flex items-start justify-between shrink-0 ${
-          compact ? 'pb-2.5 mb-3.5' : 'pb-3 mb-5'
-        }`}
-      >
-        <div>
-          <div className="text-[10px] font-bold tracking-widest uppercase text-slate-500 font-mono-code">
-            International Baccalaureate Organization
-          </div>
-          <h2 className="text-base font-bold font-serif text-slate-950 mt-0.5">{paperTitle}</h2>
-        </div>
-        <div className="text-right">
-          <span className="font-mono-code text-xs font-bold text-slate-800">PAGE {pageNumber}</span>
-        </div>
+      {/* Running page head */}
+      <div className={`flex items-baseline justify-between gap-4 border-b border-ink shrink-0 ${compact ? 'pb-2 mb-6' : 'pb-3 mb-8'}`}>
+        <p className="font-serif text-[15px] sm:text-[16px] font-semibold text-ink truncate">{paperTitle}</p>
+        <p className="tabular text-[13px] text-ink-muted shrink-0">Page {pageNumber}</p>
       </div>
 
-      {/* Question Content & Designated Working Space */}
+      {/* Question content and designated working space */}
       {questionsOnPage.length > 0 ? (
         questionsOnPage.map((q) => {
           const hasSubparts = Array.isArray(q.subparts) && q.subparts.length > 0;
@@ -574,95 +594,72 @@ export const DrawingCanvas = forwardRef<DrawingCanvasRef, DrawingCanvasProps>(({
           const workingHeight = calculateWorkingHeight(q.totalMarks, compact);
 
           return (
-            <div key={q.id} className="flex-1 flex flex-col min-h-0 space-y-6">
-              {/* 1. Entire Question Box (Shown as a whole, authentic IB typography) */}
-              <div className="bg-white rounded-xl border border-slate-300 p-6 sm:p-7 shadow-sm space-y-5">
-                {/* Header: Question number & [Maximum mark: X] */}
-                <div className="flex items-baseline justify-between border-b border-slate-300 pb-3 shrink-0">
-                  <div className="flex items-center gap-2.5">
-                    <h3 className="text-xl font-bold font-serif text-slate-950">
-                      {cleanNumber}.
-                    </h3>
-                    {isSectionB && (
-                      <span className="text-[10px] font-mono-code uppercase font-bold tracking-wider px-2 py-0.5 rounded bg-slate-100 text-slate-700 border border-slate-300">
-                        Section B
-                      </span>
-                    )}
-                  </div>
-                  <span className="text-sm font-serif font-bold text-slate-900 tracking-tight">
+            <section key={q.id} aria-label={`Question ${cleanNumber}`} className="flex-1 flex flex-col min-h-0">
+              {/* Question: number, prompt, and a right-hand margin column for marks */}
+              <div className="grid grid-cols-[auto_1fr_auto] gap-x-4 sm:gap-x-6 items-baseline">
+                <h3 className={`font-serif font-semibold text-ink tabular ${compact ? 'text-[24px]' : 'text-[28px]'} leading-none`}>
+                  {cleanNumber}.
+                </h3>
+                <div className="min-w-0" />
+                <div className="text-right">
+                  <p className="font-serif text-[15px] font-semibold text-ink whitespace-nowrap">
                     [Maximum mark: {q.totalMarks}]
-                  </span>
+                  </p>
+                  {isSectionB && <p className="mt-1 text-[13px] text-ink-muted">Section B</p>}
                 </div>
+              </div>
 
-                {/* Main Question Context / Preamble / Equations */}
-                {cleanedPromptText && (
-                  <div className="text-slate-950 font-serif leading-relaxed text-[15px]">
-                    <MathRenderer content={cleanedPromptText} lightMode={true} />
-                  </div>
-                )}
+              {cleanedPromptText && (
+                <div className={`mt-4 font-serif text-ink leading-[1.65] ${compact ? 'text-[16px]' : 'text-[17px] sm:text-[18px]'} max-w-[68ch]`}>
+                  <MathRenderer content={cleanedPromptText} lightMode={true} />
+                </div>
+              )}
 
-                {/* Top-Level Mathematical Diagram / SVG Graph */}
-                {q.diagram?.hasDiagram && q.diagram.svgContent && (
-                  <div className="p-4 bg-white rounded-lg border border-slate-300 shadow-sm flex flex-col items-center my-3">
-                    {q.diagram.title && (
-                      <div className="text-xs font-mono-code font-bold text-slate-800 mb-2">
-                        {q.diagram.title}
-                      </div>
-                    )}
-                    <div
-                      className="w-full max-w-lg overflow-x-auto flex justify-center [&>svg]:max-w-full [&>svg]:h-auto"
-                      dangerouslySetInnerHTML={{ __html: q.diagram.svgContent }}
-                    />
-                    {q.diagram.description && (
-                      <div className="text-[11px] text-slate-500 font-serif italic mt-2 text-center">
-                        {q.diagram.description}
-                      </div>
-                    )}
-                  </div>
-                )}
+              {q.diagram?.hasDiagram && q.diagram.svgContent && (
+                <figure className="my-6 flex flex-col items-center">
+                  <div
+                    className="w-full max-w-lg overflow-x-auto flex justify-center [&>svg]:max-w-full [&>svg]:h-auto"
+                    dangerouslySetInnerHTML={{ __html: q.diagram.svgContent }}
+                  />
+                  {(q.diagram.title || q.diagram.description) && (
+                    <figcaption className="mt-3 max-w-[60ch] text-center font-serif italic text-[14px] text-ink-muted">
+                      {q.diagram.title && <span className="not-italic font-semibold text-ink">{q.diagram.title}. </span>}
+                      {q.diagram.description}
+                    </figcaption>
+                  )}
+                </figure>
+              )}
 
-                {/* All Subparts displayed continuously within the question */}
-                {hasSubparts && (
-                  <div className="space-y-4 pt-1 border-t border-slate-200">
-                    {q.subparts!.map((sub) => {
-                      const isNested = /^\([a-z]\)\([ivx]+\)/i.test(sub.partLetter) || /^\([ivx]+\)/i.test(sub.partLetter);
-
-                      return (
-                        <div key={sub.id} className="flex flex-col space-y-2">
-                          <div className="flex items-start justify-between gap-6">
-                            <div className={`flex items-start gap-3.5 flex-1 ${isNested ? 'pl-6' : ''}`}>
-                              <span className="font-serif font-bold text-[15px] text-slate-950 shrink-0 select-none min-w-[28px]">
-                                {sub.partLetter}
-                              </span>
-                              <div className="text-[15px] text-slate-950 font-serif leading-relaxed flex-1">
-                                <MathRenderer content={sub.promptText} lightMode={true} />
-                              </div>
-                            </div>
-                            <span className="text-[13px] font-serif font-bold text-slate-800 shrink-0 select-none pt-0.5">
-                              [{sub.totalMarks}]
-                            </span>
-                          </div>
-
+              {hasSubparts && (
+                <ol className="mt-5 space-y-4">
+                  {q.subparts!.map((sub) => {
+                    const isNested = /^\([a-z]\)\([ivx]+\)/i.test(sub.partLetter) || /^\([ivx]+\)/i.test(sub.partLetter);
+                    return (
+                      <li key={sub.id} className="grid grid-cols-[auto_1fr_auto] gap-x-4 sm:gap-x-6 items-baseline">
+                        <span className={`font-serif font-semibold text-[17px] text-ink select-none min-w-[2.25rem] ${isNested ? 'pl-5' : ''}`}>
+                          {sub.partLetter}
+                        </span>
+                        <div className={`font-serif text-ink leading-[1.65] ${compact ? 'text-[16px]' : 'text-[17px] sm:text-[18px]'} max-w-[64ch]`}>
+                          <MathRenderer content={sub.promptText} lightMode={true} />
                           {sub.diagram?.hasDiagram && sub.diagram.svgContent && (
-                            <div className="p-3 bg-white rounded border border-slate-300 flex justify-center [&>svg]:max-w-full [&>svg]:h-auto my-2">
+                            <div className="my-3 flex justify-center [&>svg]:max-w-full [&>svg]:h-auto">
                               <div dangerouslySetInnerHTML={{ __html: sub.diagram.svgContent }} />
                             </div>
                           )}
                         </div>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
+                        <span className="font-serif text-[15px] font-semibold text-ink tabular select-none">[{sub.totalMarks}]</span>
+                      </li>
+                    );
+                  })}
+                </ol>
+              )}
 
-              {/* 2. Designated Working Space Below the Entire Question (height proportional to marks) */}
-              <div className="flex flex-col space-y-2 pt-2">
-                <div className="flex items-center justify-between text-[11px] font-mono-code text-slate-500 uppercase tracking-wider px-1">
-                  <span className="font-bold text-slate-700">
-                    Working Area • Question {cleanNumber} ({q.totalMarks} marks)
-                  </span>
-                  <span className="italic normal-case text-slate-400">
-                    Answers must be written in the space provided below
+              {/* Working space, sized to the marks available */}
+              <div className="mt-8 flex flex-col gap-2">
+                <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+                  <span className="text-[14px] font-semibold text-ink">Working for question {cleanNumber}</span>
+                  <span className="text-[13px] text-ink-muted">
+                    {readOnly ? 'Reading time: you cannot write yet' : 'Write your answer inside this box'}
                   </span>
                 </div>
 
@@ -670,64 +667,60 @@ export const DrawingCanvas = forwardRef<DrawingCanvasRef, DrawingCanvasProps>(({
                   ref={(el) => { boxRefs.current[q.id] = el; }}
                   data-boxid={q.id}
                   style={{ minHeight: `${workingHeight}px` }}
-                  className="relative w-full rounded-xl border-2 border-slate-400 bg-white overflow-hidden shadow-sm flex flex-col"
+                  className="ruled relative w-full border border-paper-rule-strong bg-paper overflow-hidden flex flex-col"
                 >
-                  {/* Authentic 28px Ruled Lines Grid */}
-                  <div className="absolute inset-0 bg-[linear-gradient(to_bottom,#f1f5f9_1px,transparent_1px)] bg-[size:100%_28px] pointer-events-none" />
-
-                  {/* Clear Button with Confirmation Safeguard */}
-                  <div className="absolute top-3 right-3 z-20 pointer-events-auto">
-                    {confirmClearBoxId === q.id ? (
-                      <div className="flex items-center gap-1.5 p-1 bg-white border border-slate-300 rounded-lg shadow-md text-xs font-mono-code animate-message-enter">
-                        <span className="text-[11px] text-slate-700 px-1 font-sans">Clear working?</span>
+                  {!readOnly && (
+                    <div className="absolute top-2 right-2 z-20">
+                      {confirmClearBoxId === q.id ? (
+                        <div className="flex items-center gap-2 p-1.5 bg-paper border border-paper-rule-strong">
+                          <span className="text-[14px] text-ink px-1">Clear this working?</span>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              handleClearBox(q.id);
+                              setConfirmClearBoxId(null);
+                            }}
+                            className="btn btn-sm btn-destructive"
+                          >
+                            Clear
+                          </button>
+                          <button type="button" onClick={() => setConfirmClearBoxId(null)} className="btn btn-sm btn-quiet-paper">
+                            Keep
+                          </button>
+                        </div>
+                      ) : (
                         <button
                           type="button"
-                          onClick={() => {
-                            handleClearBox(q.id);
-                            setConfirmClearBoxId(null);
-                          }}
-                          className="px-2 py-0.5 rounded bg-[#c64545] text-white hover:bg-[#a83232] font-semibold transition"
+                          onClick={() => setConfirmClearBoxId(q.id)}
+                          aria-label={`Clear working for question ${cleanNumber}`}
+                          className="btn btn-sm btn-quiet-paper"
                         >
-                          Yes, clear
+                          <Trash2 className="w-4 h-4" aria-hidden="true" />
+                          <span className="hidden sm:inline">Clear</span>
                         </button>
-                        <button
-                          type="button"
-                          onClick={() => setConfirmClearBoxId(null)}
-                          className="px-2 py-0.5 rounded bg-slate-100 text-slate-700 hover:bg-slate-200 transition"
-                        >
-                          Cancel
-                        </button>
-                      </div>
-                    ) : (
-                      <button
-                        type="button"
-                        onClick={() => setConfirmClearBoxId(q.id)}
-                        title={`Clear working for Question ${cleanNumber}`}
-                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-white hover:bg-[#c64545]/10 text-slate-700 hover:text-[#c64545] border border-slate-300 shadow-sm text-xs font-mono-code transition active:scale-95"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                        <span>Clear</span>
-                      </button>
-                    )}
-                  </div>
+                      )}
+                    </div>
+                  )}
 
                   <canvas
                     ref={(el) => { canvasRefs.current[q.id] = el; }}
+                    role="img"
+                    aria-label={`Handwritten working for question ${cleanNumber}`}
                     onPointerDown={(e) => handlePointerDown(e, q.id)}
                     onPointerMove={(e) => handlePointerMove(e, q.id)}
                     onPointerUp={(e) => handlePointerUp(e, q.id)}
                     onPointerCancel={(e) => handlePointerUp(e, q.id)}
-                    className="absolute inset-0 w-full h-full cursor-crosshair touch-none z-10"
+                    className={`absolute inset-0 w-full h-full touch-none z-10 ${readOnly ? 'cursor-not-allowed' : 'cursor-crosshair'}`}
                   />
                 </div>
               </div>
-            </div>
+            </section>
           );
         })
       ) : (
-        <div className="flex-1 flex items-center justify-center text-slate-400 font-serif italic">
-          No question items indexed on this page.
-        </div>
+        <p className="flex-1 flex items-center justify-center font-serif italic text-ink-muted">
+          No questions on this page.
+        </p>
       )}
     </div>
   );

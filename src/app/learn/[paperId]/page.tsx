@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { useParams, useSearchParams } from 'next/navigation';
+import Link from 'next/link';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import {
   ExamManifest,
   QuestionItem,
@@ -10,30 +11,39 @@ import {
   CanvasStroke,
 } from '@/types/exam';
 import { getManifestById, getAiConfig } from '@/lib/storage';
+import { INVALID_KEY, MissingKeyError, NO_KEY } from '@/lib/aiKey';
 import { useAppShell } from '@/components/common/AppShell';
-import { SocraticSidebar } from '@/components/socratic/SocraticSidebar';
+import { StorageErrorNotice } from '@/components/common/StorageErrorNotice';
+import { SocraticSidebar, TutorFailure } from '@/components/socratic/SocraticSidebar';
+import { ContentsStrip } from '@/components/exam/ContentsStrip';
+import { ReportDialog } from '@/components/common/ReportDialog';
 import { DrawingCanvas, DrawingCanvasRef } from '@/components/canvas/DrawingCanvas';
 import { CanvasToolbar } from '@/components/canvas/CanvasToolbar';
 import { InlineDiagramCanvas } from '@/components/editor/InlineDiagramCanvas';
 import { MathRenderer } from '@/components/common/MathRenderer';
-import {
-  Sparkles,
-  ChevronLeft,
-  ChevronRight,
-  PieChart,
-} from 'lucide-react';
+import { PieChart } from 'lucide-react';
 
 export default function SocraticLearnPage() {
   const params = useParams();
   const searchParams = useSearchParams();
+  const router = useRouter();
   const paperId = params.paperId as string;
   const questionParam = searchParams.get('question');
   const { setHeaderInfo } = useAppShell();
 
   const [manifest, setManifest] = useState<ExamManifest | null>(null);
   const [selectedQuestionIndex, setSelectedQuestionIndex] = useState(0);
+  // Which way the last move through the paper went, so the next sheet turns that way
+  const [turn, setTurn] = useState<'forward' | 'back' | undefined>(undefined);
   const [currentTier, setCurrentTier] = useState<PedagogicalTier>(1);
   const [isMarkschemeUnlocked, setIsMarkschemeUnlocked] = useState(false);
+  const [highestTier, setHighestTier] = useState<Record<string, PedagogicalTier>>({});
+  const [showRevealDialog, setShowRevealDialog] = useState(false);
+  const [hasDraft, setHasDraft] = useState(false);
+  const [pendingLeaveHref, setPendingLeaveHref] = useState<string | null>(null);
+  const [notFound, setNotFound] = useState(false);
+  const [storageError, setStorageError] = useState(false);
+  const [tutorFailure, setTutorFailure] = useState<(TutorFailure & { questionId: string; text: string; tier: PedagogicalTier }) | null>(null);
 
   // Chat message history per question: questionId -> SocraticMessage[]
   const [conversations, setConversations] = useState<Record<string, SocraticMessage[]>>({});
@@ -42,7 +52,7 @@ export default function SocraticLearnPage() {
   // Canvas drawing for STEM
   const canvasRef = useRef<DrawingCanvasRef>(null);
   const [tool, setTool] = useState<'pen' | 'highlighter' | 'eraser'>('pen');
-  const [color, setColor] = useState('#0f172a');
+  const [color, setColor] = useState('#1a2238');
   const [width, setWidth] = useState(2.5);
   const [strokes, setStrokes] = useState<Record<string, CanvasStroke[]>>({});
   const [questionBoxStrokes, setQuestionBoxStrokes] = useState<Record<string, Record<string, CanvasStroke[]>>>({});
@@ -56,6 +66,10 @@ export default function SocraticLearnPage() {
 
   useEffect(() => {
     getManifestById(paperId).then((m) => {
+      if (!m) {
+        setNotFound(true);
+        return;
+      }
       if (m) {
         setManifest(m);
         setHeaderInfo({
@@ -86,7 +100,7 @@ export default function SocraticLearnPage() {
                 {
                   id: `welcome-${targetQ.id}`,
                   sender: 'tutor',
-                  text: `Welcome! Let's work through Question ${targetQ.number.replace(/^Question\s*/i, '')} together step by step.\n\nTo start, take a look at the command term: **"${targetQ.commandTerm}"**. How would you like to set up your first step?`,
+                  text: `Welcome! Let's work through Question ${targetQ.number.replace(/^Question\s*/i, '')} together step by step.\n\nTo start, take a look at the command term: **“${targetQ.commandTerm}”**. How would you like to set up your first step?`,
                   timestamp: new Date().toISOString(),
                   tierActive: 1,
                 },
@@ -95,15 +109,47 @@ export default function SocraticLearnPage() {
           });
         }
       }
-    });
+    }).catch(() => setStorageError(true));
   }, [paperId, setHeaderInfo, questionParam]);
 
   const currentQuestion: QuestionItem | undefined = manifest?.questions[selectedQuestionIndex];
 
+  // Guided practice isn't saved, so leaving loses the working, the tutor conversation and any unsent message
+  const hasUnsavedWork =
+    hasDraft ||
+    Object.values(strokes).some((s) => s.length > 0) ||
+    Object.values(questionBoxStrokes).some((boxes) => Object.values(boxes).some((b) => b.length > 0)) ||
+    Object.values(humanitiesText).some((t) => t.trim()) ||
+    Object.values(humanitiesDiagrams).some(Boolean) ||
+    Object.values(conversations).some((messages) => messages.some((m) => m.sender === 'student'));
+
+  useEffect(() => {
+    if (!hasUnsavedWork) return;
+    const onBeforeUnload = (e: BeforeUnloadEvent) => e.preventDefault();
+    // Links off this page (the header's logo and mode switch) ask first; captured before Next's Link navigates
+    const onClick = (e: MouseEvent) => {
+      if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+      const link = (e.target as Element | null)?.closest('a[href]');
+      if (!(link instanceof HTMLAnchorElement) || link.target === '_blank') return;
+      if (link.origin !== window.location.origin || link.pathname === window.location.pathname) return;
+      e.preventDefault();
+      e.stopPropagation();
+      setPendingLeaveHref(link.pathname + link.search + link.hash);
+    };
+    window.addEventListener('beforeunload', onBeforeUnload);
+    window.addEventListener('click', onClick, true);
+    return () => {
+      window.removeEventListener('beforeunload', onBeforeUnload);
+      window.removeEventListener('click', onClick, true);
+    };
+  }, [hasUnsavedWork]);
+
   const handleSelectQuestion = useCallback((idx: number) => {
+    if (idx !== selectedQuestionIndex) setTurn(idx > selectedQuestionIndex ? 'forward' : 'back');
     setSelectedQuestionIndex(idx);
     setCurrentTier(1);
     setIsMarkschemeUnlocked(false);
+    setTutorFailure(null);
 
     const q = manifest?.questions[idx];
     if (q) {
@@ -115,7 +161,7 @@ export default function SocraticLearnPage() {
             {
               id: `welcome-${q.id}`,
               sender: 'tutor',
-              text: `Welcome! Let's work through Question ${q.number.replace(/^Question\s*/i, '')} together step by step.\n\nTo start, take a look at the command term: **"${q.commandTerm}"**. How would you like to set up your first step?`,
+              text: `Welcome! Let's work through Question ${q.number.replace(/^Question\s*/i, '')} together step by step.\n\nTo start, take a look at the command term: **“${q.commandTerm}”**. How would you like to set up your first step?`,
               timestamp: new Date().toISOString(),
               tierActive: 1,
             },
@@ -123,7 +169,7 @@ export default function SocraticLearnPage() {
         };
       });
     }
-  }, [manifest]);
+  }, [manifest, selectedQuestionIndex]);
 
   // Keyboard navigation: ArrowLeft / ArrowRight to switch questions (when not typing)
   useEffect(() => {
@@ -157,34 +203,27 @@ export default function SocraticLearnPage() {
     return () => window.removeEventListener('keydown', handleKeyNav);
   }, [selectedQuestionIndex, manifest, handleSelectQuestion]);
 
-  // Send message to Socratic tutor
-  const handleSendMessage = async (userText: string, tier: PedagogicalTier) => {
+  // Ask the Socratic tutor, given the conversation so far (which already ends with the student's message)
+  const askTutor = async (history: SocraticMessage[], userText: string, tier: PedagogicalTier) => {
     if (!currentQuestion) return;
-
-    const userMsg: SocraticMessage = {
-      id: `user-${Date.now()}`,
-      sender: 'student',
-      text: userText,
-      timestamp: new Date().toISOString(),
-    };
-
-    const currentHistory = conversations[currentQuestion.id] || [];
-    const updatedHistory = [...currentHistory, userMsg];
-    setConversations((prev) => ({ ...prev, [currentQuestion.id]: updatedHistory }));
-
+    const questionId = currentQuestion.id;
     setIsLoadingTutor(true);
+    setTutorFailure(null);
 
     try {
-      // Capture student snapshot
       let snapshotImg = '';
-      if (manifest?.category === 'STEM' && canvasRef.current) {
+      const hasStemWorking =
+        (strokes[questionId]?.length ?? 0) > 0 ||
+        Object.values(questionBoxStrokes[questionId] ?? {}).some((b) => b.length > 0);
+      // A blank canvas is not sent, so the tutor never "sees" working that isn't there
+      if (manifest?.category === 'STEM' && canvasRef.current && hasStemWorking) {
         snapshotImg = canvasRef.current.getCanvasSnapshot();
       } else if (manifest?.category === 'HUMANITIES') {
-        snapshotImg = humanitiesDiagrams[currentQuestion.id] || '';
+        snapshotImg = humanitiesDiagrams[questionId] || '';
       }
 
       const cfg = await getAiConfig();
-
+      if (!cfg.apiKey) throw new MissingKeyError();
       const response = await fetch('/api/socratic', {
         method: 'POST',
         headers: {
@@ -193,137 +232,189 @@ export default function SocraticLearnPage() {
         },
         body: JSON.stringify({
           question: currentQuestion,
-          messages: updatedHistory,
+          messages: history,
           requestedTier: tier,
           userMessage: userText,
           studentSnapshotImageBase64: snapshotImg,
-          studentSnapshotText: humanitiesText[currentQuestion.id] || '',
+          studentSnapshotText: humanitiesText[questionId] || '',
           thinkingBudget: cfg.thinkingBudgetSocratic ?? 2048,
         }),
       });
 
-      const data = await response.json();
-
-      if (response.ok && data.response) {
-        const reply = data.response;
-        const tutorMsg: SocraticMessage = {
-          id: `tutor-${Date.now()}`,
-          sender: 'tutor',
-          text: reply.text,
-          timestamp: new Date().toISOString(),
-          tierActive: reply.tierActive,
-          formulaQuote: reply.formulaQuote,
-          diagnosticHighlight: reply.diagnosticHighlight,
-          unlockedMarkscheme: reply.unlockedMarkscheme,
-        };
-
-        if (reply.unlockedMarkscheme) {
-          setIsMarkschemeUnlocked(true);
-        }
-
-        setConversations((prev) => ({
-          ...prev,
-          [currentQuestion.id]: [...updatedHistory, tutorMsg],
-        }));
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok || !data.response) {
+        if (data.code === NO_KEY || data.code === INVALID_KEY) throw new MissingKeyError();
+        throw new Error(data.error || `The tutor couldn't reply (error ${response.status}). Try again in a moment.`);
       }
+
+      const reply = data.response;
+      const tutorMsg: SocraticMessage = {
+        id: `tutor-${Date.now()}`,
+        sender: 'tutor',
+        text: reply.text,
+        timestamp: new Date().toISOString(),
+        tierActive: reply.tierActive,
+        formulaQuote: reply.formulaQuote,
+        diagnosticHighlight: reply.diagnosticHighlight,
+        unlockedMarkscheme: reply.unlockedMarkscheme,
+      };
+
+      if (reply.unlockedMarkscheme) setIsMarkschemeUnlocked(true);
+      setConversations((prev) => ({ ...prev, [questionId]: [...history, tutorMsg] }));
     } catch (err) {
-      console.error('Socratic error', err);
+      // A TypeError here is fetch failing to reach the server at all
+      const message =
+        err instanceof Error && !(err instanceof TypeError)
+          ? err.message
+          : "The tutor couldn't be reached. Check your connection and try again.";
+      setTutorFailure({
+        questionId,
+        text: userText,
+        tier,
+        message,
+        needsKey: err instanceof MissingKeyError,
+      });
     } finally {
       setIsLoadingTutor(false);
     }
   };
 
+  const handleSendMessage = async (userText: string, tier: PedagogicalTier = currentTier) => {
+    if (!currentQuestion) return;
+    const userMsg: SocraticMessage = {
+      id: `user-${Date.now()}`,
+      sender: 'student',
+      text: userText,
+      timestamp: new Date().toISOString(),
+    };
+    const updatedHistory = [...(conversations[currentQuestion.id] || []), userMsg];
+    setConversations((prev) => ({ ...prev, [currentQuestion.id]: updatedHistory }));
+    setHighestTier((prev) => ({
+      ...prev,
+      [currentQuestion.id]: Math.max(prev[currentQuestion.id] ?? 0, tier) as PedagogicalTier,
+    }));
+    await askTutor(updatedHistory, userText, tier);
+  };
+
+  const handleRetry = () => {
+    if (!currentQuestion || !tutorFailure || tutorFailure.questionId !== currentQuestion.id) return;
+    askTutor(conversations[currentQuestion.id] || [], tutorFailure.text, tutorFailure.tier);
+  };
+
+  const TIER_PROMPTS: Record<1 | 2 | 3, (q: QuestionItem) => string> = {
+    1: (q) => `What does the command term “${q.commandTerm}” mean for this question?`,
+    2: () => 'Which formula or concept applies to this step?',
+    3: () => 'Can you check my current step and see if my working is on the right track?',
+  };
+
+  const handleAskTier = (tier: 1 | 2 | 3) => {
+    if (!currentQuestion) return;
+    setCurrentTier(tier);
+    handleSendMessage(TIER_PROMPTS[tier](currentQuestion), tier);
+  };
+
   const handleUnlockMarkscheme = async () => {
+    setShowRevealDialog(false);
     setCurrentTier(4);
     setIsMarkschemeUnlocked(true);
-    await handleSendMessage('Please reveal the official markscheme breakdown and mark codes.', 4);
+    await handleSendMessage('Please reveal the markscheme breakdown and mark codes.', 4);
   };
+
+  if (storageError) return <StorageErrorNotice />;
+
+  if (notFound) {
+    return (
+      <div className="flex-1 flex items-center justify-center px-4 py-16">
+        <div className="script-sheet paper-surface max-w-[560px] w-full px-8 py-10 space-y-4">
+          <h1 className="font-serif text-[28px] font-semibold text-ink">Paper not found</h1>
+          <p className="text-[16px] leading-relaxed text-ink-muted">
+            There is no paper with the reference <span className="font-mono text-ink">{paperId}</span> on this device.
+          </p>
+          <Link href="/" className="btn btn-ink">
+            Choose a paper
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   if (!manifest || !currentQuestion) {
     return (
-      <div className="flex-1 flex items-center justify-center p-8">
-        <Sparkles className="w-8 h-8 text-[#cc785c] animate-spin" />
+      <div className="flex-1 flex items-center justify-center p-8" role="status">
+        <p className="text-[15px] text-shell-muted">Opening the paper…</p>
       </div>
     );
   }
 
   const isStem = manifest.category === 'STEM';
+  const questionHasWorking = (q: QuestionItem) =>
+    isStem
+      ? (strokes[q.id]?.length ?? 0) > 0 || Object.values(questionBoxStrokes[q.id] ?? {}).some((b) => b.length > 0)
+      : Boolean(humanitiesText[q.id]?.trim() || humanitiesDiagrams[q.id]);
+
+  const contentsItems = manifest.questions.map((q, idx) => ({
+    key: q.id,
+    label: q.number.replace(/^Question\s*/i, '').replace(/\.$/, ''),
+    marks: q.totalMarks,
+    hasWorking: questionHasWorking(q),
+    isCurrent: idx === selectedQuestionIndex,
+  }));
+
+  const insertSnippet = (snippet: string) => {
+    const existing = humanitiesText[currentQuestion.id] || '';
+    setHumanitiesText((prev) => ({ ...prev, [currentQuestion.id]: existing ? `${existing}\n\n${snippet}` : snippet }));
+  };
 
   return (
-    <div className="flex-1 flex flex-col p-4 sm:p-6 max-w-7xl mx-auto w-full gap-5 select-text pb-16">
-      {/* Sticky Question Tabs Bar: Clean frosted glass island resting beneath floating header */}
-      <div className="sticky top-[72px] sm:top-[76px] z-30 w-full">
-        <div className="bg-[#1f1e1b]/95 backdrop-blur-xl border border-white/10 rounded-2xl p-2 px-3 sm:px-4 flex items-center justify-between shadow-xl transition-all">
-          <div className="flex items-center gap-2 overflow-x-auto min-w-0 pr-2">
-            <span className="text-[10px] font-mono-code uppercase text-[#a09d96] font-semibold px-1 shrink-0">
-              Q:
-            </span>
-            <div className="flex items-center gap-1.5">
-              {manifest.questions.map((q, idx) => {
-                const isSelected = idx === selectedQuestionIndex;
-                return (
-                  <button
-                    key={q.id}
-                    type="button"
-                    onClick={() => handleSelectQuestion(idx)}
-                    className={`px-2.5 sm:px-3 py-1 rounded-lg text-xs font-mono-code whitespace-nowrap transition-fluid flex items-center justify-center shrink-0 ${isSelected
-                        ? 'bg-[#cc785c] text-white font-semibold shadow-xs ring-1 ring-[#cc785c]/50'
-                        : 'bg-[#252320] text-[#a09d96] hover:text-[#faf9f5] border border-white/5'
-                      }`}
-                  >
-                    <span>{q.number.replace(/^Question\s*/i, '')}</span>
-                  </button>
-                );
-              })}
-            </div>
+    <div className="flex-1 flex flex-col select-text">
+      <ContentsStrip
+        items={contentsItems}
+        onSelect={(key) => handleSelectQuestion(manifest.questions.findIndex((q) => q.id === key))}
+      />
 
-            {/* Active Question Metadata Badge */}
-            <div className="hidden sm:flex items-center gap-2 pl-2 border-l border-white/10 shrink-0">
-              <span className="text-[10px] font-mono-code uppercase font-semibold text-[#cc785c] bg-[#cc785c]/15 px-2.5 py-0.5 rounded-full border border-[#cc785c]/30">
-                {currentQuestion.commandTerm}
-              </span>
-              <span className="hidden md:inline-block text-[11px] font-mono-code text-[#a09d96]">
-                [{currentQuestion.totalMarks} Marks]
-              </span>
-            </div>
+      <div
+        className={`w-full max-w-[1440px] mx-auto px-3 sm:px-5 py-6 sm:py-8 grid gap-6 items-start ${
+          isStem ? 'lg:grid-cols-[minmax(0,1fr)_400px] xl:grid-cols-[152px_minmax(0,1fr)_400px]' : 'lg:grid-cols-[minmax(0,1fr)_420px]'
+        }`}
+      >
+        {isStem && (
+          <div className="hidden xl:block sticky top-[124px]">
+            <CanvasToolbar
+              orientation="vertical"
+              tool={tool}
+              setTool={setTool}
+              color={color}
+              setColor={setColor}
+              width={width}
+              setWidth={setWidth}
+              canUndo={canUndo}
+              canRedo={canRedo}
+              onUndo={() => canvasRef.current?.undo()}
+              onRedo={() => canvasRef.current?.redo()}
+              onClear={() => canvasRef.current?.clear()}
+            />
           </div>
-
-          <div className="flex items-center gap-1 text-xs text-[#a09d96] font-mono-code shrink-0 pl-3 border-l border-white/10">
-            <button
-              type="button"
-              disabled={selectedQuestionIndex <= 0}
-              onClick={() => handleSelectQuestion(selectedQuestionIndex - 1)}
-              className="p-1.5 rounded-md hover:text-[#faf9f5] hover:bg-white/5 disabled:opacity-30 transition focus-ring"
-              title="Previous Question (Arrow Left)"
-            >
-              <ChevronLeft className="w-4 h-4" />
-            </button>
-            <span className="px-1.5 text-xs text-[#faf9f5] font-medium">
-              {selectedQuestionIndex + 1} of {manifest.questions.length}
-            </span>
-            <button
-              type="button"
-              disabled={selectedQuestionIndex >= manifest.questions.length - 1}
-              onClick={() => handleSelectQuestion(selectedQuestionIndex + 1)}
-              className="p-1.5 rounded-md hover:text-[#faf9f5] hover:bg-white/5 disabled:opacity-30 transition focus-ring"
-              title="Next Question (Arrow Right)"
-            >
-              <ChevronRight className="w-4 h-4" />
-            </button>
-            <span className="hidden lg:inline text-[10px] text-[#a09d96]/50 font-mono-code pl-1 select-none">
-              [← / →]
-            </span>
-          </div>
-        </div>
-      </div>
-
-      {/* Main Socratic Split Workspace */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start flex-1">
-        {/* LEFT PANE (Col 1-7): Student Workspace (Canvas / Editor) */}
-        <div className="lg:col-span-7 flex flex-col space-y-3.5 relative min-w-0">
+        )}
+        <div className="min-w-0 flex flex-col">
           {isStem ? (
-            <div className="relative flex flex-col">
-              {/* Interactive Canvas Sheet */}
+            <>
+              {/* Below xl the tools sit above the sheet, never over the paper */}
+              <div className="xl:hidden mb-4 border border-shell-line">
+                <CanvasToolbar
+                  tool={tool}
+                  setTool={setTool}
+                  color={color}
+                  setColor={setColor}
+                  width={width}
+                  setWidth={setWidth}
+                  canUndo={canUndo}
+                  canRedo={canRedo}
+                  onUndo={() => canvasRef.current?.undo()}
+                  onRedo={() => canvasRef.current?.redo()}
+                  onClear={() => canvasRef.current?.clear()}
+                />
+              </div>
+              <div key={`learn-sheet-${currentQuestion.id}`} data-turn={turn}>
               <DrawingCanvas
                 key={`learn-canvas-${currentQuestion.id}`}
                 ref={canvasRef}
@@ -347,180 +438,130 @@ export default function SocraticLearnPage() {
                 }}
                 compact={true}
               />
-
-              {/* Persistent Bottom-Docked Floating Drawing Dock */}
-              <div className="sticky bottom-6 z-30 w-full flex justify-center pointer-events-none mt-[-58px] pb-2">
-                <div className="pointer-events-auto">
-                  <CanvasToolbar
-                    tool={tool}
-                    setTool={setTool}
-                    color={color}
-                    setColor={setColor}
-                    width={width}
-                    setWidth={setWidth}
-                    canUndo={canUndo}
-                    canRedo={canRedo}
-                    onUndo={() => canvasRef.current?.undo()}
-                    onRedo={() => canvasRef.current?.redo()}
-                    onClear={() => canvasRef.current?.clear()}
-                    currentPage={currentQuestion.pageNumber}
-                    totalPages={Math.max(1, ...manifest.questions.map((q) => q.pageNumber))}
-                    onPageChange={() => {}}
-                    showPageNav={false}
-                  />
-                </div>
               </div>
-            </div>
+            </>
           ) : (
-            <div className="double-bezel-outer-dark flex-1">
-              <div className="double-bezel-inner-dark p-6 flex flex-col space-y-4">
-                <div className="border-b border-white/10 pb-3">
-                  <div className="flex items-center gap-2">
-                    <span className="eyebrow-pill text-[#cc785c] bg-[#cc785c]/15 px-2.5 py-0.5 border border-[#cc785c]/30">
-                      {currentQuestion.commandTerm}
-                    </span>
-                    <span className="text-xs text-[#a09d96] font-mono-code">
-                      {currentQuestion.syllabusSubtopic}
-                    </span>
-                  </div>
-                  <h3 className="text-xl font-serif font-normal text-[#faf9f5] mt-2 tracking-tight">
-                    {currentQuestion.number.replace(/^Question\s*/i, '')} ({currentQuestion.totalMarks} Marks)
-                  </h3>
-                </div>
+            <div key={`learn-sheet-${currentQuestion.id}`} data-turn={turn}>
+            <article className="script-sheet paper-surface px-6 sm:px-10 py-8 sm:py-10 space-y-6">
+              <div className="grid grid-cols-[auto_1fr_auto] gap-x-4 items-baseline border-b border-ink pb-3">
+                <h2 className="font-serif text-[28px] font-semibold leading-none text-ink tabular">
+                  {currentQuestion.number.replace(/^Question\s*/i, '')}
+                </h2>
+                <p className="text-[14px] text-ink-muted truncate">{currentQuestion.syllabusSubtopic}</p>
+                <p className="font-serif text-[15px] font-semibold text-ink tabular">[{currentQuestion.totalMarks}]</p>
+              </div>
 
-                <div className="bg-[#181715] p-5 rounded-xl border border-white/10 text-[#faf9f5] text-sm shadow-2xs">
-                  <MathRenderer content={currentQuestion.promptText} lightMode={false} />
-                </div>
+              <div className="font-serif text-[17px] leading-[1.65] text-ink max-w-[65ch]">
+                <MathRenderer content={currentQuestion.promptText} lightMode={true} />
+              </div>
 
-                <div className="flex-1 flex flex-col space-y-3">
-                  <div className="flex items-center justify-between">
-                    <label className="text-xs font-mono-code font-semibold text-[#a09d96] uppercase tracking-wider">
-                      Your Draft Response:
-                    </label>
-                    <button
-                      type="button"
-                      onClick={() => setShowHumanitiesDiagram(!showHumanitiesDiagram)}
-                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono-code transition ${showHumanitiesDiagram
-                          ? 'bg-[#cc785c] text-white font-medium shadow-sm'
-                          : humanitiesDiagrams[currentQuestion.id]
-                            ? 'bg-[#5db8a6]/15 text-[#5db8a6] border border-[#5db8a6]/30'
-                            : 'bg-[#252320] text-[#a09d96] hover:text-[#faf9f5] border border-white/10'
-                        }`}
-                    >
-                      <PieChart className="w-3.5 h-3.5" />
-                      <span>
-                        {showHumanitiesDiagram
-                          ? 'Hide Diagram'
-                          : humanitiesDiagrams[currentQuestion.id]
-                            ? 'Diagram Attached (Edit)'
-                            : '+ Add Diagram'}
-                      </span>
-                    </button>
-                  </div>
+              <div className="flex flex-wrap items-center justify-between gap-3 border-t border-paper-rule pt-4">
+                <label htmlFor="learn-draft" className="text-[15px] font-semibold text-ink">
+                  Your draft
+                </label>
+                <button
+                  type="button"
+                  onClick={() => setShowHumanitiesDiagram(!showHumanitiesDiagram)}
+                  aria-expanded={showHumanitiesDiagram}
+                  className="btn btn-sm btn-quiet-paper"
+                >
+                  <PieChart className="w-4 h-4" aria-hidden="true" />
+                  {showHumanitiesDiagram ? 'Close diagram' : humanitiesDiagrams[currentQuestion.id] ? 'Edit diagram' : 'Add a diagram'}
+                </button>
+              </div>
 
-                  {showHumanitiesDiagram && (
-                    <div className="animate-in slide-in-from-top-2 duration-200">
-                      <InlineDiagramCanvas
-                        initialImage={humanitiesDiagrams[currentQuestion.id]}
-                        onSave={(img) =>
-                          setHumanitiesDiagrams((prev) => ({ ...prev, [currentQuestion.id]: img }))
-                        }
-                      />
-                    </div>
-                  )}
-
-                  {/* Essay Structure Helper Toolbar */}
-                  <div className="flex flex-wrap items-center gap-1.5 pt-1">
-                    <span className="text-[10px] font-mono-code uppercase font-semibold text-[#a09d96] mr-1">
-                      Structure Helpers:
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const snippet = '**Definition & Theoretical Context:**\n';
-                        const existing = humanitiesText[currentQuestion.id] || '';
-                        setHumanitiesText((prev) => ({
-                          ...prev,
-                          [currentQuestion.id]: existing ? `${existing}\n\n${snippet}` : snippet,
-                        }));
-                      }}
-                      className="text-[10px] font-mono-code font-medium text-[#a09d96] hover:text-[#faf9f5] bg-[#252320] hover:bg-[#2c2a26] border border-white/10 px-2.5 py-1 rounded-lg transition"
-                    >
-                      + Definition
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const snippet = '**Diagram Analysis & Mechanism:**\nAs shown in the diagram, the initial equilibrium...';
-                        const existing = humanitiesText[currentQuestion.id] || '';
-                        setHumanitiesText((prev) => ({
-                          ...prev,
-                          [currentQuestion.id]: existing ? `${existing}\n\n${snippet}` : snippet,
-                        }));
-                      }}
-                      className="text-[10px] font-mono-code font-medium text-[#a09d96] hover:text-[#faf9f5] bg-[#252320] hover:bg-[#2c2a26] border border-white/10 px-2.5 py-1 rounded-lg transition"
-                    >
-                      + Diagram Analysis
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const snippet = '**Real-World Example / Application:**\nFor instance, in the case of...';
-                        const existing = humanitiesText[currentQuestion.id] || '';
-                        setHumanitiesText((prev) => ({
-                          ...prev,
-                          [currentQuestion.id]: existing ? `${existing}\n\n${snippet}` : snippet,
-                        }));
-                      }}
-                      className="text-[10px] font-mono-code font-medium text-[#a09d96] hover:text-[#faf9f5] bg-[#252320] hover:bg-[#2c2a26] border border-white/10 px-2.5 py-1 rounded-lg transition"
-                    >
-                      + Example
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const snippet = '**Evaluation & Conclusion (Stakeholder synthesis):**\nIn the short run vs long run, the most critical tradeoff is...';
-                        const existing = humanitiesText[currentQuestion.id] || '';
-                        setHumanitiesText((prev) => ({
-                          ...prev,
-                          [currentQuestion.id]: existing ? `${existing}\n\n${snippet}` : snippet,
-                        }));
-                      }}
-                      className="text-[10px] font-mono-code font-medium text-[#cc785c] bg-[#cc785c]/15 hover:bg-[#cc785c]/25 border border-[#cc785c]/30 px-2.5 py-1 rounded-lg transition"
-                    >
-                      + Evaluation
-                    </button>
-                  </div>
-
-                  <textarea
-                    value={humanitiesText[currentQuestion.id] || ''}
-                    onChange={(e) => {
-                      const text = e.target.value;
-                      setHumanitiesText((prev) => ({ ...prev, [currentQuestion.id]: text }));
-                    }}
-                    placeholder="Draft your thoughts or write your working here..."
-                    className="flex-1 min-h-[300px] bg-[#181715] border border-white/10 rounded-xl p-4 text-xs font-mono-code text-[#faf9f5] placeholder:text-[#a09d96] outline-none focus:border-[#cc785c]"
+              {showHumanitiesDiagram && (
+                <div className="bg-paper-tint border border-paper-rule px-4 py-4">
+                  <InlineDiagramCanvas
+                    initialImage={humanitiesDiagrams[currentQuestion.id]}
+                    onSave={(img) => setHumanitiesDiagrams((prev) => ({ ...prev, [currentQuestion.id]: img }))}
                   />
                 </div>
+              )}
+
+              <div className="flex flex-wrap items-center gap-2" role="group" aria-label="Paragraph starters">
+                <span className="text-[14px] text-ink-muted mr-1">Paragraph starters:</span>
+                {[
+                  ['Definition', 'Definition and theoretical context:\n'],
+                  ['Diagram analysis', 'Diagram analysis and mechanism:\nAs shown in the diagram, the initial equilibrium...'],
+                  ['Example', 'Real-world example:\nFor instance, in the case of...'],
+                  ['Evaluation', 'Evaluation and conclusion:\nIn the short run vs long run, the most critical tradeoff is...'],
+                ].map(([label, snippet]) => (
+                  <button key={label} type="button" onClick={() => insertSnippet(snippet)} className="btn btn-sm btn-quiet-paper">
+                    {label}
+                  </button>
+                ))}
               </div>
+
+              <textarea
+                id="learn-draft"
+                value={humanitiesText[currentQuestion.id] || ''}
+                onChange={(e) => {
+                  const text = e.target.value;
+                  setHumanitiesText((prev) => ({ ...prev, [currentQuestion.id]: text }));
+                }}
+                placeholder="Draft your answer here. The tutor reads it when you ask for help."
+                className="ruled w-full min-h-[360px] px-4 pt-[18px] pb-8 bg-paper bg-[position:0_45px] border border-paper-rule-strong font-serif text-[17px] leading-[28px] text-student caret-student placeholder:text-ink-muted resize-y outline-none focus-visible:outline-2 focus-visible:outline-ink"
+              />
+            </article>
             </div>
           )}
         </div>
 
-        {/* RIGHT PANE (Col 8-12): Sticky Low-Latency Socratic Sidebar */}
-        <div className="lg:col-span-5 lg:sticky lg:top-[140px] h-auto lg:h-[calc(100vh-160px)] min-h-[520px] lg:max-h-[880px] flex flex-col">
+        <div className="lg:sticky lg:top-[124px] lg:h-[calc(100dvh-148px)] min-h-[560px] flex flex-col">
           <SocraticSidebar
             question={currentQuestion}
             currentTier={currentTier}
-            onSelectTier={setCurrentTier}
-            messages={conversations[currentQuestion.id] || []}
-            onSendMessage={handleSendMessage}
-            isLoading={isLoadingTutor}
+            highestTierReached={highestTier[currentQuestion.id] ?? 0}
             isMarkschemeUnlocked={isMarkschemeUnlocked}
-            onUnlockMarkscheme={handleUnlockMarkscheme}
+            onAskTier={handleAskTier}
+            onRequestReveal={() => setShowRevealDialog(true)}
+            messages={conversations[currentQuestion.id] || []}
+            onSendMessage={(text) => handleSendMessage(text)}
+            isLoading={isLoadingTutor}
+            failure={tutorFailure && tutorFailure.questionId === currentQuestion.id ? tutorFailure : null}
+            onRetry={handleRetry}
+            workingShared={questionHasWorking(currentQuestion)}
+            onDraftChange={setHasDraft}
           />
         </div>
       </div>
+
+      <ReportDialog open={showRevealDialog} onClose={() => setShowRevealDialog(false)} title="Reveal the markscheme?">
+        <p className="text-[16px] leading-relaxed text-ink">
+          You&rsquo;ll see the full mark breakdown for question {contentsItems[selectedQuestionIndex]?.label}. Once you&rsquo;ve
+          read it, this question is no longer a fair test of what you know.
+        </p>
+        <div className="flex flex-wrap justify-end gap-3 pt-1">
+          <button type="button" onClick={() => setShowRevealDialog(false)} className="btn btn-quiet-paper" autoFocus>
+            Keep working
+          </button>
+          <button type="button" onClick={handleUnlockMarkscheme} className="btn btn-ink">
+            Reveal markscheme
+          </button>
+        </div>
+      </ReportDialog>
+
+      <ReportDialog open={pendingLeaveHref !== null} onClose={() => setPendingLeaveHref(null)} title="Leave guided practice?">
+        <p className="text-[16px] leading-relaxed text-ink">
+          Guided practice isn&rsquo;t saved. Your working, the tutor conversation and any unsent message will be lost.
+        </p>
+        <div className="flex flex-wrap justify-end gap-3 pt-1">
+          <button type="button" onClick={() => setPendingLeaveHref(null)} className="btn btn-quiet-paper" autoFocus>
+            Stay
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              if (pendingLeaveHref) router.push(pendingLeaveHref);
+              setPendingLeaveHref(null);
+            }}
+            className="btn btn-ink"
+          >
+            Leave
+          </button>
+        </div>
+      </ReportDialog>
     </div>
   );
 }

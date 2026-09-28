@@ -1,70 +1,78 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { AiStudioConfig } from '@/types/exam';
 import { getAiConfig, saveAiConfig } from '@/lib/storage';
 import {
-  INGESTION_SYSTEM_PROMPT,
-  GRADING_SYSTEM_PROMPT,
-  SOCRATIC_SYSTEM_PROMPT,
-} from '@/lib/prompts';
-import {
-  MANIFEST_RESPONSE_SCHEMA,
-  GRADING_RESPONSE_SCHEMA,
-  SOCRATIC_RESPONSE_SCHEMA,
-} from '@/lib/schemas';
-import {
   X,
   Sliders,
-  Code2,
   Key,
-  Check,
-  Copy,
   ExternalLink,
-  Cpu,
   RefreshCw,
   CheckCircle2,
   AlertCircle,
-  LineChart,
 } from 'lucide-react';
-import { SpikeMark } from '@/components/common/SpikeMark';
-import { renderCartesianGraph, CartesianGraphSpec, getQuestion12GraphSpec } from '@/lib/graphRenderer';
+import { CriterionMark } from '@/components/common/CriterionMark';
+
+export type AiStudioTab = 'reasoning' | 'apiKey';
 
 interface AiStudioDrawerProps {
   isOpen: boolean;
   onClose: () => void;
+  initialTab?: AiStudioTab;
+  /** Called after a Gemini key is saved. */
+  onKeySaved?: () => void;
 }
 
-export const AiStudioDrawer: React.FC<AiStudioDrawerProps> = ({ isOpen, onClose }) => {
-  const [activeTab, setActiveTab] = useState<'reasoning' | 'prompts' | 'schemas' | 'apiKey' | 'graphs'>('reasoning');
-  const [activePromptTab, setActivePromptTab] = useState<'grading' | 'socratic' | 'ingestion'>('grading');
-  const [activeSchemaTab, setActiveSchemaTab] = useState<'grading' | 'socratic' | 'manifest'>('grading');
+type KeyTestResult = { tone: 'ok' | 'warn' | 'error'; message: string };
 
-  // Matplotlib Graph Studio state
-  const [graphSpec, setGraphSpec] = useState<CartesianGraphSpec>(getQuestion12GraphSpec('exam'));
-  const [renderedSvg, setRenderedSvg] = useState<string | null>(null);
-  const [isRenderingGraph, setIsRenderingGraph] = useState(false);
-  const [graphError, setGraphError] = useState<string | null>(null);
-  const [customExpr, setCustomExpr] = useState('6 - 0.5 * (x - 2)**2');
-  const [customDomain, setCustomDomain] = useState('-4, 6');
-  const [selectedTheme, setSelectedTheme] = useState<'exam' | 'obsidian'>('exam');
+/** The outcome of a key test: a glyph and a word as well as the colour. */
+const KeyTestNotice: React.FC<{ result: KeyTestResult }> = ({ result }) => {
+  const look = {
+    ok: { label: 'Saved', Icon: CheckCircle2, className: 'border-awarded-on-shell/40 text-awarded-on-shell' },
+    warn: { label: 'Saved, not confirmed', Icon: AlertCircle, className: 'border-shell-line text-shell-ink' },
+    error: { label: 'Not saved', Icon: AlertCircle, className: 'border-lost-on-shell/40 text-lost-on-shell' },
+  }[result.tone];
+  return (
+    <div role="status" className={`p-3 border text-[14px] leading-relaxed flex items-start gap-2 ${look.className}`}>
+      <look.Icon className="w-4 h-4 mt-0.5 shrink-0" aria-hidden="true" />
+      <p>
+        <span className="font-semibold">{look.label}.</span> {result.message}
+      </p>
+    </div>
+  );
+};
 
+export const AiStudioDrawer: React.FC<AiStudioDrawerProps> = ({ isOpen, onClose, initialTab = 'reasoning', onKeySaved }) => {
+  const [activeTab, setActiveTab] = useState<AiStudioTab>(initialTab);
+  const dialogRef = useRef<HTMLDialogElement>(null);
+
+  // Native modal: traps focus and handles Esc; focus returns to the opener on close
+  useEffect(() => {
+    const dialog = dialogRef.current;
+    if (!isOpen || !dialog) return;
+    const opener = document.activeElement as HTMLElement | null;
+    if (!dialog.open) dialog.showModal();
+    return () => {
+      if (dialog.open) dialog.close();
+      opener?.focus?.();
+    };
+  }, [isOpen]);
   const [config, setConfig] = useState<AiStudioConfig | null>(null);
   const [tempApiKey, setTempApiKey] = useState('');
-  const [testResult, setTestResult] = useState<{ valid?: boolean; message?: string } | null>(null);
+  const [testResult, setTestResult] = useState<KeyTestResult | null>(null);
   const [isTesting, setIsTesting] = useState(false);
 
   const [tempZaiKey, setTempZaiKey] = useState('');
-  const [testZaiResult, setTestZaiResult] = useState<{ valid?: boolean; message?: string } | null>(null);
+  const [testZaiResult, setTestZaiResult] = useState<KeyTestResult | null>(null);
   const [isTestingZai, setIsTestingZai] = useState(false);
-
-  const [copied, setCopied] = useState<string | null>(null);
 
   useEffect(() => {
     if (isOpen) {
       getAiConfig().then((cfg) => {
         setConfig(cfg);
         if (cfg.apiKey) setTempApiKey(cfg.apiKey);
+        else setActiveTab('apiKey'); // Nothing works without a key, so that's where Settings opens
         if (cfg.zaiApiKey) setTempZaiKey(cfg.zaiApiKey);
       });
     }
@@ -79,101 +87,89 @@ export const AiStudioDrawer: React.FC<AiStudioDrawerProps> = ({ isOpen, onClose 
   };
 
   const handleTestKey = async () => {
+    const key = tempApiKey.trim();
+    if (!key) return;
     setIsTesting(true);
     setTestResult(null);
     try {
       const res = await fetch('/api/test-key', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ apiKey: tempApiKey, provider: 'gemini' }),
+        body: JSON.stringify({ apiKey: key, provider: 'gemini' }),
       });
-      const data = await res.json();
-      setTestResult(data);
+      const data = await res.json().catch(() => ({}));
       if (data.valid) {
-        await saveAiConfig({ apiKey: tempApiKey });
+        await saveAiConfig({ apiKey: key });
+        setTestResult({ tone: 'ok', message: 'Marking and the tutor are ready.' });
+        onKeySaved?.();
+      } else if (data.code === 'GEMINI_UNAVAILABLE') {
+        // Gemini being busy says nothing about the key, so keep it
+        await saveAiConfig({ apiKey: key });
+        setTestResult({
+          tone: 'warn',
+          message: "Gemini is busy and couldn't confirm the key just now. If marking says the key is wrong, check it here.",
+        });
+        onKeySaved?.();
+      } else if (data.code === 'INVALID_KEY') {
+        setTestResult({ tone: 'error', message: 'Gemini rejected this key. Copy it again from Google AI Studio.' });
+      } else {
+        setTestResult({ tone: 'error', message: data.message || "The key couldn't be tested. Try again." });
       }
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Network test error';
-      setTestResult({ valid: false, message: msg });
+    } catch {
+      setTestResult({ tone: 'error', message: "Couldn't reach Criterion to test the key. Check your connection and try again." });
     } finally {
       setIsTesting(false);
     }
   };
 
   const handleTestZaiKey = async () => {
+    const key = tempZaiKey.trim();
+    if (!key) return;
     setIsTestingZai(true);
     setTestZaiResult(null);
     try {
       const res = await fetch('/api/test-key', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ apiKey: tempZaiKey, provider: 'zai' }),
+        body: JSON.stringify({ apiKey: key, provider: 'zai' }),
       });
-      const data = await res.json();
-      setTestZaiResult(data);
+      const data = await res.json().catch(() => ({}));
       if (data.valid) {
-        await saveAiConfig({ zaiApiKey: tempZaiKey });
+        await saveAiConfig({ zaiApiKey: key });
+        setTestZaiResult({ tone: 'ok', message: 'Z.AI will read your handwriting and PDFs too.' });
+      } else {
+        setTestZaiResult({ tone: 'error', message: data.message || "Couldn't test this key. Try again." });
       }
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Network test error';
-      setTestZaiResult({ valid: false, message: msg });
+    } catch {
+      setTestZaiResult({ tone: 'error', message: "Couldn't reach Criterion to test the key. Check your connection and try again." });
     } finally {
       setIsTestingZai(false);
     }
   };
 
-  const copyToClipboard = (text: string, label: string) => {
-    navigator.clipboard.writeText(text);
-    setCopied(label);
-    setTimeout(() => setCopied(null), 2000);
-  };
-
-  const handleRenderGraph = async (specToRender: CartesianGraphSpec = graphSpec) => {
-    setIsRenderingGraph(true);
-    setGraphError(null);
-    try {
-      const svg = await renderCartesianGraph(specToRender);
-      setRenderedSvg(svg);
-    } catch (err: unknown) {
-      setGraphError(err instanceof Error ? err.message : 'Error rendering Cartesian graph');
-    } finally {
-      setIsRenderingGraph(false);
-    }
-  };
-
-  const activePromptText =
-    activePromptTab === 'grading'
-      ? GRADING_SYSTEM_PROMPT
-      : activePromptTab === 'socratic'
-        ? SOCRATIC_SYSTEM_PROMPT
-        : INGESTION_SYSTEM_PROMPT;
-
-  const activeSchemaJson =
-    activeSchemaTab === 'grading'
-      ? JSON.stringify(GRADING_RESPONSE_SCHEMA, null, 2)
-      : activeSchemaTab === 'socratic'
-        ? JSON.stringify(SOCRATIC_RESPONSE_SCHEMA, null, 2)
-        : JSON.stringify(MANIFEST_RESPONSE_SCHEMA, null, 2);
-
   return (
-    <div className="fixed inset-0 z-50 flex justify-end bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="w-full max-w-2xl h-full bg-[#181715] border-l border-white/[0.1] shadow-2xl flex flex-col overflow-hidden text-[#faf9f5]">
+    <dialog
+      ref={dialogRef}
+      aria-label="Settings"
+      onCancel={(e) => {
+        e.preventDefault();
+        onClose();
+      }}
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+      className="drawer shell-surface fixed m-0 ml-auto h-dvh max-h-none w-full max-w-2xl p-0 border-0 border-l border-shell-line bg-shell text-shell-ink backdrop:bg-[rgba(10,12,15,0.6)]"
+    >
+      <div className="w-full h-full flex flex-col overflow-hidden">
         {/* Drawer Header */}
-        <div className="p-4 bg-[#252320] border-b border-white/[0.1] flex items-center justify-between">
+        <div className="p-4 bg-shell-raised border-b border-shell-line flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-lg bg-[#181715] border border-white/[0.1] flex items-center justify-center text-[#cc785c]">
-              <SpikeMark className="w-5 h-5 text-[#cc785c]" />
+            <div className="w-9 h-9 bg-shell border border-shell-line flex items-center justify-center text-shell-ink">
+              <CriterionMark className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-base font-serif font-normal text-[#faf9f5] flex items-center gap-2">
-                <span>Examiner Settings &amp; AI Controls</span>
-                <span className="text-[11px] font-mono-code font-normal text-[#5db8a6] bg-[#181715] px-2 py-0.5 rounded border border-white/[0.1]">
-                  Gemini 3.8 Flash
-                </span>
-              </h2>
-              <p className="text-xs text-[#a09d96]">
-                Configure marking depth, examine prompts, and manage API keys
-              </p>
+              <h2 className="text-[18px] font-serif font-semibold text-shell-ink">Settings</h2>
+              <p className="text-[13px] text-shell-muted">Your API key and how deeply the examiner and tutor think</p>
             </div>
           </div>
 
@@ -181,666 +177,219 @@ export const AiStudioDrawer: React.FC<AiStudioDrawerProps> = ({ isOpen, onClose 
             type="button"
             onClick={onClose}
             aria-label="Close settings drawer"
-            className="p-1.5 text-[#a09d96] hover:text-[#faf9f5] rounded-lg hover:bg-[#181715] transition focus-ring"
+            className="min-h-11 min-w-11 flex items-center justify-center text-shell-muted hover:text-shell-ink transition"
           >
-            <X className="w-5 h-5" />
+            <X className="w-5 h-5" aria-hidden="true" />
           </button>
         </div>
 
         {/* Tab Navigation */}
-        <div className="flex items-center gap-1 px-4 py-2.5 bg-[#141413] border-b border-white/[0.08] text-xs">
-          <button
-            type="button"
-            onClick={() => setActiveTab('reasoning')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition font-medium focus-ring ${
-              activeTab === 'reasoning'
-                ? 'bg-[#cc785c] text-white shadow-sm'
-                : 'text-[#a09d96] hover:text-[#faf9f5] hover:bg-[#252320]'
-            }`}
-          >
-            <Sliders className="w-3.5 h-3.5" />
-            <span>Marking Depth</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setActiveTab('prompts')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition font-medium focus-ring ${
-              activeTab === 'prompts'
-                ? 'bg-[#cc785c] text-white shadow-sm'
-                : 'text-[#a09d96] hover:text-[#faf9f5] hover:bg-[#252320]'
-            }`}
-          >
-            <Cpu className="w-3.5 h-3.5" />
-            <span>System Prompts</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setActiveTab('schemas')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition font-medium focus-ring ${
-              activeTab === 'schemas'
-                ? 'bg-[#cc785c] text-white shadow-sm'
-                : 'text-[#a09d96] hover:text-[#faf9f5] hover:bg-[#252320]'
-            }`}
-          >
-            <Code2 className="w-3.5 h-3.5" />
-            <span>Response Schemas</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setActiveTab('apiKey')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition font-medium focus-ring ${
-              activeTab === 'apiKey'
-                ? 'bg-[#cc785c] text-white shadow-sm'
-                : 'text-[#a09d96] hover:text-[#faf9f5] hover:bg-[#252320]'
-            }`}
-          >
-            <Key className="w-3.5 h-3.5" />
-            <span>API Settings</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => {
-              setActiveTab('graphs');
-              if (!renderedSvg) handleRenderGraph();
-            }}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition font-medium focus-ring ${
-              activeTab === 'graphs'
-                ? 'bg-[#cc785c] text-white shadow-sm'
-                : 'text-[#a09d96] hover:text-[#faf9f5] hover:bg-[#252320]'
-            }`}
-          >
-            <LineChart className="w-3.5 h-3.5" />
-            <span>Graph Studio</span>
-          </button>
+        <div role="tablist" aria-label="Settings sections" className="flex items-center px-4 py-2.5 bg-shell border-b border-shell-line">
+          {(
+            [
+              { tab: 'reasoning', label: 'Marking depth', Icon: Sliders },
+              { tab: 'apiKey', label: 'API key', Icon: Key },
+            ] as const
+          ).map(({ tab, label, Icon }) => (
+            <button
+              key={tab}
+              type="button"
+              role="tab"
+              aria-selected={activeTab === tab}
+              onClick={() => setActiveTab(tab)}
+              className={`wipe min-h-11 flex items-center gap-1.5 px-3 text-[14px] font-medium border border-shell-line -ml-px first:ml-0 ${
+                activeTab === tab ? 'text-ink' : 'text-shell-muted hover:text-shell-ink'
+              }`}
+            >
+              <Icon className="w-3.5 h-3.5" aria-hidden="true" />
+              <span>{label}</span>
+            </button>
+          ))}
         </div>
 
         {/* Tab Content */}
-        <div className="flex-1 p-6 overflow-y-auto space-y-6 select-text">
+        <div role="tabpanel" className="flex-1 p-6 overflow-y-auto space-y-6 select-text">
           {/* 1. REASONING MODULATION */}
           {activeTab === 'reasoning' && (
             <div className="space-y-6">
-              <div className="p-4 bg-[#252320] border border-white/[0.1] rounded-xl text-xs text-[#b0ada5]">
-                <span className="font-semibold text-[#cc785c] block mb-1 font-mono-code">
-                  AI Thinking Budget &amp; Depth:
-                </span>
-                <p className="leading-relaxed">
-                  The examiner dynamically adjusts how deeply it thinks depending on the task. A higher thinking budget is used when marking complete exam papers (checking multi-step algebra and calculating follow-through marks), while a balanced budget helps the tutor provide step-by-step guidance.
-                </p>
-              </div>
+              <p className="text-[14px] leading-relaxed text-shell-muted">
+                The thinking budget is how much the model may reason before it answers. More thinking checks multi-step
+                working and follow-through marks more carefully, but takes longer.
+              </p>
 
               {/* Grading Reasoning Slider */}
-              <div className="p-4 bg-[#252320] border border-white/[0.1] rounded-xl space-y-3">
-                <div className="flex items-center justify-between">
+              <div className="p-4 bg-shell-raised border border-shell-line space-y-3">
+                <div className="flex items-center justify-between gap-4">
                   <div>
-                    <h3 className="text-xs font-semibold text-[#faf9f5] uppercase tracking-wider font-mono-code">
-                      Exam Marking Depth
-                    </h3>
-                    <p className="text-[11px] text-[#a09d96]">
-                      Controls how thoroughly working steps and follow-through marks are checked
+                    <label htmlFor="grading-budget" className="text-[15px] font-semibold text-shell-ink block">
+                      Marking depth
+                    </label>
+                    <p id="grading-budget-hint" className="text-[13px] text-shell-muted">
+                      How thoroughly working steps and follow-through marks are checked
                     </p>
                   </div>
-                  <span className="text-xs font-mono-code font-semibold text-[#cc785c] bg-[#181715] px-2.5 py-1 rounded-lg border border-white/[0.1]">
-                    {config?.thinkingBudgetGrading || 8192} tokens
+                  <span className="text-[14px] tabular font-semibold text-shell-ink whitespace-nowrap">
+                    {Math.min(config?.thinkingBudgetGrading || 8192, 8192)} tokens
                   </span>
                 </div>
 
                 <input
+                  id="grading-budget"
+                  aria-describedby="grading-budget-hint"
                   type="range"
                   min={1024}
-                  max={16384}
+                  max={8192}
                   step={1024}
-                  value={config?.thinkingBudgetGrading || 8192}
+                  value={Math.min(config?.thinkingBudgetGrading || 8192, 8192)}
                   onChange={(e) => handleSaveBudget('thinkingBudgetGrading', Number(e.target.value))}
-                  className="w-full accent-[#cc785c] cursor-pointer h-2 bg-[#181715] rounded-lg appearance-none"
+                  className="w-full accent-paper cursor-pointer"
                 />
 
-                <div className="flex justify-between text-[10px] font-mono-code text-[#79766e]">
-                  <span>Standard (1024)</span>
-                  <span className="text-[#cc785c] font-semibold">Recommended (8192)</span>
-                  <span>Maximum Depth (16384)</span>
+                <div className="flex justify-between text-[13px] tabular text-shell-muted">
+                  <span>Quicker (1024)</span>
+                  <span>Most thorough, recommended (8192)</span>
                 </div>
               </div>
 
               {/* Socratic Dialogue Reasoning Slider */}
-              <div className="p-4 bg-[#252320] border border-white/[0.1] rounded-xl space-y-3">
-                <div className="flex items-center justify-between">
+              <div className="p-4 bg-shell-raised border border-shell-line space-y-3">
+                <div className="flex items-center justify-between gap-4">
                   <div>
-                    <h3 className="text-xs font-semibold text-[#faf9f5] uppercase tracking-wider font-mono-code">
-                      Tutor Thinking Budget
-                    </h3>
-                    <p className="text-[11px] text-[#a09d96]">
-                      Helps the tutor review your steps and offer tailored hints
+                    <label htmlFor="tutor-budget" className="text-[15px] font-semibold text-shell-ink block">
+                      Tutor thinking
+                    </label>
+                    <p id="tutor-budget-hint" className="text-[13px] text-shell-muted">
+                      How carefully the tutor reviews your steps before it hints
                     </p>
                   </div>
-                  <span className="text-xs font-mono-code font-semibold text-[#5db8a6] bg-[#181715] px-2.5 py-1 rounded-lg border border-white/[0.1]">
-                    {config?.thinkingBudgetSocratic === 0 ? 'Zero / Sub-Second' : `${config?.thinkingBudgetSocratic ?? 2048} tokens`}
+                  <span className="text-[14px] tabular font-semibold text-shell-ink whitespace-nowrap">
+                    {config?.thinkingBudgetSocratic === 0 ? 'None' : `${config?.thinkingBudgetSocratic ?? 2048} tokens`}
                   </span>
                 </div>
 
                 <input
+                  id="tutor-budget"
+                  aria-describedby="tutor-budget-hint"
                   type="range"
                   min={0}
                   max={4096}
                   step={256}
                   value={config?.thinkingBudgetSocratic ?? 2048}
                   onChange={(e) => handleSaveBudget('thinkingBudgetSocratic', Number(e.target.value))}
-                  className="w-full accent-[#cc785c] cursor-pointer h-2 bg-[#181715] rounded-lg appearance-none"
+                  className="w-full accent-paper cursor-pointer"
                 />
 
-                <div className="flex justify-between text-[10px] font-mono-code text-[#79766e]">
-                  <span>Instant / Zero (0)</span>
-                  <span className="text-[#5db8a6] font-semibold">Recommended (2048)</span>
-                  <span>Deep Proofs (4096)</span>
+                <div className="flex justify-between text-[13px] tabular text-shell-muted">
+                  <span>Fastest (0)</span>
+                  <span>Recommended (2048)</span>
+                  <span>Most careful (4096)</span>
                 </div>
               </div>
             </div>
           )}
 
-          {/* 2. SYSTEM PROMPTS INSPECTOR */}
-          {activeTab === 'prompts' && (
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-1 bg-[#252320] p-1 rounded-lg border border-white/[0.1] text-xs font-mono-code">
-                  <button
-                    type="button"
-                    onClick={() => setActivePromptTab('grading')}
-                    className={`px-3 py-1 rounded-md transition ${
-                      activePromptTab === 'grading' ? 'bg-[#cc785c] text-white font-semibold' : 'text-[#a09d96] hover:text-[#faf9f5]'
-                    }`}
-                  >
-                    Exam Marking
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setActivePromptTab('socratic')}
-                    className={`px-3 py-1 rounded-md transition ${
-                      activePromptTab === 'socratic' ? 'bg-[#cc785c] text-white font-semibold' : 'text-[#a09d96] hover:text-[#faf9f5]'
-                    }`}
-                  >
-                    Socratic Tutor
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setActivePromptTab('ingestion')}
-                    className={`px-3 py-1 rounded-md transition ${
-                      activePromptTab === 'ingestion' ? 'bg-[#cc785c] text-white font-semibold' : 'text-[#a09d96] hover:text-[#faf9f5]'
-                    }`}
-                  >
-                    Past Paper Import
-                  </button>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() => copyToClipboard(activePromptText, 'prompt')}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#252320] hover:bg-[#2e2b27] border border-white/[0.1] text-[#faf9f5] text-xs font-mono-code transition"
-                >
-                  {copied === 'prompt' ? <Check className="w-3.5 h-3.5 text-[#5db8a6]" /> : <Copy className="w-3.5 h-3.5" />}
-                  <span>{copied === 'prompt' ? 'Copied' : 'Copy Prompt'}</span>
-                </button>
-              </div>
-
-              <div className="bg-[#141413] border border-white/[0.1] rounded-xl p-4 font-mono-code text-xs text-[#b0ada5] leading-relaxed whitespace-pre-wrap max-h-[480px] overflow-y-auto">
-                {activePromptText}
-              </div>
-            </div>
-          )}
-
-          {/* 3. RESPONSE SCHEMAS */}
-          {activeTab === 'schemas' && (
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-1 bg-[#252320] p-1 rounded-lg border border-white/[0.1] text-xs font-mono-code">
-                  <button
-                    type="button"
-                    onClick={() => setActiveSchemaTab('grading')}
-                    className={`px-3 py-1 rounded-md transition ${
-                      activeSchemaTab === 'grading' ? 'bg-[#cc785c] text-white font-semibold' : 'text-[#a09d96] hover:text-[#faf9f5]'
-                    }`}
-                  >
-                    Grading Schema
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setActiveSchemaTab('socratic')}
-                    className={`px-3 py-1 rounded-md transition ${
-                      activeSchemaTab === 'socratic' ? 'bg-[#cc785c] text-white font-semibold' : 'text-[#a09d96] hover:text-[#faf9f5]'
-                    }`}
-                  >
-                    Socratic Schema
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setActiveSchemaTab('manifest')}
-                    className={`px-3 py-1 rounded-md transition ${
-                      activeSchemaTab === 'manifest' ? 'bg-[#cc785c] text-white font-semibold' : 'text-[#a09d96] hover:text-[#faf9f5]'
-                    }`}
-                  >
-                    Manifest Schema
-                  </button>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() => copyToClipboard(activeSchemaJson, 'schema')}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#252320] hover:bg-[#2e2b27] border border-white/[0.1] text-[#faf9f5] text-xs font-mono-code transition"
-                >
-                  {copied === 'schema' ? <Check className="w-3.5 h-3.5 text-[#5db8a6]" /> : <Copy className="w-3.5 h-3.5" />}
-                  <span>{copied === 'schema' ? 'Copied' : 'Copy Schema'}</span>
-                </button>
-              </div>
-
-              <div className="bg-[#141413] border border-white/[0.1] rounded-xl p-4 font-mono-code text-xs text-[#5db8a6] leading-relaxed whitespace-pre-wrap max-h-[480px] overflow-y-auto">
-                {activeSchemaJson}
-              </div>
-            </div>
-          )}
-
-          {/* 4. API SETTINGS */}
+          {/* 2. API KEYS */}
           {activeTab === 'apiKey' && (
             <div className="space-y-5">
-              <div className="p-4 bg-[#252320] border border-white/[0.1] rounded-xl space-y-3">
-                <label className="text-xs font-semibold text-[#faf9f5] uppercase tracking-wider block font-mono-code">
-                  Gemini API Key Override
+              <div className="p-4 bg-shell-raised border border-shell-line space-y-3">
+                <label htmlFor="gemini-key" className="text-[15px] font-semibold text-shell-ink block">
+                  Your Gemini API key
                 </label>
-                <p className="text-[11px] text-[#a09d96]">
-                  By default, the application reads <code className="text-[#cc785c] font-mono-code">GEMINI_API_KEY</code> from your server environment. You can also supply a temporary key below for local browser testing.
+                <p className="text-[14px] leading-relaxed text-shell-muted">
+                  Criterion marks your scripts and runs the tutor with Google&rsquo;s Gemini, using your own key. It&rsquo;s
+                  free. The key stays in this browser and is sent with your marking and tutor requests, which pass it straight
+                  to Google; Criterion doesn&rsquo;t keep it anywhere else.
                 </p>
+                <ol className="list-decimal pl-5 space-y-1 text-[14px] leading-relaxed text-shell-ink">
+                  <li>
+                    Open{' '}
+                    <a
+                      href="https://aistudio.google.com/apikey"
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex items-center gap-1 underline underline-offset-2 hover:text-shell-muted"
+                    >
+                      Google AI Studio
+                      <ExternalLink className="w-3 h-3" aria-hidden="true" />
+                    </a>{' '}
+                    and sign in with a Google account.
+                  </li>
+                  <li>Choose Create API key, then copy the key.</li>
+                  <li>Paste it here and choose Test and save.</li>
+                </ol>
 
                 <div className="flex gap-2">
                   <input
+                    id="gemini-key"
                     type="password"
+                    autoComplete="off"
+                    spellCheck={false}
                     value={tempApiKey}
                     onChange={(e) => setTempApiKey(e.target.value)}
-                    placeholder="AIzaSy..."
-                    className="flex-1 bg-[#181715] border border-white/[0.1] rounded-xl px-3.5 py-2 text-xs font-mono-code text-[#faf9f5] placeholder:text-[#6b6963] outline-none focus:border-[#cc785c]"
+                    placeholder="Paste your key"
+                    className="flex-1 min-h-11 bg-shell border border-shell-line px-3.5 text-[14px] text-shell-ink placeholder:text-shell-muted"
                   />
                   <button
                     type="button"
                     onClick={handleTestKey}
-                    disabled={isTesting}
-                    className="flex items-center gap-1.5 px-4 py-2 rounded-xl claude-btn-primary disabled:opacity-40 text-xs font-medium transition"
+                    disabled={isTesting || !tempApiKey.trim()}
+                    className="btn btn-sm btn-slip"
                   >
                     {isTesting ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Key className="w-3.5 h-3.5" />}
-                    <span>Test &amp; Save</span>
+                    <span>{isTesting ? 'Testing…' : 'Test and save'}</span>
                   </button>
                 </div>
 
-                {testResult && (
-                  <div
-                    className={`p-3 rounded-xl border text-xs flex items-center gap-2 font-mono-code ${
-                      testResult.valid
-                        ? 'bg-[#5db8a6]/10 border-[#5db8a6]/30 text-[#5db8a6]'
-                        : 'bg-[#c64545]/10 border-[#c64545]/30 text-[#c64545]'
-                    }`}
-                  >
-                    {testResult.valid ? (
-                      <CheckCircle2 className="w-4 h-4 text-[#5db8a6] shrink-0" />
-                    ) : (
-                      <AlertCircle className="w-4 h-4 text-[#c64545] shrink-0" />
-                    )}
-                    <span>{testResult.message}</span>
-                  </div>
-                )}
+                {testResult && <KeyTestNotice result={testResult} />}
               </div>
 
               {/* Z.AI / GLM-OCR API KEY */}
-              <div className="p-4 bg-[#252320] border border-white/[0.1] rounded-xl space-y-3">
-                <div className="flex items-center justify-between">
-                  <label className="text-xs font-semibold text-[#faf9f5] uppercase tracking-wider block font-mono-code">
-                    Z.AI / GLM-OCR API Key (SOTA Math &amp; Layout OCR)
-                  </label>
-                  <span className="text-[10px] font-mono-code text-[#5db8a6] bg-[#5db8a6]/10 px-2 py-0.5 rounded border border-[#5db8a6]/20">
-                    GLM-OCR 0.9B
-                  </span>
-                </div>
-                <p className="text-[11px] text-[#a09d96]">
-                  GLM-OCR is the primary OCR engine for dual-PDF ingestion (tables, LaTeX math, diagrams) and student canvas handwriting recognition. Reads <code className="text-[#cc785c] font-mono-code">ZAI_API_KEY</code> from <code className="text-[#cc785c] font-mono-code">.env.local</code> or local browser storage.
-                </p>
-
-                <div className="flex gap-2">
-                  <input
-                    type="password"
-                    value={tempZaiKey}
-                    onChange={(e) => setTempZaiKey(e.target.value)}
-                    placeholder="Enter Z.AI API key..."
-                    className="flex-1 bg-[#181715] border border-white/[0.1] rounded-xl px-3.5 py-2 text-xs font-mono-code text-[#faf9f5] placeholder:text-[#6b6963] outline-none focus:border-[#cc785c]"
-                  />
-                  <button
-                    type="button"
-                    onClick={handleTestZaiKey}
-                    disabled={isTestingZai}
-                    className="flex items-center gap-1.5 px-4 py-2 rounded-xl claude-btn-primary disabled:opacity-40 text-xs font-medium transition"
-                  >
-                    {isTestingZai ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Key className="w-3.5 h-3.5" />}
-                    <span>Test &amp; Save</span>
-                  </button>
-                </div>
-
-                {testZaiResult && (
-                  <div
-                    className={`p-3 rounded-xl border text-xs flex items-center gap-2 font-mono-code ${
-                      testZaiResult.valid
-                        ? 'bg-[#5db8a6]/10 border-[#5db8a6]/30 text-[#5db8a6]'
-                        : 'bg-[#c64545]/10 border-[#c64545]/30 text-[#c64545]'
-                    }`}
-                  >
-                    {testZaiResult.valid ? (
-                      <CheckCircle2 className="w-4 h-4 text-[#5db8a6] shrink-0" />
-                    ) : (
-                      <AlertCircle className="w-4 h-4 text-[#c64545] shrink-0" />
-                    )}
-                    <span>{testZaiResult.message}</span>
-                  </div>
-                )}
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div className="p-3 bg-[#252320] border border-white/[0.1] rounded-xl text-xs text-[#a09d96] flex items-center justify-between">
-                  <span>Google AI Studio:</span>
-                  <a
-                    href="https://aistudio.google.com"
-                    target="_blank"
-                    rel="noreferrer"
-                    className="flex items-center gap-1 text-[#cc785c] hover:text-[#e08b6f] font-mono-code transition"
-                  >
-                    <span>aistudio.google.com</span>
-                    <ExternalLink className="w-3 h-3" />
-                  </a>
-                </div>
-
-                <div className="p-3 bg-[#252320] border border-white/[0.1] rounded-xl text-xs text-[#a09d96] flex items-center justify-between">
-                  <span>Z.AI Developer Portal:</span>
+              <div className="p-4 bg-shell-raised border border-shell-line space-y-3">
+                <label htmlFor="zai-key" className="text-[15px] font-semibold text-shell-ink block">
+                  Z.AI key (optional)
+                </label>
+                <p className="text-[14px] leading-relaxed text-shell-muted">
+                  You don&rsquo;t need this. With a Z.AI key, its GLM-OCR model also reads your handwriting and the PDFs you
+                  upload, alongside Gemini.{' '}
                   <a
                     href="https://z.ai/manage-apikey/apikey-list"
                     target="_blank"
                     rel="noreferrer"
-                    className="flex items-center gap-1 text-[#5db8a6] hover:text-[#79cbbd] font-mono-code transition"
+                    className="inline-flex items-center gap-1 text-shell-ink underline underline-offset-2 hover:text-shell-muted"
                   >
-                    <span>z.ai/manage-apikey</span>
-                    <ExternalLink className="w-3 h-3" />
+                    Get a Z.AI key
+                    <ExternalLink className="w-3 h-3" aria-hidden="true" />
                   </a>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* 5. MATPLOTLIB GRAPH STUDIO */}
-          {activeTab === 'graphs' && (
-            <div className="space-y-5">
-              <div className="p-4 bg-[#252320] border border-white/[0.1] rounded-xl text-xs text-[#b0ada5]">
-                <div className="flex items-center justify-between mb-1.5">
-                  <span className="font-semibold text-[#cc785c] font-mono-code flex items-center gap-1.5">
-                    <LineChart className="w-4 h-4" />
-                    Python Matplotlib &amp; NumPy Cartesian Pipeline
-                  </span>
-                  <span className="text-[10px] font-mono-code text-[#5db8a6] bg-[#5db8a6]/10 border border-[#5db8a6]/20 px-2 py-0.5 rounded-full">
-                    Python 3.14 • Matplotlib 3.11
-                  </span>
-                </div>
-                <p className="leading-relaxed text-[#d6d5d1]">
-                  Vector Cartesian plane engine rendering authentic IB exam coordinate grids, piecewise functions,
-                  vertical/horizontal asymptotes, and shaded integration regions with genuine mathematical precision.
                 </p>
-              </div>
 
-              {/* Presets & Theme Bar */}
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5">
-                <div className="flex flex-wrap items-center gap-1.5 text-xs font-mono-code">
+                <div className="flex gap-2">
+                  <input
+                    id="zai-key"
+                    type="password"
+                    autoComplete="off"
+                    spellCheck={false}
+                    value={tempZaiKey}
+                    onChange={(e) => setTempZaiKey(e.target.value)}
+                    placeholder="Paste your Z.AI key"
+                    className="flex-1 min-h-11 bg-shell border border-shell-line px-3.5 text-[14px] text-shell-ink placeholder:text-shell-muted"
+                  />
                   <button
                     type="button"
-                    onClick={() => {
-                      const spec = getQuestion12GraphSpec(selectedTheme);
-                      setGraphSpec(spec);
-                      handleRenderGraph(spec);
-                    }}
-                    className="px-2.5 py-1 bg-[#252320] hover:bg-[#2e2b27] border border-white/[0.1] text-[#faf9f5] rounded-lg transition"
+                    onClick={handleTestZaiKey}
+                    disabled={isTestingZai || !tempZaiKey.trim()}
+                    className="btn btn-sm btn-slip"
                   >
-                    Preset: Question 12
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const spec: CartesianGraphSpec = {
-                        title: 'Rational Curve with Asymptotes: f(x) = 1/(x-2) + 1',
-                        theme: selectedTheme,
-                        xRange: [-4, 8],
-                        yRange: [-6, 8],
-                        xStep: 2,
-                        yStep: 2,
-                        grid: true,
-                        showAxes: true,
-                        curves: [
-                          { expression: '1 / (x - 2) + 1', domain: [-4, 1.9], color: selectedTheme === 'exam' ? '#0f172a' : '#cc785c', width: 2.2 },
-                          { expression: '1 / (x - 2) + 1', domain: [2.1, 8], color: selectedTheme === 'exam' ? '#0f172a' : '#cc785c', width: 2.2 },
-                        ],
-                        asymptotes: [
-                          { type: 'vertical', value: 2, label: 'x = 2', color: '#c64545' },
-                          { type: 'horizontal', value: 1, label: 'y = 1', color: '#5db8a6' },
-                        ],
-                        points: [
-                          { x: 0, y: 0.5, label: '(0, 0.5)', color: '#5db8a6' },
-                          { x: 1, y: 0, label: '(1, 0)', color: '#5db8a6' },
-                        ],
-                      };
-                      setGraphSpec(spec);
-                      handleRenderGraph(spec);
-                    }}
-                    className="px-2.5 py-1 bg-[#252320] hover:bg-[#2e2b27] border border-white/[0.1] text-[#faf9f5] rounded-lg transition"
-                  >
-                    Preset: Rational Curve
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const spec: CartesianGraphSpec = {
-                        title: 'Definite Integral: Area under y = 2*sin(x)',
-                        theme: selectedTheme,
-                        xRange: [-1, 7],
-                        yRange: [-3, 3],
-                        xStep: 1,
-                        yStep: 1,
-                        grid: true,
-                        showAxes: true,
-                        curves: [
-                          { expression: '2 * np.sin(x)', domain: [0, 6.28], label: 'y = 2 sin(x)', color: selectedTheme === 'exam' ? '#0f172a' : '#cc785c', width: 2.2 },
-                        ],
-                        shading: [
-                          { expression: '2 * np.sin(x)', domain: [0, 3.14159], color: 'rgba(204, 120, 92, 0.25)', label: 'Integral' },
-                        ],
-                        annotations: [
-                          { x: 1.57, y: 0.8, text: 'Area = 4', color: selectedTheme === 'exam' ? '#0f172a' : '#faf9f5' }
-                        ]
-                      };
-                      setGraphSpec(spec);
-                      handleRenderGraph(spec);
-                    }}
-                    className="px-2.5 py-1 bg-[#252320] hover:bg-[#2e2b27] border border-white/[0.1] text-[#faf9f5] rounded-lg transition"
-                  >
-                    Preset: Trig &amp; Area
+                    {isTestingZai ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Key className="w-3.5 h-3.5" />}
+                    <span>{isTestingZai ? 'Testing…' : 'Test and save'}</span>
                   </button>
                 </div>
 
-                {/* Theme Selector */}
-                <div className="flex items-center gap-1 bg-[#252320] p-1 rounded-lg border border-white/[0.1] text-xs font-mono-code">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setSelectedTheme('exam');
-                      const updated = { ...graphSpec, theme: 'exam' as const };
-                      setGraphSpec(updated);
-                      handleRenderGraph(updated);
-                    }}
-                    className={`px-2 py-1 rounded transition ${
-                      selectedTheme === 'exam'
-                        ? 'bg-[#cc785c] text-white font-semibold'
-                        : 'text-[#a09d96] hover:text-[#faf9f5]'
-                    }`}
-                  >
-                    Exam Paper
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setSelectedTheme('obsidian');
-                      const updated = { ...graphSpec, theme: 'obsidian' as const };
-                      setGraphSpec(updated);
-                      handleRenderGraph(updated);
-                    }}
-                    className={`px-2 py-1 rounded transition ${
-                      selectedTheme === 'obsidian'
-                        ? 'bg-[#cc785c] text-white font-semibold'
-                        : 'text-[#a09d96] hover:text-[#faf9f5]'
-                    }`}
-                  >
-                    Claude Navy
-                  </button>
-                </div>
-              </div>
-
-              {/* Custom Expression Row */}
-              <div className="p-4 bg-[#252320] border border-white/[0.1] rounded-xl space-y-3 text-xs">
-                <div className="font-semibold text-[#faf9f5] font-mono-code flex items-center justify-between">
-                  <span>Custom Equation Plotter:</span>
-                  <span className="text-[10px] text-[#a09d96]">Supports numpy math (x**2, sin(x), exp(x), log(x))</span>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-12 gap-3">
-                  <div className="sm:col-span-8">
-                    <label className="text-[10px] font-mono-code text-[#a09d96] block mb-1">
-                      Function f(x) =
-                    </label>
-                    <input
-                      type="text"
-                      value={customExpr}
-                      onChange={(e) => setCustomExpr(e.target.value)}
-                      placeholder="e.g. 6 - 0.5 * (x - 2)**2"
-                      className="w-full bg-[#181715] border border-white/[0.1] rounded-lg px-3 py-1.5 font-mono-code text-[#faf9f5] outline-none focus:border-[#cc785c]"
-                    />
-                  </div>
-
-                  <div className="sm:col-span-4">
-                    <label className="text-[10px] font-mono-code text-[#a09d96] block mb-1">
-                      Domain [x_min, x_max]
-                    </label>
-                    <input
-                      type="text"
-                      value={customDomain}
-                      onChange={(e) => setCustomDomain(e.target.value)}
-                      placeholder="-4, 6"
-                      className="w-full bg-[#181715] border border-white/[0.1] rounded-lg px-3 py-1.5 font-mono-code text-[#faf9f5] outline-none focus:border-[#cc785c]"
-                    />
-                  </div>
-                </div>
-
-                <div className="flex justify-end gap-2 pt-1">
-                  <button
-                    type="button"
-                    disabled={isRenderingGraph}
-                    onClick={() => {
-                      const domainParts = customDomain.split(',').map((p) => parseFloat(p.trim()));
-                      const dMin = isNaN(domainParts[0]) ? -5 : domainParts[0];
-                      const dMax = isNaN(domainParts[1]) ? 5 : domainParts[1];
-                      const spec: CartesianGraphSpec = {
-                        title: `f(x) = ${customExpr}`,
-                        theme: selectedTheme,
-                        xRange: [Math.floor(dMin - 1), Math.ceil(dMax + 1)],
-                        yRange: [-6, 8],
-                        xStep: 1,
-                        yStep: 1,
-                        grid: true,
-                        showAxes: true,
-                        curves: [
-                          {
-                            expression: customExpr,
-                            domain: [dMin, dMax],
-                            color: selectedTheme === 'exam' ? '#0f172a' : '#cc785c',
-                            width: 2.2,
-                          },
-                        ],
-                      };
-                      setGraphSpec(spec);
-                      handleRenderGraph(spec);
-                    }}
-                    className="px-4 py-1.5 claude-btn-primary text-xs font-mono-code flex items-center gap-1.5 disabled:opacity-50"
-                  >
-                    {isRenderingGraph ? (
-                      <>
-                        <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                        <span>Rendering in Python...</span>
-                      </>
-                    ) : (
-                      <>
-                        <LineChart className="w-3.5 h-3.5" />
-                        <span>Plot with Matplotlib</span>
-                      </>
-                    )}
-                  </button>
-                </div>
-              </div>
-
-              {/* Error Notice */}
-              {graphError && (
-                <div className="p-3 bg-[#c64545]/15 border border-[#c64545]/40 rounded-xl text-xs text-[#fca5a5] flex items-center gap-2 font-mono-code">
-                  <AlertCircle className="w-4 h-4 text-[#c64545] shrink-0" />
-                  <span>{graphError}</span>
-                </div>
-              )}
-
-              {/* Live Preview Canvas */}
-              <div className="space-y-2">
-                <div className="flex items-center justify-between text-xs font-mono-code text-[#a09d96]">
-                  <span>Live Scalable SVG Preview:</span>
-                  {renderedSvg && (
-                    <div className="flex items-center gap-2">
-                      <button
-                        type="button"
-                        onClick={() => copyToClipboard(renderedSvg, 'svg')}
-                        className="flex items-center gap-1 text-[#cc785c] hover:text-[#e08b6f] transition"
-                      >
-                        {copied === 'svg' ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
-                        <span>{copied === 'svg' ? 'Copied!' : 'Copy SVG'}</span>
-                      </button>
-                    </div>
-                  )}
-                </div>
-
-                <div
-                  className={`w-full rounded-xl border p-4 flex flex-col items-center justify-center transition-all ${
-                    selectedTheme === 'exam'
-                      ? 'bg-[#faf9f5] border-[#e6dfd8] shadow-inner'
-                      : 'bg-[#141413] border-white/[0.1]'
-                  }`}
-                >
-                  {isRenderingGraph ? (
-                    <div className="py-20 text-center space-y-2">
-                      <RefreshCw className="w-6 h-6 text-[#cc785c] animate-spin mx-auto" />
-                      <p className="text-xs font-mono-code text-[#a09d96]">
-                        Executing Python Matplotlib subprocess...
-                      </p>
-                    </div>
-                  ) : renderedSvg ? (
-                    <div
-                      className="w-full max-w-lg flex justify-center [&>svg]:max-w-full [&>svg]:h-auto shadow-sm"
-                      dangerouslySetInnerHTML={{ __html: renderedSvg }}
-                    />
-                  ) : (
-                    <div className="py-20 text-center text-xs font-mono-code text-[#79766e]">
-                      Click &quot;Plot with Matplotlib&quot; or select a preset above.
-                    </div>
-                  )}
-                </div>
+                {testZaiResult && <KeyTestNotice result={testZaiResult} />}
               </div>
             </div>
           )}
         </div>
       </div>
-    </div>
+    </dialog>
   );
 };
